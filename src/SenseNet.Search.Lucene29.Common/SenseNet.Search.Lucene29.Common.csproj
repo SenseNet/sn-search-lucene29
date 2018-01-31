@@ -109,7 +109,7 @@
       <HintPath>..\packages\SenseNet.Preview.7.0.0\lib\net451\SenseNet.Preview.dll</HintPath>
     </Reference>
     <Reference Include="SenseNet.Search, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SenseNet.Services.7.1.0\lib\net451\SenseNet.Search.dll</HintPath>
+      <HintPath>..\packages\SenseNet.Search.1.0.0\lib\net451\SenseNet.Search.dll</HintPath>
     </Reference>
     <Reference Include="SenseNet.Search.Lucene29, Version=7.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SenseNet.Services.7.1.0\lib\net451\SenseNet.Search.Lucene29.dll</HintPath>
@@ -159,7 +159,9 @@
     <Compile Include="SafeQueriesInternal.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="SenseNet.Search.Lucene29.Common.nuspec" />
   </ItemGroup>
   <ItemGroup />
