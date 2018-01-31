@@ -20,5 +20,6 @@
   </metadata>
   <files>
     <file src="bin\Release\SenseNet.Search.Lucene29.*" target="lib\net451" />
+    <file src="bin\Release\Lucene.Net.*" target="lib\net451" />
   </files>
 </package>
