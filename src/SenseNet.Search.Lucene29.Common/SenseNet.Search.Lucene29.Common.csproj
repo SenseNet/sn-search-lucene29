@@ -114,9 +114,6 @@
     <Reference Include="SenseNet.Search.Lucene29, Version=7.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SenseNet.Services.7.1.0\lib\net451\SenseNet.Search.Lucene29.dll</HintPath>
     </Reference>
-    <Reference Include="SenseNet.Search.Lucene29.Common, Version=7.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SenseNet.Services.7.1.0\lib\net451\SenseNet.Search.Lucene29.Common.dll</HintPath>
-    </Reference>
     <Reference Include="SenseNet.Security, Version=2.3.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SenseNet.Security.2.3.1\lib\net45\SenseNet.Security.dll</HintPath>
       <Private>True</Private>
