@@ -480,6 +480,8 @@ namespace SenseNet.Search.Lucene29.Tests
             var indxManConsole = new StringWriter();
             var repoBuilder = new RepositoryBuilder()
                 .UseDataProvider(dataProvider)
+                .UseBlobMetaDataProvider(new InMemoryBlobStorageMetaDataProvider(dataProvider))
+                .UseBlobProviderSelector(new InMemoryBlobProviderSelector())
                 .UseAccessProvider(new DesktopAccessProvider())
                 .UsePermissionFilterFactory(new EverythingAllowedPermissionFilterFactory())
                 .UseSearchEngine(searchEngine)
