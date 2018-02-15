@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Mail;
 using System.Threading;
+using System.Threading.Tasks;
 using Lucene.Net.Analysis;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
@@ -309,6 +310,7 @@ namespace SenseNet.Search.Lucene29
 
         /* ============================================================================================= Document Operations */
 
+        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
         public void WriteIndex(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates, IEnumerable<IndexDocument> additions)
         {
             using (var wrFrame = IndexWriterFrame.Get(_writer, _writerRestartLock, false)) // // AddTree
@@ -318,24 +320,24 @@ namespace SenseNet.Search.Lucene29
 
                 if (updates != null)
                 {
-                    foreach (var update in updates)
+                    Parallel.ForEach(updates, update =>
                     {
                         if (update.Document != null)
                             wrFrame.IndexWriter.UpdateDocument(GetTerm(update.UpdateTerm), GetDocument(update.Document));
-                    }
+                    });
                 }
 
                 if (additions != null)
                 {
-                    foreach (var snDoc in additions)
+                    Parallel.ForEach(additions, snDoc =>
                     {
-                        if (snDoc != null)
-                        {
-                            // pessimistic approach: delete document before adding it to avoid duplicate index documents
-                            wrFrame.IndexWriter.DeleteDocuments(GetVersionIdTerm(snDoc.VersionId));
-                            wrFrame.IndexWriter.AddDocument(GetDocument(snDoc));
-                        }
-                    }
+                        if (snDoc == null)
+                            return;
+
+                        // pessimistic approach: delete document before adding it to avoid duplicate index documents
+                        wrFrame.IndexWriter.DeleteDocuments(GetVersionIdTerm(snDoc.VersionId));
+                        wrFrame.IndexWriter.AddDocument(GetDocument(snDoc));
+                    });
                 }
             }
         }
