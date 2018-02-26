@@ -193,17 +193,19 @@ namespace SenseNet.Search.Lucene29
             {
                 try
                 {
-                    var smtpClient = new SmtpClient();
-                    var msgstr = String.Format(WRITELOCKREMOVEERRORTEMPLATESTR,
-                        Configuration.Lucene29.IndexLockFileWaitForRemovedTimeout,
-                        AppDomain.CurrentDomain.FriendlyName,
-                        AppDomain.CurrentDomain.BaseDirectory);
-                    var msg = new MailMessage(
-                        NotificationSender,
-                        Configuration.Lucene29.IndexLockFileRemovedNotificationEmail.Replace(';', ','),
-                        WRITELOCKREMOVEERRORSUBJECTSTR,
-                        msgstr);
-                    smtpClient.Send(msg);
+                    using (var smtpClient = new SmtpClient())
+                    {
+                        var msgstr = String.Format(WRITELOCKREMOVEERRORTEMPLATESTR,
+                            Configuration.Lucene29.IndexLockFileWaitForRemovedTimeout,
+                            AppDomain.CurrentDomain.FriendlyName,
+                            AppDomain.CurrentDomain.BaseDirectory);
+                        var msg = new MailMessage(
+                            NotificationSender,
+                            Configuration.Lucene29.IndexLockFileRemovedNotificationEmail.Replace(';', ','),
+                            WRITELOCKREMOVEERRORSUBJECTSTR,
+                            msgstr);
+                        smtpClient.Send(msg);
+                    }
                 }
                 catch (Exception ex)
                 {
