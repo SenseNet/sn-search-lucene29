@@ -1,17 +1,21 @@
 # Lucene 2.9 for sensenet ECM
 A sensenet ECM *Search engine* implementation built on *Lucene.Net 2.9*
 
-[![NuGet](https://img.shields.io/nuget/v/SenseNet.Search.Lucene29.svg)](https://www.nuget.org/packages/SenseNet.Search.Lucene29)
-[![NuGet](https://img.shields.io/nuget/v/SenseNet.Search.Lucene29.Common.svg)](https://www.nuget.org/packages/SenseNet.Search.Lucene29.Common)
-[![NuGet](https://img.shields.io/nuget/v/SenseNet.Search.Lucene29.Local.svg)](https://www.nuget.org/packages/SenseNet.Search.Lucene29.Local)
+For information about the different modules and configuration options please visit the [Lucene search](/docs/lucenesearch.md) article.
 
 ### SenseNet.Search.Lucene29 library
+[![NuGet](https://img.shields.io/nuget/v/SenseNet.Search.Lucene29.svg)](https://www.nuget.org/packages/SenseNet.Search.Lucene29)
+
 This library contains all the Lucene-related code that works directly with the index stored in the file system. It does not have a dependency on the _Content Repository_, only the general _Search_ library for sensenet ECM.
 
 ### Common library
+[![NuGet](https://img.shields.io/nuget/v/SenseNet.Search.Lucene29.Common.svg)](https://www.nuget.org/packages/SenseNet.Search.Lucene29.Common)
+
 This is the server-side component of the Lucene search engine implementation: contains classes that are needed on the web server.
 
 ### Local library
+[![NuGet](https://img.shields.io/nuget/v/SenseNet.Search.Lucene29.Local.svg)](https://www.nuget.org/packages/SenseNet.Search.Lucene29.Local)
+
 A query and indexing engine that is able to work *locally, on the web server*. This is the original implementation for sensenet ECM that requires the index folder to be present on *all web servers* in an NLB environment.
 
 ## Running tests
