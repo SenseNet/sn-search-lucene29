@@ -50,8 +50,8 @@
     <Reference Include="itextsharp, Version=4.1.6.0, Culture=neutral, PublicKeyToken=8354ae6d2174ddca">
       <HintPath>..\..\packages\SenseNet.Services.7.1.0\lib\net451\itextsharp.dll</HintPath>
     </Reference>
-    <Reference Include="Lucene.Net, Version=2.9.4.2, Culture=neutral, PublicKeyToken=85089178b9ac3181, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\SenseNet.Services.7.1.0\lib\net451\Lucene.Net.dll</HintPath>
+    <Reference Include="Lucene.Net">
+      <HintPath>..\..\References\Lucene.Net.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Exchange.WebServices, Version=14.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\SenseNet.Services.7.1.0\lib\net451\Microsoft.Exchange.WebServices.dll</HintPath>
@@ -111,12 +111,6 @@
     <Reference Include="SenseNet.Search, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\SenseNet.Search.1.0.0\lib\net451\SenseNet.Search.dll</HintPath>
     </Reference>
-    <Reference Include="SenseNet.Search.Lucene29, Version=7.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\SenseNet.Services.7.1.0\lib\net451\SenseNet.Search.Lucene29.dll</HintPath>
-    </Reference>
-    <Reference Include="SenseNet.Search.Lucene29.Common, Version=7.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\SenseNet.Services.7.1.0\lib\net451\SenseNet.Search.Lucene29.Common.dll</HintPath>
-    </Reference>
     <Reference Include="SenseNet.Security, Version=2.3.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\SenseNet.Security.2.3.1\lib\net45\SenseNet.Security.dll</HintPath>
@@ -173,9 +167,17 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\SenseNet.Search.Lucene29.Common\SenseNet.Search.Lucene29.Common.csproj">
+      <Project>{ff0b1af9-753b-4660-8bd0-b84492321808}</Project>
+      <Name>SenseNet.Search.Lucene29.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\SenseNet.Search.Lucene29.Local\SenseNet.Search.Lucene29.Local.csproj">
       <Project>{ef7844be-e78f-43ce-9cb0-364117228dd7}</Project>
       <Name>SenseNet.Search.Lucene29.Local</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\SenseNet.Search.Lucene29\SenseNet.Search.Lucene29.csproj">
+      <Project>{9e776eda-681a-4330-8632-9ed0b67ed5a6}</Project>
+      <Name>SenseNet.Search.Lucene29</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

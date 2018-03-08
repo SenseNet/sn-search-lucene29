@@ -50,8 +50,8 @@
     <Reference Include="itextsharp, Version=4.1.6.0, Culture=neutral, PublicKeyToken=8354ae6d2174ddca">
       <HintPath>..\packages\SenseNet.Services.7.1.0\lib\net451\itextsharp.dll</HintPath>
     </Reference>
-    <Reference Include="Lucene.Net, Version=2.9.4.2, Culture=neutral, PublicKeyToken=85089178b9ac3181, processorArchitecture=MSIL">
-      <HintPath>..\packages\SenseNet.Services.7.1.0\lib\net451\Lucene.Net.dll</HintPath>
+    <Reference Include="Lucene.Net">
+      <HintPath>..\References\Lucene.Net.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Exchange.WebServices, Version=14.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\SenseNet.Services.7.1.0\lib\net451\Microsoft.Exchange.WebServices.dll</HintPath>
@@ -111,9 +111,6 @@
     <Reference Include="SenseNet.Search, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SenseNet.Search.1.0.0\lib\net451\SenseNet.Search.dll</HintPath>
     </Reference>
-    <Reference Include="SenseNet.Search.Lucene29, Version=7.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SenseNet.Services.7.1.0\lib\net451\SenseNet.Search.Lucene29.dll</HintPath>
-    </Reference>
     <Reference Include="SenseNet.Security, Version=2.3.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SenseNet.Security.2.3.1\lib\net45\SenseNet.Security.dll</HintPath>
       <Private>True</Private>
@@ -164,7 +161,12 @@
     </None>
     <None Include="SenseNet.Search.Lucene29.Common.nuspec" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\SenseNet.Search.Lucene29\SenseNet.Search.Lucene29.csproj">
+      <Project>{9e776eda-681a-4330-8632-9ed0b67ed5a6}</Project>
+      <Name>SenseNet.Search.Lucene29</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
