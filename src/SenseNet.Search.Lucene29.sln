@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2002
+VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenseNet.Search.Lucene29", "SenseNet.Search.Lucene29\SenseNet.Search.Lucene29.csproj", "{9E776EDA-681A-4330-8632-9ED0B67ED5A6}"
 EndProject
@@ -12,6 +12,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B4F558A3-EB20-4AF6-849C-6CF719C5F483}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenseNet.Search.Lucene29.Tests", "Tests\SenseNet.Search.Lucene29.Tests\SenseNet.Search.Lucene29.Tests.csproj", "{948CE434-4B01-4B5E-8E01-E7661891D159}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenseNet.Search.Lucene29.Centralized", "SenseNet.Search.Lucene29.Centralized\SenseNet.Search.Lucene29.Centralized.csproj", "{48A8AA39-10E9-4706-9681-99B421E89FED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenseNet.Search.Lucene29.Centralized.Service", "SenseNet.Search.Lucene29.Centralized.Service\SenseNet.Search.Lucene29.Centralized.Service.csproj", "{730398D4-E856-48C9-8875-84902CC8D6F8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +39,14 @@ Global
 		{948CE434-4B01-4B5E-8E01-E7661891D159}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{948CE434-4B01-4B5E-8E01-E7661891D159}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{948CE434-4B01-4B5E-8E01-E7661891D159}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48A8AA39-10E9-4706-9681-99B421E89FED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48A8AA39-10E9-4706-9681-99B421E89FED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48A8AA39-10E9-4706-9681-99B421E89FED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48A8AA39-10E9-4706-9681-99B421E89FED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{730398D4-E856-48C9-8875-84902CC8D6F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{730398D4-E856-48C9-8875-84902CC8D6F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{730398D4-E856-48C9-8875-84902CC8D6F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{730398D4-E856-48C9-8875-84902CC8D6F8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
