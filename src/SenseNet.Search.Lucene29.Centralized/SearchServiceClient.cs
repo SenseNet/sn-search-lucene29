@@ -7,8 +7,8 @@ namespace SenseNet.Search.Lucene29.Centralized
 {
     public class SearchServiceClient : System.ServiceModel.ClientBase<ISearchServiceContract>, ISearchServiceContract
     {
-        private static readonly Lazy<ISearchServiceContract> _instance = new Lazy<ISearchServiceContract>(() => new SearchServiceClient());
-        public static ISearchServiceContract Instance => _instance.Value;
+        private static readonly Lazy<ISearchServiceContract> LazyInstance = new Lazy<ISearchServiceContract>(() => new SearchServiceClient());
+        public static ISearchServiceContract Instance => LazyInstance.Value;
 
         public SearchServiceClient()
         { }
@@ -52,16 +52,14 @@ namespace SenseNet.Search.Lucene29.Centralized
             Channel.SetIndexingInfo(analyzerTypes, indexFieldTypes);
         }
 
-        public ServiceQueryResultInt ExecuteQuery(string query)
+        public QueryResult<int> ExecuteQuery(SnQuery query)
         {
             return Channel.ExecuteQuery(query);
         }
 
-        public ServiceQueryResultString ExecuteQueryAndProject(string query)
+        public QueryResult<string> ExecuteQueryAndProject(SnQuery query)
         {
             return Channel.ExecuteQueryAndProject(query);
         }
-
-        
     }
 }

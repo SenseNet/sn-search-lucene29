@@ -59,12 +59,9 @@
   <ItemGroup>
     <Compile Include="Lucene29CentralizedIndexingEngine.cs" />
     <Compile Include="Lucene29CentralizedQueryEngine.cs" />
-    <Compile Include="Lucene29ServiceQueryEngine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SearchServiceClient.cs" />
     <Compile Include="ISearchServiceContract.cs" />
-    <Compile Include="ServiceQueryContext.cs" />
-    <Compile Include="ServiceQueryResult.cs" />
     <Compile Include="Service\SearchManager.cs" />
     <Compile Include="Service\SearchService.cs" />
   </ItemGroup>

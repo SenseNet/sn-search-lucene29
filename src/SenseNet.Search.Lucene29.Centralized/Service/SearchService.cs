@@ -37,24 +37,31 @@ namespace SenseNet.Search.Lucene29.Centralized.Service
             return SearchManager.Instance.ReadActivityStatusFromIndex();
         }
 
-        public ServiceQueryResultInt ExecuteQuery(string query)
+        public QueryResult<int> ExecuteQuery(SnQuery query)
         {
             //UNDONE: [USER] determine the user id (always admin?)
-            var context = new ServiceQueryContext(null, 1);
-            var snQuery = SnQuery.Parse(query, context);
-            var lucQuery = Compile(snQuery, context);
+            var lucQuery = Compile(query, null);
 
             //UNDONE: [QUERY] permission filter?
-            var lucQueryResult = lucQuery.Execute(new ServicePermissionFilter(), context);
+            var lucQueryResult = lucQuery.Execute(new ServicePermissionFilter(), null);
             var hits = lucQueryResult?.Select(x => x.NodeId).ToArray() ?? new int[0];
 
-            return new ServiceQueryResultInt(hits, lucQuery.TotalCount);
+            return new QueryResult<int>(hits, lucQuery.TotalCount);
         }
 
-        public ServiceQueryResultString ExecuteQueryAndProject(string query)
+        public QueryResult<string> ExecuteQueryAndProject(SnQuery query)
         {
             //UNDONE: [QUERY] parse and execute query with projection
-            throw new NotImplementedException();
+            var lucQuery = Compile(query, null);
+            var projection = query.Projection ?? IndexFieldName.NodeId;
+            var lucQueryResult = lucQuery.Execute(new ServicePermissionFilter(), null);
+            var hits = lucQueryResult?
+                           .Select(x => x[projection, false])
+                           .Where(r => !string.IsNullOrEmpty(r))
+                           .ToArray()
+                       ?? new string[0];
+
+            return new QueryResult<string>(hits, lucQuery.TotalCount);
         }
 
         public void WriteIndex(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates, IEnumerable<IndexDocument> additions)

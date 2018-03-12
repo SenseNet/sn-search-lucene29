@@ -33,10 +33,11 @@ namespace SenseNet.Search.Lucene29.Centralized
 
         [OperationContract]
         //QueryResult<int> ExecuteQuery(SnQuery query, IPermissionFilter filter, IQueryContext context);
-        ServiceQueryResultInt ExecuteQuery(string query);
+        //ServiceQueryResultInt ExecuteQuery(SnQuery query);
+        QueryResult<int> ExecuteQuery(SnQuery query);
 
         [OperationContract]
         //QueryResult<string> ExecuteQueryAndProject(SnQuery query, IPermissionFilter filter, IQueryContext context);
-        ServiceQueryResultString ExecuteQueryAndProject(string query);
+        QueryResult<string> ExecuteQueryAndProject(SnQuery query);
     }
 }

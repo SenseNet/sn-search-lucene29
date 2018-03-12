@@ -11,13 +11,14 @@ namespace SenseNet.Search.Lucene29
 {
     public class Lucene29CentralizedIndexingEngine : ILuceneIndexingEngine
     {
-        //UNDONE: implement IndexingEngine.Running
+        //UNDONE: [INDEX] implement IndexingEngine.Running?
         public bool Running
         {
             get { return true; }
+            // ReSharper disable once ValueParameterNotUsed
             set
             {
-
+                //do nothing
             }
         } 
         public bool IndexIsCentralized => true;
