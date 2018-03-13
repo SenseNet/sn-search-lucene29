@@ -47,9 +47,11 @@ namespace SenseNet.Search.Lucene29.Centralized
             Channel.WriteIndex(deletions, updates, additions);
         }
 
-        public void SetIndexingInfo(IDictionary<string, IndexFieldAnalyzer> analyzerTypes, IDictionary<string, IndexValueType> indexFieldTypes)
+        public void SetIndexingInfo(IDictionary<string, IndexFieldAnalyzer> analyzerTypes, 
+            IDictionary<string, IndexValueType> indexFieldTypes,
+            IDictionary<string, string> sortFieldNames)
         {
-            Channel.SetIndexingInfo(analyzerTypes, indexFieldTypes);
+            Channel.SetIndexingInfo(analyzerTypes, indexFieldTypes, sortFieldNames);
         }
 
         public QueryResult<int> ExecuteQuery(SnQuery query)

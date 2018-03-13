@@ -11,14 +11,13 @@ namespace SenseNet.Search.Lucene29
 {
     public class Lucene29CentralizedIndexingEngine : ILuceneIndexingEngine
     {
-        //UNDONE: [INDEX] implement IndexingEngine.Running?
         public bool Running
         {
-            get { return true; }
-            // ReSharper disable once ValueParameterNotUsed
+            get => true;
             set
             {
-                //do nothing
+                if (!value)
+                    throw new NotSupportedException("Switching off a centralized indexing engine is not supported.");
             }
         } 
         public bool IndexIsCentralized => true;
@@ -51,16 +50,19 @@ namespace SenseNet.Search.Lucene29
 
         public void WriteIndex(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates, IEnumerable<IndexDocument> additions)
         {
+            //UNDONE: [INDEX] partition and send delete/update/add lists separately
             SearchServiceClient.Instance.WriteIndex(deletions, updates, additions);
         }
         
         public void SetIndexingInfo(IDictionary<string, IPerFieldIndexingInfo> indexingInfo)
         {
-            //UNDONE: make sure this works correctly through the wire
             var analyzers = indexingInfo.Where(kvp => kvp.Value.Analyzer != IndexFieldAnalyzer.Default).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Analyzer);
             var indexFieldTypes = indexingInfo.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.IndexFieldHandler.IndexFieldType);
+            var sortInfo = indexingInfo
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.IndexFieldHandler.GetSortFieldName(kvp.Key))
+                .Where(kvp => string.CompareOrdinal(kvp.Key, kvp.Value) != 0).ToDictionary(p => p.Key, p => p.Value);
 
-            SearchServiceClient.Instance.SetIndexingInfo(analyzers, indexFieldTypes);
+            SearchServiceClient.Instance.SetIndexingInfo(analyzers, indexFieldTypes, sortInfo);
         }
 
         public Analyzer GetAnalyzer()

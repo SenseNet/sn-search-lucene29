@@ -27,7 +27,8 @@ namespace SenseNet.Search.Lucene29.Centralized
 
         [OperationContract]
         void SetIndexingInfo(IDictionary<string, IndexFieldAnalyzer> analyzerTypes,
-            IDictionary<string, IndexValueType> indexFieldTypes);
+            IDictionary<string, IndexValueType> indexFieldTypes,
+            IDictionary<string, string> sortFieldNames);
 
         //=================================================================================================== Querying
 

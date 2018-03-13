@@ -84,11 +84,14 @@ namespace SenseNet.Search.Lucene29.Centralized.Service
         //    SearchManager.SetPerFieldIndexingInfo(indexingInfo);
         //}
 
-        public void SetIndexingInfo(IDictionary<string, IndexFieldAnalyzer> analyzerTypes, IDictionary<string, IndexValueType> indexFieldTypes)
+        public void SetIndexingInfo(IDictionary<string, IndexFieldAnalyzer> analyzerTypes, 
+            IDictionary<string, IndexValueType> indexFieldTypes,
+            IDictionary<string, string> sortFieldNames)
         {
             var analyzers = analyzerTypes.ToDictionary(kvp => kvp.Key, kvp => GetAnalyzer(kvp.Value));
 
             SearchManager.Instance.SetIndexingInfo(analyzers, indexFieldTypes);
+            SearchManager.SortFieldNames = sortFieldNames;
         }
 
         #endregion
@@ -137,46 +140,46 @@ namespace SenseNet.Search.Lucene29.Centralized.Service
         }
         private static SortField CreateSortField(string fieldName, bool reverse)
         {
-            //UNDONE: get field indexing info!
-            //IPerFieldIndexingInfo info = null;
-            //var info = SearchManager.GetPerFieldIndexingInfo(fieldName);
-            var sortType = SortField.STRING;
-            //if (info != null)
+            if (string.IsNullOrEmpty(fieldName))
+                throw new ArgumentException(nameof(fieldName));
+
+            int sortType;
+            var fieldType = default(IndexValueType);
+
+            // ReSharper disable once AssignNullToNotNullAttribute
+            SearchManager.Instance?.IndexFieldTypeInfo?.TryGetValue(fieldName, out fieldType);
+
+            switch (fieldType)
             {
-                //UNDONE: get sort field name from the web!
-                //fieldName = info.IndexFieldHandler.GetSortFieldName(fieldName);
-
-                var fieldType = default(IndexValueType);
-                SearchManager.Instance?.IndexFieldTypeInfo?.TryGetValue(fieldName, out fieldType);
-
-                switch (fieldType)
-                {
-                    case IndexValueType.Bool:
-                    case IndexValueType.String:
-                    case IndexValueType.StringArray:
-                        sortType = SortField.STRING;
-                        break;
-                    case IndexValueType.Int:
-                        sortType = SortField.INT;
-                        break;
-                    case IndexValueType.DateTime:
-                    case IndexValueType.Long:
-                        sortType = SortField.LONG;
-                        break;
-                    case IndexValueType.Float:
-                        sortType = SortField.FLOAT;
-                        break;
-                    case IndexValueType.Double:
-                        sortType = SortField.DOUBLE;
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                case IndexValueType.Bool:
+                case IndexValueType.String:
+                case IndexValueType.StringArray:
+                    sortType = SortField.STRING;
+                    break;
+                case IndexValueType.Int:
+                    sortType = SortField.INT;
+                    break;
+                case IndexValueType.DateTime:
+                case IndexValueType.Long:
+                    sortType = SortField.LONG;
+                    break;
+                case IndexValueType.Float:
+                    sortType = SortField.FLOAT;
+                    break;
+                case IndexValueType.Double:
+                    sortType = SortField.DOUBLE;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
-            if (sortType == SortField.STRING)
-                return new SortField(fieldName, System.Threading.Thread.CurrentThread.CurrentCulture, reverse);
-            return new SortField(fieldName, sortType, reverse);
+            var sfn = fieldName;
+            if (SearchManager.SortFieldNames?.TryGetValue(fieldName, out sfn) ?? false)
+                fieldName = sfn;
+
+            return sortType == SortField.STRING
+                ? new SortField(fieldName, System.Threading.Thread.CurrentThread.CurrentCulture, reverse)
+                : new SortField(fieldName, sortType, reverse);
         }
     }
 
