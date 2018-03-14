@@ -66,7 +66,6 @@ namespace SenseNet.Search.Lucene29.Centralized.Service
 
         public void WriteIndex(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates, IEnumerable<IndexDocument> additions)
         {
-            //UNDONE: a scalable implementation is needed
             SearchManager.Instance.WriteIndex(deletions, updates, additions);
         }
 

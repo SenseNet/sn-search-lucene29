@@ -11,9 +11,12 @@ namespace SenseNet.Search.Lucene29
 {
     public class Lucene29CentralizedIndexingEngine : ILuceneIndexingEngine
     {
+        private static readonly int ServiceWritePartitionSize = 50;
+        private bool _running;
+
         public bool Running
         {
-            get => true;
+            get => _running;
             set
             {
                 if (!value)
@@ -26,6 +29,7 @@ namespace SenseNet.Search.Lucene29
         public void Start(TextWriter consoleOut)
         {
             //UNDONE: make sure the search service is accessible
+            _running = true;
         }
 
         public void ShutDown()
@@ -47,11 +51,38 @@ namespace SenseNet.Search.Lucene29
         {
             SearchServiceClient.Instance.WriteActivityStatusToIndex(state);
         }
-
+        
         public void WriteIndex(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates, IEnumerable<IndexDocument> additions)
         {
-            //UNDONE: [INDEX] partition and send delete/update/add lists separately
-            SearchServiceClient.Instance.WriteIndex(deletions, updates, additions);
+            // local function for partitioning index document collections
+            void WriteIndex<T>(IEnumerable<T> source, Action<IEnumerable<T>> write)
+            {
+                if (source == null)
+                    return;
+
+                var partition = new List<T>(ServiceWritePartitionSize);
+
+                // enumerate the source collection only once
+                foreach (var item in source)
+                {
+                    // fill the buffer with items to send
+                    partition.Add(item);
+                    if (partition.Count < ServiceWritePartitionSize)
+                        continue;
+
+                    // send a bunch of data to the service and clean the buffer
+                    write(partition);
+                    partition.Clear();
+                }
+
+                // process the last page
+                if (partition.Any())
+                    write(partition);   
+            }
+
+            WriteIndex(deletions, deleteTerms => SearchServiceClient.Instance.WriteIndex(deleteTerms, null, null));
+            WriteIndex(updates, updateDocuments => SearchServiceClient.Instance.WriteIndex(null, updateDocuments, null));
+            WriteIndex(additions, indexDocuments => SearchServiceClient.Instance.WriteIndex(null, null, indexDocuments));
         }
         
         public void SetIndexingInfo(IDictionary<string, IPerFieldIndexingInfo> indexingInfo)
