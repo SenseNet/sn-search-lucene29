@@ -43,7 +43,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Service
             var lucQuery = Compile(query, null);
 
             //UNDONE: [QUERY] permission filter?
-            var lucQueryResult = lucQuery.Execute(new ServicePermissionFilter(), null);
+            var lucQueryResult = lucQuery.Execute(new AllowEverythingPermissionFilter(), null);
             var hits = lucQueryResult?.Select(x => x.NodeId).ToArray() ?? new int[0];
 
             return new QueryResult<int>(hits, lucQuery.TotalCount);
@@ -54,7 +54,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Service
             //UNDONE: [QUERY] parse and execute query with projection
             var lucQuery = Compile(query, null);
             var projection = query.Projection ?? IndexFieldName.NodeId;
-            var lucQueryResult = lucQuery.Execute(new ServicePermissionFilter(), null);
+            var lucQueryResult = lucQuery.Execute(new AllowEverythingPermissionFilter(), null);
             var hits = lucQueryResult?
                            .Select(x => x[projection, false])
                            .Where(r => !string.IsNullOrEmpty(r))
@@ -179,14 +179,6 @@ namespace SenseNet.Search.Lucene29.Centralized.Service
             return sortType == SortField.STRING
                 ? new SortField(fieldName, System.Threading.Thread.CurrentThread.CurrentCulture, reverse)
                 : new SortField(fieldName, sortType, reverse);
-        }
-    }
-
-    public class ServicePermissionFilter : IPermissionFilter
-    {
-        public bool IsPermitted(int nodeId, bool isLastPublic, bool isLastDraft)
-        {
-            return true;
         }
     }
 }

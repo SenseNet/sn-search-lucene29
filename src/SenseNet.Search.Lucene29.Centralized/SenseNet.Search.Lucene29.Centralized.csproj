@@ -64,6 +64,7 @@
     <Compile Include="ISearchServiceContract.cs" />
     <Compile Include="Service\SearchManager.cs" />
     <Compile Include="Service\SearchService.cs" />
+    <Compile Include="Service\AllowEverythingPermissionFilter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
