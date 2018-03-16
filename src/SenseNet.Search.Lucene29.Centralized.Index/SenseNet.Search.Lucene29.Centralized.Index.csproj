@@ -30,11 +30,20 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.2\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.2\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
     <Reference Include="Lucene.Net">
       <HintPath>..\References\Lucene.Net.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="SenseNet.Common, Version=7.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SenseNet.Common.7.1.0\lib\net451\SenseNet.Common.dll</HintPath>
     </Reference>
     <Reference Include="SenseNet.Search, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SenseNet.Search.1.0.0\lib\net451\SenseNet.Search.dll</HintPath>
@@ -42,10 +51,14 @@
     <Reference Include="SenseNet.Security, Version=2.3.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SenseNet.Security.2.3.1\lib\net45\SenseNet.Security.dll</HintPath>
     </Reference>
+    <Reference Include="SenseNet.Security.EF6SecurityStore, Version=2.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SenseNet.Security.EF6SecurityStore.2.3.0.0\lib\net45\SenseNet.Security.EF6SecurityStore.dll</HintPath>
+    </Reference>
     <Reference Include="SenseNet.Tools, Version=2.1.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SenseNet.Tools.2.1.1\lib\net451\SenseNet.Tools.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -56,9 +69,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AllowEverythingPermissionFilter.cs" />
+    <Compile Include="Configuration\Providers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SearchManager.cs" />
     <Compile Include="SearchService.cs" />
+    <Compile Include="SearchUser.cs" />
+    <Compile Include="SecurityHandler.cs" />
+    <Compile Include="ServiceSecurityContext.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SenseNet.Search.Lucene29.Centralized.Common\SenseNet.Search.Lucene29.Centralized.Common.csproj">

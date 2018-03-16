@@ -14,6 +14,8 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
     {
         public static void Start()
         {
+            SecurityHandler.StartSecurity();
+
             //UNDONE: provide a console object
             SearchManager.Instance.Start(null);
         }
