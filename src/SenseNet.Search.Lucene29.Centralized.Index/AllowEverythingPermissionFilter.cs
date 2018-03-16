@@ -1,6 +1,6 @@
 ﻿using SenseNet.Search.Querying;
 
-namespace SenseNet.Search.Lucene29.Centralized.Service
+namespace SenseNet.Search.Lucene29.Centralized.Index
 {
     /// <summary>
     /// A built-in permission filter that allows everything.

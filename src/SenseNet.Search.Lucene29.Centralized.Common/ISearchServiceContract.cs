@@ -3,7 +3,7 @@ using System.ServiceModel;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Querying;
 
-namespace SenseNet.Search.Lucene29.Centralized
+namespace SenseNet.Search.Lucene29.Centralized.Common
 {
     [ServiceContract(Namespace = "http://SenseNet.ServiceModel.Search.Lucene29")]
     public interface ISearchServiceContract

@@ -1,5 +1,6 @@
 ﻿using System.ServiceModel;
 using System.ServiceProcess;
+using SenseNet.Search.Lucene29.Centralized.Index;
 
 namespace SenseNet.Search.Lucene29.Centralized.Service
 {

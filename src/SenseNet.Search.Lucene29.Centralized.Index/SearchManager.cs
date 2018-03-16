@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace SenseNet.Search.Lucene29.Centralized.Service
+namespace SenseNet.Search.Lucene29.Centralized.Index
 {
     public class SearchManager
     {

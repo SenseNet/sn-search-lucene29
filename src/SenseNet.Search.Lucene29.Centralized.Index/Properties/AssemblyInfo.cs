@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("SenseNet.Search.Lucene29.Tests")]
 
 #if DEBUG
-[assembly: AssemblyTitle("SenseNet.Search.Lucene29.Centralized.Service (Debug)")]
+[assembly: AssemblyTitle("SenseNet.Search.Lucene29.Centralized.Index (Debug)")]
 #else
-[assembly: AssemblyTitle("SenseNet.Search.Lucene29.Centralized.Service (Release)")]
+[assembly: AssemblyTitle("SenseNet.Search.Lucene29.Centralized.Index (Release)")]
 #endif
 
-[assembly: AssemblyDescription("Communication layer for the sensenet ECM Centralized search engine implementation for Lucene29.")]
+[assembly: AssemblyDescription("Index layer for the sensenet ECM Centralized search engine implementation for Lucene29.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Sense/Net Inc.")]
 [assembly: AssemblyCopyright("Copyright © Sense/Net Inc.")]
@@ -23,4 +23,4 @@ using System.Runtime.InteropServices;
 
 [assembly: ComVisible(false)]
 
-[assembly: Guid("730398d4-e856-48c9-8875-84902cc8d6f8")]
+[assembly: Guid("b408ff84-8d7e-4869-955b-a070623ab611")]

@@ -5,9 +5,10 @@ using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Search;
 using SenseNet.Search.Indexing;
+using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Search.Querying;
 
-namespace SenseNet.Search.Lucene29.Centralized.Service
+namespace SenseNet.Search.Lucene29.Centralized.Index
 {
     public class SearchService : ISearchServiceContract
     {
@@ -96,15 +97,6 @@ namespace SenseNet.Search.Lucene29.Centralized.Service
         #endregion
 
         //===================================================================================== Helper methods
-
-        //internal static Analyzer GetAnalyzer(IPerFieldIndexingInfo pfii)
-        //{
-        //    var analyzerToken = pfii.Analyzer == IndexFieldAnalyzer.Default
-        //        ? pfii.IndexFieldHandler.GetDefaultAnalyzer()
-        //        : pfii.Analyzer;
-
-        //    return GetAnalyzer(analyzerToken);
-        //}
 
         internal static Analyzer GetAnalyzer(IndexFieldAnalyzer analyzerToken)
         {

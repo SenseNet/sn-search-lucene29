@@ -1,31 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using SenseNet.Search.Indexing;
+using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Search.Querying;
 
 namespace SenseNet.Search.Lucene29.Centralized
 {
     public class SearchServiceClient : System.ServiceModel.ClientBase<ISearchServiceContract>, ISearchServiceContract
     {
+        //UNDONE: re-create the client if the connection fails
         private static readonly Lazy<ISearchServiceContract> LazyInstance = new Lazy<ISearchServiceContract>(() => new SearchServiceClient());
         public static ISearchServiceContract Instance => LazyInstance.Value;
 
-        public SearchServiceClient()
-        { }
-        public SearchServiceClient(string endpointConfigurationName) :
-            base(endpointConfigurationName)
-        { }
-        public SearchServiceClient(string endpointConfigurationName, string remoteAddress) :
-            base(endpointConfigurationName, remoteAddress)
-        { }
-        public SearchServiceClient(string endpointConfigurationName,
-            System.ServiceModel.EndpointAddress remoteAddress) :
-            base(endpointConfigurationName, remoteAddress)
-        { }
-        public SearchServiceClient(System.ServiceModel.Channels.Binding binding,
-            System.ServiceModel.EndpointAddress remoteAddress) :
-            base(binding, remoteAddress)
-        { }
+        #region Constructors
+
+        public SearchServiceClient() { }
+        public SearchServiceClient(string endpointConfigurationName) : base(endpointConfigurationName) { }
+        public SearchServiceClient(string endpointConfigurationName, string remoteAddress) : 
+            base(endpointConfigurationName, remoteAddress) {}
+        public SearchServiceClient(string endpointConfigurationName, System.ServiceModel.EndpointAddress remoteAddress) : 
+            base(endpointConfigurationName, remoteAddress) { }
+        public SearchServiceClient(System.ServiceModel.Channels.Binding binding, System.ServiceModel.EndpointAddress remoteAddress) : 
+            base(binding, remoteAddress) { }
+
+        #endregion
 
         public void ClearIndex()
         {
