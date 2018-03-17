@@ -6,8 +6,14 @@ using SenseNet.Security;
 
 namespace SenseNet.Search.Lucene29.Centralized.Index
 {
+    /// <summary>
+    /// Central security API entry point. When instatiated, it contains a security context,
+    /// therefore it is related to a particular user.
+    /// </summary>
     public class SecurityHandler
     {
+        //============================================================================================= Sttaic API
+
         public static void StartSecurity()
         {
             var securityDataProvider = Providers.Instance.SecurityDataProvider;
@@ -19,10 +25,10 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             {
                 SecurityDataProvider = securityDataProvider,
                 MessageProvider = messageProvider,
-                SystemUserId = -1, //Identifiers.SystemUserId,
-                VisitorUserId = 6, //Identifiers.VisitorUserId,
-                EveryoneGroupId = 8, //Identifiers.EveryoneGroupId,
-                OwnerGroupId = 9, //Identifiers.OwnersGroupId,
+                SystemUserId = Identifiers.SystemUserId,
+                VisitorUserId = Identifiers.VisitorUserId,
+                EveryoneGroupId = Identifiers.EveryoneGroupId,
+                OwnerGroupId = Identifiers.OwnersGroupId,
                 SecuritActivityTimeoutInSeconds = 120, //Configuration.Security.SecuritActivityTimeoutInSeconds,
                 SecuritActivityLifetimeInMinutes = 25 * 60, //Configuration.Security.SecuritActivityLifetimeInMinutes,
                 CommunicationMonitorRunningPeriodInSeconds = 30 //Configuration.Security.SecurityMonitorRunningPeriodInSeconds
@@ -40,6 +46,59 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         public static ServiceSecurityContext GetSecurityContext(ISecurityUser user)
         {
             return new ServiceSecurityContext(user);
+        }
+
+        //============================================================================================= Instance API
+
+        internal ServiceSecurityContext Context { get; }
+
+        public SecurityHandler(ServiceSecurityContext context)
+        {
+            Context = context ?? throw new ArgumentNullException(nameof(context));
+        }
+
+        public bool HasPermission(int nodeId, params PermissionTypeBase[] permissionTypes)
+        {
+            if (permissionTypes == null)
+                throw new ArgumentNullException(nameof(permissionTypes));
+            if (permissionTypes.Length == 0)
+                return false;
+            if (Context.CurrentUser.Id == -1)
+                return true;
+
+            //UNDONE: review the original implementation in SN: Retry and ReCreateSecurityEntity
+            return Context.HasPermission(nodeId, permissionTypes);
+        }
+
+        public List<AceInfo> GetEffectiveEntries(int contentId, IEnumerable<int> relatedIdentities = null)
+        {
+            return Context.GetEffectiveEntries(contentId, relatedIdentities);
+        }
+
+        public List<int> GetIdentitiesByMembership(int contentId = 0, int ownerId = 0)
+        {
+            var actualUser = Context.CurrentUser;
+            if (actualUser.Id == Identifiers.SystemUserId)
+                return new List<int> { Identifiers.SystemUserId };
+
+            List<int> identities;
+            if (contentId == 0)
+            {
+                identities = Context.GetGroups();
+            }
+            else if (ownerId == 0)
+            {
+                identities = Context.GetGroupsWithOwnership(contentId);
+            }
+            else
+            {
+                identities = Context.GetGroups();
+                if (actualUser.Id == ownerId)
+                    identities.Add(Identifiers.OwnersGroupId);
+            }
+            identities.Add(actualUser.Id);
+
+            return identities;
         }
     }
 }

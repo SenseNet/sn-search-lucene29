@@ -16,6 +16,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         {
             SecurityHandler.StartSecurity();
 
+            //UNDONE: Logging and tracing in the search service
             //UNDONE: provide a console object
             SearchManager.Instance.Start(null);
         }
@@ -40,24 +41,24 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             return SearchManager.Instance.ReadActivityStatusFromIndex();
         }
 
-        public QueryResult<int> ExecuteQuery(SnQuery query)
+        public QueryResult<int> ExecuteQuery(SnQuery query, ServiceQueryContext queryContext)
         {
-            //UNDONE: [USER] determine the user id (always admin?)
+            var filter = GetPermissionFilter(query, queryContext);
             var lucQuery = Compile(query, null);
-
-            //UNDONE: [QUERY] permission filter?
-            var lucQueryResult = lucQuery.Execute(new AllowEverythingPermissionFilter(), null);
+            var lucQueryResult = lucQuery.Execute(filter, null);
             var hits = lucQueryResult?.Select(x => x.NodeId).ToArray() ?? new int[0];
 
             return new QueryResult<int>(hits, lucQuery.TotalCount);
         }
 
-        public QueryResult<string> ExecuteQueryAndProject(SnQuery query)
+        public QueryResult<string> ExecuteQueryAndProject(SnQuery query, ServiceQueryContext queryContext)
         {
+            var filter = GetPermissionFilter(query, queryContext);
+
             //UNDONE: [QUERY] parse and execute query with projection
             var lucQuery = Compile(query, null);
             var projection = query.Projection ?? IndexFieldName.NodeId;
-            var lucQueryResult = lucQuery.Execute(new AllowEverythingPermissionFilter(), null);
+            var lucQueryResult = lucQuery.Execute(filter, null);
             var hits = lucQueryResult?
                            .Select(x => x[projection, false])
                            .Where(r => !string.IsNullOrEmpty(r))
@@ -65,6 +66,20 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
                        ?? new string[0];
 
             return new QueryResult<string>(hits, lucQuery.TotalCount);
+        }
+
+        private static IPermissionFilter GetPermissionFilter(SnQuery query, ServiceQueryContext queryContext)
+        {
+            var security = new SecurityHandler(new ServiceSecurityContext(new SearchUser
+            {
+                Id = queryContext.UserId,
+                DynamicGroups = queryContext.DynamicGroups
+            }));
+
+            if (!Enum.TryParse(queryContext.FieldLevel, true, out QueryFieldLevel queryFieldLevel))
+                queryFieldLevel = QueryFieldLevel.HeadOnly;
+            
+            return new ServicePermissionFilter(security, queryFieldLevel, query.AllVersions);
         }
 
         public void WriteIndex(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates, IEnumerable<IndexDocument> additions)
@@ -76,15 +91,6 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         {
             SearchManager.Instance.WriteActivityStatusToIndex(state);
         }
-
-        //public void SetIndexingInfo(IDictionary<string, IPerFieldIndexingInfo> indexingInfo)
-        //{
-        //    var analyzers = indexingInfo.ToDictionary(kvp => kvp.Key, kvp => GetAnalyzer(kvp.Value));
-        //    var indexFieldTypes = indexingInfo.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.IndexFieldHandler.IndexFieldType);
-
-        //    SearchManager.Instance.SetIndexingInfo(analyzers, indexFieldTypes);
-        //    SearchManager.SetPerFieldIndexingInfo(indexingInfo);
-        //}
 
         public void SetIndexingInfo(IDictionary<string, IndexFieldAnalyzer> analyzerTypes, 
             IDictionary<string, IndexValueType> indexFieldTypes,

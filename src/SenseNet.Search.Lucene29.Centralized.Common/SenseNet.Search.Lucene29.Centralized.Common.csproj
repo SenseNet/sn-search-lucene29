@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="ISearchServiceContract.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServiceQueryContext.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

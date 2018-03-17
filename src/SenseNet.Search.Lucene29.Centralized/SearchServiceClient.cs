@@ -52,14 +52,14 @@ namespace SenseNet.Search.Lucene29.Centralized
             Channel.SetIndexingInfo(analyzerTypes, indexFieldTypes, sortFieldNames);
         }
 
-        public QueryResult<int> ExecuteQuery(SnQuery query)
+        public QueryResult<int> ExecuteQuery(SnQuery query, ServiceQueryContext queryContext)
         {
-            return Channel.ExecuteQuery(query);
+            return Channel.ExecuteQuery(query, queryContext);
         }
 
-        public QueryResult<string> ExecuteQueryAndProject(SnQuery query)
+        public QueryResult<string> ExecuteQueryAndProject(SnQuery query, ServiceQueryContext queryContext)
         {
-            return Channel.ExecuteQueryAndProject(query);
+            return Channel.ExecuteQueryAndProject(query, queryContext);
         }
     }
 }

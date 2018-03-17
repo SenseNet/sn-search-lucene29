@@ -6,10 +6,11 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
     internal class SearchUser : ISecurityUser
     {
         public int Id { get; set; }
+        public int[] DynamicGroups { get; set; }
+
         public IEnumerable<int> GetDynamicGroups(int entityId)
         {
-            //UNDONE: dynamic groups are not accessible here!
-            return new int[0];
+            return DynamicGroups ?? new int[0];
         }
     }
 }
