@@ -54,8 +54,6 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         public QueryResult<string> ExecuteQueryAndProject(SnQuery query, ServiceQueryContext queryContext)
         {
             var filter = GetPermissionFilter(query, queryContext);
-
-            //UNDONE: [QUERY] parse and execute query with projection
             var lucQuery = Compile(query, null);
             var projection = query.Projection ?? IndexFieldName.NodeId;
             var lucQueryResult = lucQuery.Execute(filter, null);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using SenseNet.ContentRepository;
+using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.ContentRepository.Storage;
 using SenseNet.ContentRepository.Storage.Security;
 using SenseNet.Search.Lucene29.Centralized;
@@ -21,13 +22,13 @@ namespace SenseNet.Search.Lucene29
 
         public QueryResult<string> ExecuteQueryAndProject(SnQuery query, IPermissionFilter filter, IQueryContext context)
         {
-            //UNDONE: [QUERY] Convert every projected value using the converter.
-            //var projection = query.Projection ?? IndexFieldName.NodeId;
-            //var indexFieldHandler = context.GetPerFieldIndexingInfo(projection).IndexFieldHandler as IIndexValueConverter;
-            //var converter = indexFieldHandler == null ? DefaultConverter : indexFieldHandler.GetBack;
+            var projection = query.Projection ?? IndexFieldName.NodeId;
+            var converter = !(context.GetPerFieldIndexingInfo(projection).IndexFieldHandler is IIndexValueConverter indexFieldHandler)
+                ? DefaultConverter
+                : indexFieldHandler.GetBack;
 
             var result = SearchServiceClient.Instance.ExecuteQueryAndProject(query, GetQueryContext(query, context));
-            return new QueryResult<string>(result.Hits, result.TotalCount);
+            return new QueryResult<string>(result.Hits.Select(h => converter(h)?.ToString()), result.TotalCount);
         }
 
         private static ServiceQueryContext GetQueryContext(SnQuery query, IQueryContext context)
