@@ -31,11 +31,11 @@ namespace SenseNet.Search.Lucene29.Centralized.Index.Configuration
             }
             catch (TypeNotFoundException)
             {
-                throw new ConfigurationException($"Security data provider implementation not found: {SecurityDataProviderClassName}");
+                throw new SnConfigurationException($"Security data provider implementation not found: {SecurityDataProviderClassName}");
             }
             catch (InvalidCastException)
             {
-                throw new ConfigurationException($"Invalid security data provider implementation: {SecurityDataProviderClassName}");
+                throw new SnConfigurationException($"Invalid security data provider implementation: {SecurityDataProviderClassName}");
             }
 
             if (securityDataProvider == null)
@@ -93,15 +93,11 @@ namespace SenseNet.Search.Lucene29.Centralized.Index.Configuration
             }
             catch (TypeNotFoundException)
             {
-                //UNDONE: use ConfigurationException from the Tools library when it is available
-                //throw new ConfigurationException($"{providerName} implementation does not exist: {className}");
-                throw new Exception($"{providerName} implementation does not exist: {className}");
+                throw new SnConfigurationException($"{providerName} implementation does not exist: {className}");
             }
             catch (InvalidCastException)
             {
-                //UNDONE: use ConfigurationException from the Tools library when it is available
-                //throw new ConfigurationException($"Invalid {providerName} implementation: {className}");
-                throw new Exception($"Invalid {providerName} implementation: {className}");
+                throw new SnConfigurationException($"Invalid {providerName} implementation: {className}");
             }
 
             SnLog.WriteInformation($"{providerName} created: {className}");
