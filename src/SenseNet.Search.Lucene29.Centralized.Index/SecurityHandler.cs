@@ -20,7 +20,6 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             var messageProvider = Providers.Instance.SecurityMessageProvider;
             var startingThesystem = DateTime.UtcNow;
 
-            //UNDONE: configure security values
             ServiceSecurityContext.StartTheSystem(new SecurityConfiguration
             {
                 SecurityDataProvider = securityDataProvider,
@@ -29,9 +28,9 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
                 VisitorUserId = Identifiers.VisitorUserId,
                 EveryoneGroupId = Identifiers.EveryoneGroupId,
                 OwnerGroupId = Identifiers.OwnersGroupId,
-                SecuritActivityTimeoutInSeconds = 120, //Configuration.Security.SecuritActivityTimeoutInSeconds,
-                SecuritActivityLifetimeInMinutes = 25 * 60, //Configuration.Security.SecuritActivityLifetimeInMinutes,
-                CommunicationMonitorRunningPeriodInSeconds = 30 //Configuration.Security.SecurityMonitorRunningPeriodInSeconds
+                SecuritActivityTimeoutInSeconds = Configuration.Security.SecuritActivityTimeoutInSeconds,
+                SecuritActivityLifetimeInMinutes = Configuration.Security.SecuritActivityLifetimeInMinutes,
+                CommunicationMonitorRunningPeriodInSeconds = Configuration.Security.SecurityMonitorRunningPeriodInSeconds
             });
 
             messageProvider.Start(startingThesystem);

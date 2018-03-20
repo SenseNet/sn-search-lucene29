@@ -4,8 +4,10 @@ using System.Linq;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Search;
+using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized.Common;
+using SenseNet.Search.Lucene29.Centralized.Index.Configuration;
 using SenseNet.Search.Querying;
 
 namespace SenseNet.Search.Lucene29.Centralized.Index
@@ -14,9 +16,10 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
     {
         public static void Start()
         {
+            UpdateTraceCategories();
+
             SecurityHandler.StartSecurity();
 
-            //UNDONE: Logging and tracing in the search service
             //UNDONE: provide a console object
             SearchManager.Instance.Start(null);
         }
@@ -177,6 +180,15 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             return sortType == SortField.STRING
                 ? new SortField(fieldName, System.Threading.Thread.CurrentThread.CurrentCulture, reverse)
                 : new SortField(fieldName, sortType, reverse);
+        }
+
+        private static void UpdateTraceCategories()
+        {
+            foreach (var category in SnTrace.Categories)
+                category.Enabled = Tracing.TraceCategories.Contains(category.Name);
+
+            SnLog.WriteInformation("Trace settings were updated in Search service.", EventId.NotDefined,
+                properties: SnTrace.Categories.ToDictionary(c => c.Name, c => (object)c.Enabled.ToString()));
         }
     }
 }

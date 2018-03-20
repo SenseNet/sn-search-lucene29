@@ -40,10 +40,9 @@ namespace SenseNet.Search.Lucene29.Centralized.Index.Configuration
 
             if (securityDataProvider == null)
             {
-                //UNDONE: configure command timeout
                 // default implementation
                 securityDataProvider = new EF6SecurityDataProvider(
-                    120,
+                    Security.SecurityDatabaseCommandTimeoutInSeconds,
                     ConnectionStrings.SecurityDatabaseConnectionString);
             }
 

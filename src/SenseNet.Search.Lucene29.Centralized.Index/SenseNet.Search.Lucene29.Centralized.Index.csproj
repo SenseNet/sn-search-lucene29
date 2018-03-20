@@ -71,6 +71,8 @@
     <Compile Include="AllowEverythingPermissionFilter.cs" />
     <Compile Include="Configuration\Identifiers.cs" />
     <Compile Include="Configuration\Providers.cs" />
+    <Compile Include="Configuration\Security.cs" />
+    <Compile Include="Configuration\Tracing.cs" />
     <Compile Include="PermissionType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SearchManager.cs" />
