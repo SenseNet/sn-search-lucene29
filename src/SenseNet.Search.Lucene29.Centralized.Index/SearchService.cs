@@ -20,8 +20,10 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
             SecurityHandler.StartSecurity();
 
-            //UNDONE: provide a console object
-            SearchManager.Instance.Start(null);
+            using (var traceWriter = new TraceTextWriter())
+            {
+                SearchManager.Instance.Start(traceWriter);
+            }
         }
 
         public static void ShutDown()

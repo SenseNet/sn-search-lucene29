@@ -81,6 +81,7 @@
     <Compile Include="SecurityHandler.cs" />
     <Compile Include="ServicePermissionFilter.cs" />
     <Compile Include="ServiceSecurityContext.cs" />
+    <Compile Include="TraceTextWriter.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SenseNet.Search.Lucene29.Centralized.Common\SenseNet.Search.Lucene29.Centralized.Common.csproj">
