@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Search.Querying;
@@ -8,9 +9,36 @@ namespace SenseNet.Search.Lucene29.Centralized
 {
     public class SearchServiceClient : System.ServiceModel.ClientBase<ISearchServiceContract>, ISearchServiceContract
     {
-        //UNDONE: re-create the client if the connection fails
-        private static readonly Lazy<ISearchServiceContract> LazyInstance = new Lazy<ISearchServiceContract>(() => new SearchServiceClient());
+        #region Search service contract instance
+        
+        private static DateTime _lastErrorLog;
+        private static Lazy<ISearchServiceContract> LazyInstance { get; set; } = new Lazy<ISearchServiceContract>(GetSearchServiceContract);
+
+        private static void SearchServiceChannelOnFaulted(object sender, EventArgs eventArgs)
+        {
+            SnTrace.Index.WriteError("Centralized search service channel error.");
+
+            // log an error once per minute
+            if (_lastErrorLog.AddMinutes(1) < DateTime.UtcNow)
+            {
+                SnLog.WriteError("Centralized search service channel error.");
+                _lastErrorLog = DateTime.UtcNow;
+            }
+
+            // re-create the channel
+            LazyInstance = new Lazy<ISearchServiceContract>(GetSearchServiceContract);
+        }
+        private static ISearchServiceContract GetSearchServiceContract()
+        {
+            var ssc = new SearchServiceClient();
+            ssc.InnerChannel.Faulted += SearchServiceChannelOnFaulted;
+
+            return ssc;
+        }
+
         public static ISearchServiceContract Instance => LazyInstance.Value;
+
+        #endregion
 
         #region Constructors
 
