@@ -34,7 +34,9 @@ namespace SenseNet.Search.Lucene29
 
         public void ShutDown()
         {
-            //UNDONE: [INDEX] maybe write the activity status here
+            //TODO: we may write the indexing state (last activity id) to the index in the future
+            // to make the centralized index compatible with the local version. Currently the state
+            // is not written there because it is not needed for a centralized index to work.
         }
 
         public void ClearIndex()
@@ -49,6 +51,10 @@ namespace SenseNet.Search.Lucene29
 
         public void WriteActivityStatusToIndex(IndexingActivityStatus state)
         {
+            //TODO: we may write the indexing state (last activity id) to the index in the future
+            // to make the centralized index compatible with the local version. Currently the state
+            // is not written there because it is not needed for a centralized index to work.
+
             SearchServiceClient.Instance.WriteActivityStatusToIndex(state);
         }
         

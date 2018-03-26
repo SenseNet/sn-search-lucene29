@@ -28,9 +28,6 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
         public static void ShutDown()
         {
-            //UNDONE: [INDEX] CommitState: maybe need to write the final state in the distributed environment.
-            // IndexManager.GetCurrentIndexingActivityStatus()
-            // WriteActivityStatusToIndex
             SearchManager.Instance.ShutDown();
         }
 
