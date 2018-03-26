@@ -55,7 +55,7 @@ namespace SenseNet.Search.Lucene29
         public void WriteIndex(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates, IEnumerable<IndexDocument> additions)
         {
             // local function for partitioning index document collections
-            void WriteIndex<T>(IEnumerable<T> source, Action<IEnumerable<T>> write)
+            void WriteIndex<T>(IEnumerable<T> source, Action<T[]> write)
             {
                 if (source == null)
                     return;
@@ -71,13 +71,13 @@ namespace SenseNet.Search.Lucene29
                         continue;
 
                     // send a bunch of data to the service and clean the buffer
-                    write(partition);
+                    write(partition.ToArray());
                     partition.Clear();
                 }
 
                 // process the last page
                 if (partition.Any())
-                    write(partition);   
+                    write(partition.ToArray());
             }
 
             WriteIndex(deletions, deleteTerms => SearchServiceClient.Instance.WriteIndex(deleteTerms, null, null));

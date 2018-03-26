@@ -20,7 +20,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Common
         void WriteActivityStatusToIndex(IndexingActivityStatus state);
 
         [OperationContract]
-        void WriteIndex(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates, IEnumerable<IndexDocument> additions);
+        void WriteIndex(SnTerm[] deletions, DocumentUpdate[] updates, IndexDocument[] additions);
 
         [OperationContract]
         void SetIndexingInfo(IDictionary<string, IndexFieldAnalyzer> analyzerTypes,

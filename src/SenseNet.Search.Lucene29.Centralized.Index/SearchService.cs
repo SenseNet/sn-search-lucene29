@@ -85,7 +85,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             return new ServicePermissionFilter(security, queryFieldLevel, query.AllVersions);
         }
 
-        public void WriteIndex(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates, IEnumerable<IndexDocument> additions)
+        public void WriteIndex(SnTerm[] deletions, DocumentUpdate[] updates, IndexDocument[] additions)
         {
             SearchManager.Instance.WriteIndex(deletions, updates, additions);
         }
