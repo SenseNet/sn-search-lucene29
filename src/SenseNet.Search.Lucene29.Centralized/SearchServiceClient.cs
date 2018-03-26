@@ -9,8 +9,11 @@ namespace SenseNet.Search.Lucene29.Centralized
 {
     public class SearchServiceClient : System.ServiceModel.ClientBase<ISearchServiceContract>, ISearchServiceContract
     {
+        internal static readonly int RetryCount = 5;
+        internal static readonly int RetryWaitMilliseconds = 2000;
+
         #region Search service contract instance
-        
+
         private static DateTime _lastErrorLog;
         private static Lazy<ISearchServiceContract> LazyInstance { get; set; } = new Lazy<ISearchServiceContract>(GetSearchServiceContract);
 

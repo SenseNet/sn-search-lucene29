@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.ServiceModel;
 using Lucene.Net.Analysis;
+using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized;
 using SenseNet.Search.Querying;
+using SenseNet.Tools;
 
 namespace SenseNet.Search.Lucene29
 {
@@ -41,12 +44,14 @@ namespace SenseNet.Search.Lucene29
 
         public void ClearIndex()
         {
-            SearchServiceClient.Instance.ClearIndex();
+            Retrier.Retry(SearchServiceClient.RetryCount, SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
+                () => SearchServiceClient.Instance.ClearIndex());
         }
 
         public IndexingActivityStatus ReadActivityStatusFromIndex()
         {
-            return SearchServiceClient.Instance.ReadActivityStatusFromIndex();
+            return Retrier.Retry(SearchServiceClient.RetryCount, SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
+                () => SearchServiceClient.Instance.ReadActivityStatusFromIndex());
         }
 
         public void WriteActivityStatusToIndex(IndexingActivityStatus state)
@@ -55,7 +60,8 @@ namespace SenseNet.Search.Lucene29
             // to make the centralized index compatible with the local version. Currently the state
             // is not written there because it is not needed for a centralized index to work.
 
-            SearchServiceClient.Instance.WriteActivityStatusToIndex(state);
+            Retrier.Retry(SearchServiceClient.RetryCount, SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
+                () => SearchServiceClient.Instance.WriteActivityStatusToIndex(state));
         }
         
         public void WriteIndex(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates, IEnumerable<IndexDocument> additions)
@@ -77,13 +83,30 @@ namespace SenseNet.Search.Lucene29
                         continue;
 
                     // send a bunch of data to the service and clean the buffer
-                    write(partition.ToArray());
+                    RetryWrite(partition.ToArray(), write);
+
                     partition.Clear();
                 }
 
                 // process the last page
                 if (partition.Any())
-                    write(partition.ToArray());
+                    RetryWrite(partition.ToArray(), write);
+            }
+
+            void RetryWrite<T>(T[] data, Action<T[]> write)
+            {
+                Retrier.Retry(SearchServiceClient.RetryCount, SearchServiceClient.RetryWaitMilliseconds,
+                    () => write(data), (remainingCount, ex) =>
+                    {
+                        if (ex == null)
+                            return true;
+                        if (remainingCount == 1)
+                            throw ex;
+
+                        SnTrace.Index.WriteError($"WriteIndex: {ex.Message} Remaining retry count: {remainingCount - 1}");
+
+                        return true;
+                    });
             }
 
             WriteIndex(deletions, deleteTerms => SearchServiceClient.Instance.WriteIndex(deleteTerms, null, null));
@@ -99,7 +122,8 @@ namespace SenseNet.Search.Lucene29
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.IndexFieldHandler.GetSortFieldName(kvp.Key))
                 .Where(kvp => string.CompareOrdinal(kvp.Key, kvp.Value) != 0).ToDictionary(p => p.Key, p => p.Value);
 
-            SearchServiceClient.Instance.SetIndexingInfo(analyzers, indexFieldTypes, sortInfo);
+            Retrier.Retry(SearchServiceClient.RetryCount, SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
+                () => SearchServiceClient.Instance.SetIndexingInfo(analyzers, indexFieldTypes, sortInfo));
         }
 
         public Analyzer GetAnalyzer()

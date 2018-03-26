@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.ServiceModel;
 using SenseNet.ContentRepository;
 using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.ContentRepository.Storage;
@@ -7,6 +8,7 @@ using SenseNet.ContentRepository.Storage.Security;
 using SenseNet.Search.Lucene29.Centralized;
 using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Search.Querying;
+using Retrier = SenseNet.Tools.Retrier;
 
 namespace SenseNet.Search.Lucene29
 {
@@ -14,7 +16,9 @@ namespace SenseNet.Search.Lucene29
     {
         public QueryResult<int> ExecuteQuery(SnQuery query, IPermissionFilter filter, IQueryContext context)
         {
-            var result = SearchServiceClient.Instance.ExecuteQuery(query, GetQueryContext(query, context));
+            var result = Retrier.Retry(SearchServiceClient.RetryCount, SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
+                () => SearchServiceClient.Instance.ExecuteQuery(query, GetQueryContext(query, context)));
+
             return new QueryResult<int>(result.Hits, result.TotalCount);
         }
 
@@ -27,7 +31,9 @@ namespace SenseNet.Search.Lucene29
                 ? DefaultConverter
                 : indexFieldHandler.GetBack;
 
-            var result = SearchServiceClient.Instance.ExecuteQueryAndProject(query, GetQueryContext(query, context));
+            var result = Retrier.Retry(SearchServiceClient.RetryCount, SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
+                () => SearchServiceClient.Instance.ExecuteQueryAndProject(query, GetQueryContext(query, context)));
+
             return new QueryResult<string>(result.Hits.Select(h => converter(h)?.ToString()), result.TotalCount);
         }
 
