@@ -132,15 +132,20 @@ namespace SenseNet.Search.Lucene29
 
         public void ClearIndex()
         {
-            _reader?.Close();
-            _writer?.Close();
+            using (var op = SnTrace.Index.StartOperation("LM.ClearIndex"))
+            {
+                _reader?.Close();
+                _writer?.Close();
 
-            var dir = FSDirectory.Open(new DirectoryInfo(IndexDirectory.CurrentDirectory));
-            var writer = new IndexWriter(dir, GetAnalyzer(), true, IndexWriter.MaxFieldLength.UNLIMITED);
-            writer.Commit();
-            writer.Close();
+                var dir = FSDirectory.Open(new DirectoryInfo(IndexDirectory.CurrentDirectory));
+                var writer = new IndexWriter(dir, GetAnalyzer(), true, IndexWriter.MaxFieldLength.UNLIMITED);
+                writer.Commit();
+                writer.Close();
 
-            CreateWriterAndReader();
+                CreateWriterAndReader();
+
+                op.Successful = true;
+            }
         }
 
         public IndexingActivityStatus ReadActivityStatusFromIndex()
@@ -453,19 +458,15 @@ namespace SenseNet.Search.Lucene29
             {
                 using (var wrFrame = IndexWriterFrame.Get(_writer, _writerRestartLock, !reopenReader)) // // Commit
                 {
-                    //TODO: CommitState: cleanup commitState if null if needed in the distributed environment.
-                    //var commitState = state ?? IndexManager.GetCurrentIndexingActivityStatus();
-                    var commitState = state;
-
-                    var commitStateMessage = commitState?.ToString();
+                    var commitStateMessage = state?.ToString();
 
                     SnTrace.Index.Write("LM: Committing_writer. commitState: " + commitStateMessage);
 
                     // Write a fake document to make sure that the index changes are written to the file system.
                     wrFrame.IndexWriter.UpdateDocument(new Term(COMMITFIELDNAME, COMMITFIELDNAME), GetFakeDocument());
 
-                    if (commitState != null)
-                        wrFrame.IndexWriter.Commit(GetCommitUserData(commitState));
+                    if (state != null)
+                        wrFrame.IndexWriter.Commit(GetCommitUserData(state));
                     else
                         wrFrame.IndexWriter.Commit();
 

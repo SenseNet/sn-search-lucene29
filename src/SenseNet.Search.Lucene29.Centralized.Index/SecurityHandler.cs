@@ -12,7 +12,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
     /// </summary>
     public class SecurityHandler
     {
-        //============================================================================================= Sttaic API
+        //============================================================================================= Static API
 
         public static void StartSecurity()
         {
@@ -65,7 +65,6 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             if (Context.CurrentUser.Id == -1)
                 return true;
 
-            //UNDONE: review the original implementation in SN: Retry and ReCreateSecurityEntity
             return Context.HasPermission(nodeId, permissionTypes);
         }
 

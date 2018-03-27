@@ -70,6 +70,7 @@
   <ItemGroup>
     <Compile Include="AllowEverythingPermissionFilter.cs" />
     <Compile Include="Configuration\Identifiers.cs" />
+    <Compile Include="Configuration\Indexing.cs" />
     <Compile Include="Configuration\Providers.cs" />
     <Compile Include="Configuration\Security.cs" />
     <Compile Include="Configuration\Tracing.cs" />

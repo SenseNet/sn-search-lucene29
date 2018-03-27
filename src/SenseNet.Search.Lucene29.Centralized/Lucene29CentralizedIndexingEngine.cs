@@ -12,6 +12,11 @@ using SenseNet.Tools;
 
 namespace SenseNet.Search.Lucene29
 {
+    /// <summary>
+    /// Centralized indexing engine built using Lucene 2.9.
+    /// It requires a central search service accessible for all web servers at all times. All operations
+    /// are routed towards that service with a short retry period.
+    /// </summary>
     public class Lucene29CentralizedIndexingEngine : ILuceneIndexingEngine
     {
         private static readonly int ServiceWritePartitionSize = 50;
@@ -31,7 +36,9 @@ namespace SenseNet.Search.Lucene29
 
         public void Start(TextWriter consoleOut)
         {
-            //UNDONE: make sure the search service is accessible
+            // warmup
+            var unused = SearchServiceClient.Instance;
+
             _running = true;
         }
 

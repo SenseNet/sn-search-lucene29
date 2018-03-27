@@ -12,6 +12,11 @@ using Retrier = SenseNet.Tools.Retrier;
 
 namespace SenseNet.Search.Lucene29
 {
+    /// <summary>
+    /// Centralized query engine built using Lucene 2.9.
+    /// It requires a central search service accessible for all web servers at all times. All operations
+    /// are routed towards that service with a short retry period.
+    /// </summary>
     public class Lucene29CentralizedQueryEngine : IQueryEngine
     {
         public QueryResult<int> ExecuteQuery(SnQuery query, IPermissionFilter filter, IQueryContext context)
@@ -21,9 +26,7 @@ namespace SenseNet.Search.Lucene29
 
             return new QueryResult<int>(result.Hits, result.TotalCount);
         }
-
-        private static readonly Func<string, object> DefaultConverter = s => s;
-
+        
         public QueryResult<string> ExecuteQueryAndProject(SnQuery query, IPermissionFilter filter, IQueryContext context)
         {
             var projection = query.Projection ?? IndexFieldName.NodeId;
@@ -36,6 +39,8 @@ namespace SenseNet.Search.Lucene29
 
             return new QueryResult<string>(result.Hits.Select(h => converter(h)?.ToString()), result.TotalCount);
         }
+
+        private static readonly Func<string, object> DefaultConverter = s => s;
 
         private static ServiceQueryContext GetQueryContext(SnQuery query, IQueryContext context)
         {

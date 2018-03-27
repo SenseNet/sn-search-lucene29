@@ -84,7 +84,11 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
         public void WriteIndex(SnTerm[] deletions, DocumentUpdate[] updates, IndexDocument[] additions)
         {
-            SearchManager.Instance.WriteIndex(deletions, updates, additions);
+            using (var op = SnTrace.Index.StartOperation($"WriteIndex: deletions:{deletions?.Length} updates:{updates?.Length} additions:{additions?.Length}"))
+            {
+                SearchManager.Instance.WriteIndex(deletions, updates, additions);
+                op.Successful = true;
+            }
         }
 
         public void WriteActivityStatusToIndex(IndexingActivityStatus state)
@@ -97,6 +101,8 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             IDictionary<string, string> sortFieldNames)
         {
             var analyzers = analyzerTypes.ToDictionary(kvp => kvp.Key, kvp => GetAnalyzer(kvp.Value));
+
+            SnTrace.Index.Write("Indexing info set.");
 
             SearchManager.Instance.SetIndexingInfo(analyzers, indexFieldTypes);
             SearchManager.SortFieldNames = sortFieldNames;
