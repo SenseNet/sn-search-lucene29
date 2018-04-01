@@ -10,11 +10,11 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("SenseNet.Search.Lucene29.Centralized.Service (Release)")]
 #endif
 
-[assembly: AssemblyDescription("Communication layer for the sensenet ECM Centralized search engine implementation for Lucene29.")]
+[assembly: AssemblyDescription("Communication layer for the sensenet Centralized search engine implementation for Lucene29.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Sense/Net Inc.")]
 [assembly: AssemblyCopyright("Copyright © Sense/Net Inc.")]
-[assembly: AssemblyProduct("sensenet ECM")]
+[assembly: AssemblyProduct("sensenet")]
 [assembly: AssemblyTrademark("Sense/Net Inc.")]
 [assembly: AssemblyCulture("")]
 [assembly: AssemblyVersion("1.0.0.0")]
@@ -22,5 +22,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyInformationalVersion("1.0.0")]
 
 [assembly: ComVisible(false)]
-
 [assembly: Guid("730398d4-e856-48c9-8875-84902cc8d6f8")]

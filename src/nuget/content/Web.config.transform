@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <configSections>
+    <sectionGroup name="sensenet">
+      <section name="lucene29" type="System.Configuration.NameValueFileSectionHandler" />
+    </sectionGroup>
+  </configSections>
+  <sensenet>
+    <lucene29>
+      <add key="IndexingEngine" value="SenseNet.Search.Lucene29.Lucene29CentralizedIndexingEngine" />
+      <add key="QueryEngine" value="SenseNet.Search.Lucene29.Lucene29CentralizedQueryEngine" />
+    </lucene29>
+  </sensenet>
+  <system.serviceModel>
+    <serviceHostingEnvironment aspNetCompatibilityEnabled="true" multipleSiteBindingsEnabled="true" />
+    <bindings>
+      <netTcpBinding>
+        <binding name="NetTcpBinding_ISearchServiceContract" />
+      </netTcpBinding>
+    </bindings>
+    <client>
+      <endpoint address="net.tcp://localhost:50123/SenseNetServiceModel/service/SearchService"
+                binding="netTcpBinding"
+                bindingConfiguration="NetTcpBinding_ISearchServiceContract"
+                contract="SenseNet.Search.Lucene29.Centralized.Common.ISearchServiceContract"
+                name="NetTcpBinding_ISearchServiceContract">
+      </endpoint>
+    </client>
+  </system.serviceModel>
+</configuration>

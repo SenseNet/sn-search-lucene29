@@ -2,20 +2,20 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
   <metadata>
     <id>SenseNet.Search.Lucene29</id>
-    <version>7.1</version>
-    <title>sensenet ECM Lucene29 library</title>
-    <authors>kavics,laci,tusmester</authors>
+    <version>7.1.1</version>
+    <title>sensenet Lucene29 library</title>
+    <authors>kavics,tusmester</authors>
     <owners>Sense/Net</owners>
     <licenseUrl>https://github.com/SenseNet/sensenet/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/SenseNet/sn-search-lucene29</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/SenseNet/sn-resources/master/images/sn-icon/sensenet-icon-64.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Lucene29 library for the sensenet ECM platform containing the core indexing layer that works with Lucene index files directly.</description>
+    <description>Lucene29 library for the sensenet platform containing the core indexing layer that works with Lucene index files directly.</description>
     <releaseNotes>See release notes on GitHub.</releaseNotes>
     <copyright>Copyright © Sense/Net Inc.</copyright>
     <tags>sensenet ecm ecms indexing lucene</tags>
     <dependencies>
-      <dependency id="SenseNet.Search" version="1.0.0" />
+      <dependency id="SenseNet.Search" version="1.1.0" />
       <dependency id="SenseNet.Tools" version="2.1.1" />
     </dependencies>
   </metadata>

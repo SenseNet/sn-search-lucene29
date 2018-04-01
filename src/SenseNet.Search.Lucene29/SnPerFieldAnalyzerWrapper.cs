@@ -6,7 +6,7 @@ using SenseNet.Search.Indexing;
 namespace SenseNet.Search.Lucene29
 {
     /// <summary>
-    /// sensenet ECM specific Lucene analyzer, equivalent of Lucene's PerFieldAnalyzerWrapper.
+    /// sensenet specific Lucene analyzer, equivalent of Lucene's PerFieldAnalyzerWrapper.
     /// </summary>
     public class SnPerFieldAnalyzerWrapper : Analyzer
     {

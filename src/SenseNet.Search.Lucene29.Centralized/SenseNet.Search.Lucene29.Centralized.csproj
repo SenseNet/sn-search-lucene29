@@ -151,6 +151,7 @@
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="SenseNet.Search.Lucene29.Centralized.nuspec" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SenseNet.Search.Lucene29.Centralized.Common\SenseNet.Search.Lucene29.Centralized.Common.csproj">
