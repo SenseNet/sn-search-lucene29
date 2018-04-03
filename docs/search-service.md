@@ -4,7 +4,7 @@ title: "Lucene Search Service"
 source_url: 'https://github.com/SenseNet/sn-search-lucene29/blob/master/docs/search-service.md'
 category: Guides
 version: v7.0
-tags: [lucene, index, indexing, search, query, service, sn7]
+tags: [lucene, index, search, query, service]
 description: The Lucene search engine needs a physical file storage for its index files. In a cloud environment it is not possible to store these index files inside the web folder. This is why we created a central search service, separate from the web applications.
 
 ---
@@ -152,4 +152,4 @@ If you need to see what is happening inside the service in real time, you can sw
 The result will be a folder called *DetailedLog* in the local App_Data folder containing trace lines.
 
 ### Security activities
-The *sensenet/security* section may contain the same configuration values as on the web server: *SecuritActivityTimeoutInSeconds*, *SecuritActivityLifetimeInMinutes*, *SecurityDatabaseCommandTimeoutInSeconds*, *SecurityMonitorPeriodInSeconds* are all configurable - although the default values should be fine.
+The *sensenet/security* section may contain the same configuration values as on the web server: *SecurityActivityTimeoutInSeconds*, *SecurityActivityLifetimeInMinutes*, *SecurityDatabaseCommandTimeoutInSeconds*, *SecurityMonitorPeriodInSeconds* are all configurable - although the default values should be fine.

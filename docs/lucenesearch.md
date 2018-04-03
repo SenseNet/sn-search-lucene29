@@ -19,7 +19,9 @@ This is the default behavior of the Lucene search engine: index files are stored
 This solution fits on-premise sensenet installations perfectly as **query operations can be performed in-proc** inside the web application without external service requests, meaning super-fast.
 
 ## Centralized search engine
-> Coming soon.
+A new approach that eliminates local indexes: there is a single Search Service (a WCF service hosted in a Windows Service on a virtual machine) accessible from all web servers. all query and indexing operations are performed against this search service. The architecture makes indexing truly scalable as web server execute indexing activities only once and they can even help out each other under heavy load. For details, please check out the following article:
+
+- [Search service](search-service.md)
 
 ## Configuration
 There are several aspects of the Lucene search engine that you can configure in the web.config (or any other .Net configuration file where you use the engine).
