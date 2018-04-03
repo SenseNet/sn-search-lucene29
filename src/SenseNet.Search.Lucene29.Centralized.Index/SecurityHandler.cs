@@ -28,8 +28,8 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
                 VisitorUserId = Identifiers.VisitorUserId,
                 EveryoneGroupId = Identifiers.EveryoneGroupId,
                 OwnerGroupId = Identifiers.OwnersGroupId,
-                SecuritActivityTimeoutInSeconds = Configuration.Security.SecuritActivityTimeoutInSeconds,
-                SecuritActivityLifetimeInMinutes = Configuration.Security.SecuritActivityLifetimeInMinutes,
+                SecuritActivityTimeoutInSeconds = Configuration.Security.SecurityActivityTimeoutInSeconds,
+                SecuritActivityLifetimeInMinutes = Configuration.Security.SecurityActivityLifetimeInMinutes,
                 CommunicationMonitorRunningPeriodInSeconds = Configuration.Security.SecurityMonitorRunningPeriodInSeconds
             });
 
