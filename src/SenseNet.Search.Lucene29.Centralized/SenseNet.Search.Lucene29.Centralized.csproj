@@ -4,14 +4,13 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{EF7844BE-E78F-43CE-9CB0-364117228DD7}</ProjectGuid>
+    <ProjectGuid>{48A8AA39-10E9-4706-9681-99B421E89FED}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SenseNet.Search.Lucene29.Local</RootNamespace>
-    <AssemblyName>SenseNet.Search.Lucene29.Local</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <RootNamespace>SenseNet.Search.Lucene29.Centralized</RootNamespace>
+    <AssemblyName>SenseNet.Search.Lucene29.Centralized</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,8 +20,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>
-    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,7 +28,6 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\SenseNet.Search.Lucene29.Local.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
@@ -49,7 +45,7 @@
     <Reference Include="itextsharp, Version=4.1.6.0, Culture=neutral, PublicKeyToken=8354ae6d2174ddca">
       <HintPath>..\packages\SenseNet.Services.7.1.1\lib\net451\itextsharp.dll</HintPath>
     </Reference>
-    <Reference Include="Lucene.Net, Version=2.9.4.2, Culture=neutral, PublicKeyToken=85089178b9ac3181, processorArchitecture=MSIL">
+    <Reference Include="Lucene.Net">
       <HintPath>..\References\Lucene.Net.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Exchange.WebServices, Version=14.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -136,6 +132,8 @@
     <Reference Include="System.IdentityModel.Tokens.Jwt, Version=5.1.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\System.IdentityModel.Tokens.Jwt.5.1.3\lib\net451\System.IdentityModel.Tokens.Jwt.dll</HintPath>
     </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -144,15 +142,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Lucene29LocalIndexingEngine.cs" />
-    <Compile Include="Lucene29LocalQueryEngine.cs" />
+    <Compile Include="Lucene29CentralizedIndexingEngine.cs" />
+    <Compile Include="Lucene29CentralizedQueryEngine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SearchServiceClient.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-    <None Include="SenseNet.Search.Lucene29.Local.nuspec" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="SenseNet.Search.Lucene29.Centralized.nuspec" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\SenseNet.Search.Lucene29.Centralized.Common\SenseNet.Search.Lucene29.Centralized.Common.csproj">
+      <Project>{0352738e-fda0-4adf-934b-4f9ea7922152}</Project>
+      <Name>SenseNet.Search.Lucene29.Centralized.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SenseNet.Search.Lucene29\SenseNet.Search.Lucene29.csproj">
       <Project>{9e776eda-681a-4330-8632-9ed0b67ed5a6}</Project>
       <Name>SenseNet.Search.Lucene29</Name>

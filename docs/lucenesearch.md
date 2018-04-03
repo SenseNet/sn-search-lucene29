@@ -5,11 +5,11 @@ source_url: 'https://github.com/SenseNet/sn-search-lucene29/blob/master/docs/luc
 category: Guides
 version: v7.0
 tags: [lucene, index, indexing, search, query, sn7]
-description: sensenet ECM uses the Lucene search engine for indexing and querying content stored in the repository. Every content is indexed, even certain binaries like office documents. The fast search engine and simple query syntax helps you find anything easily.
+description: sensenet uses the Lucene search engine for indexing and querying content stored in the repository. Every content is indexed, even certain binaries like office documents. The fast search engine and simple query syntax helps you find anything easily.
 
 ---
 
-This article is about the specifics of the Lucene search engine component of sensenet ECM. For general concepts and details about indexing please check out the [Field indexing](https://community.sensenet.com/docs/field-indexing/) article.
+This article is about the specifics of the Lucene search engine component of sensenet. For general concepts and details about indexing please check out the [Field indexing](https://community.sensenet.com/docs/field-indexing/) article.
 
 ## Local search engine
 This is the default behavior of the Lucene search engine: index files are stored locally in the web folder and **every web folder has its own index**. When an indexing event occurs (e.g. a new document is uploaded) the engine performs the operation locally and *notifies all other web servers* through the messaging module to do the same.
@@ -19,7 +19,9 @@ This is the default behavior of the Lucene search engine: index files are stored
 This solution fits on-premise sensenet installations perfectly as **query operations can be performed in-proc** inside the web application without external service requests, meaning super-fast.
 
 ## Centralized search engine
-> Coming soon.
+A new approach that eliminates local indexes: there is a single Search Service (a WCF service hosted in a Windows Service on a virtual machine) accessible from all web servers. all query and indexing operations are performed against this search service. The architecture makes indexing truly scalable as web server execute indexing activities only once and they can even help out each other under heavy load. For details, please check out the following article:
+
+- [Search service](search-service.md)
 
 ## Configuration
 There are several aspects of the Lucene search engine that you can configure in the web.config (or any other .Net configuration file where you use the engine).
@@ -41,21 +43,25 @@ Defines the growing number of search results loaded in one batch when executing 
 </lucene29>
 ```
 
-####  Lucene29IndexingEngineClassName
+####  IndexingEngine
 Full class name of the Lucene indexing engine implementation, responsible for writing document data to the index.
+
+Default: local indexing engine.
 
 ```xml
 <lucene29>
-   <add key="Lucene29IndexingEngineClassName" value="SenseNet.Search.Lucene29.Lucene29LocalIndexingEngine" />
+   <add key="IndexingEngine" value="SenseNet.Search.Lucene29.Lucene29LocalIndexingEngine" />
 </lucene29>
 ```
 
-#### Lucene29QueryEngineClassName
+#### QueryEngine
 Full class name of the Lucene query engine implementation, responsible for retrieving query results.
+
+Default: local query engine.
 
 ```xml
 <lucene29>
-   <add key="Lucene29QueryEngineClassName" value="SenseNet.Search.Lucene29.Lucene29LocalQueryEngine" />
+   <add key="QueryEngine" value="SenseNet.Search.Lucene29.Lucene29LocalQueryEngine" />
 </lucene29>
 ```
 

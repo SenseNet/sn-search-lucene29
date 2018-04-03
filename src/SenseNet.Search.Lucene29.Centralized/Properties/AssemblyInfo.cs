@@ -1,7 +1,15 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("SenseNet.Search.Lucene29.Tests")]
+[assembly: InternalsVisibleTo("SenseNet.Search.Lucene29.Tests")]
+
+#if DEBUG
+[assembly: AssemblyTitle("SenseNet.Search.Lucene29.Centralized (Debug)")]
+#else
+[assembly: AssemblyTitle("SenseNet.Search.Lucene29.Centralized (Release)")]
+#endif
+
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Sense/Net Inc.")]
@@ -9,9 +17,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyProduct("sensenet")]
 [assembly: AssemblyTrademark("Sense/Net Inc.")]
 [assembly: AssemblyCulture("")]
-
-[assembly: ComVisible(false)]
-[assembly: Guid("948ce434-4b01-4b5e-8e01-e7661891d159")]
-
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyInformationalVersion("1.0.0")]
+
+[assembly: ComVisible(false)]
+[assembly: Guid("48a8aa39-10e9-4706-9681-99b421e89fed")]
