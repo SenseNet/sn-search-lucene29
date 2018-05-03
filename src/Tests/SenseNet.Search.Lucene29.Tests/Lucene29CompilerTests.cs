@@ -101,15 +101,15 @@ namespace SenseNet.Search.Lucene29.Tests
             q = Test("Name:<=aaa"); Assert.IsInstanceOfType(q, typeof(TermRangeQuery));
             q = Test("Name:>=aaa"); Assert.IsInstanceOfType(q, typeof(TermRangeQuery));
 
-            //CheckNumericRange(Test("Id:<1000"), typeof(int));
-            //CheckNumericRange(Test("Id:>1000"), typeof(int));
-            //CheckNumericRange(Test("Id:<=1000"), typeof(int));
-            //CheckNumericRange(Test("Id:>=1000"), typeof(int));
+            CheckNumericRange(Test("Id:<1000"), typeof(int));
+            CheckNumericRange(Test("Id:>1000"), typeof(int));
+            CheckNumericRange(Test("Id:<=1000"), typeof(int));
+            CheckNumericRange(Test("Id:>=1000"), typeof(int));
 
-            //CheckNumericRange(Test("LongField1:<1000000"), typeof(long));
-            //CheckNumericRange(Test("LongField1:>1000000"), typeof(long));
-            //CheckNumericRange(Test("LongField1:<=1000000"), typeof(long));
-            //CheckNumericRange(Test("LongField1:>=1000000"), typeof(long));
+            CheckNumericRange(Test("LongField1:<1000000"), typeof(long));
+            CheckNumericRange(Test("LongField1:>1000000"), typeof(long));
+            CheckNumericRange(Test("LongField1:<=1000000"), typeof(long));
+            CheckNumericRange(Test("LongField1:>=1000000"), typeof(long));
 
             var value = 3.14.ToString(CultureInfo.InvariantCulture);
             CheckNumericRange(Test($"SingleField1:<{value}"), typeof(float));
