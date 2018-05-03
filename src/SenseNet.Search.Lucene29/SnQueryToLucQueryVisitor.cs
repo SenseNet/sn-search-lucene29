@@ -153,13 +153,13 @@ namespace SenseNet.Search.Lucene29
                     query = NumericRangeQuery.NewIntRange(fieldName, min?.IntegerValue, max?.IntegerValue, minIncl, maxIncl);
                     break;
                 case IndexValueType.Long:
-                    query = NumericRangeQuery.NewIntRange(fieldName, min?.LongValue, max?.LongValue, minIncl, maxIncl);
+                    query = NumericRangeQuery.NewLongRange(fieldName, min?.LongValue, max?.LongValue, minIncl, maxIncl);
                     break;
                 case IndexValueType.Float:
-                    query = NumericRangeQuery.NewIntRange(fieldName, min?.SingleValue, max?.SingleValue, minIncl, maxIncl);
+                    query = NumericRangeQuery.NewFloatRange(fieldName, min?.SingleValue ?? float.MinValue, max?.SingleValue ?? float.MaxValue, minIncl, maxIncl);
                     break;
                 case IndexValueType.Double:
-                    query = NumericRangeQuery.NewIntRange(fieldName, min?.DoubleValue, max?.DoubleValue, minIncl, maxIncl);
+                    query = NumericRangeQuery.NewDoubleRange(fieldName, min?.DoubleValue ?? double.MinValue, max?.DoubleValue ?? double.MaxValue, minIncl, maxIncl);
                     break;
                 default:
                     throw new CompilerException("Cannot create range query from this type");

@@ -199,6 +199,36 @@ namespace SenseNet.Search.Lucene29.Tests
             Assert.AreEqual(nodeId, queryResultAfter.Identifiers.FirstOrDefault());
         }
 
+        [TestMethod, TestCategory("IR, L29")]
+        public void L29_SaveAndQuery_ModificationDate()
+        {
+            L29Test(console =>
+            {
+                var indexPopulator = SearchManager.GetIndexPopulator();
+
+                var root = Repository.Root;
+                indexPopulator.RebuildIndex(root, false, IndexRebuildLevel.DatabaseAndIndex);
+                var admin = User.Administrator;
+                indexPopulator.RebuildIndex(admin, false, IndexRebuildLevel.DatabaseAndIndex);
+
+                var nodeName = "L29_SaveAndQuery_ModificationDate";
+
+                var node = new SystemFolder(root) {Name = nodeName};
+                using (new SystemAccount())
+                    node.Save();
+
+                var date = node.ModificationDate.AddMinutes(-1.5);
+                var value = date.ToString("yyyy-MM-dd HH:mm:ss");
+                var query = $"+Name:'{nodeName}' +ModificationDate:>'{value}' .TOP:5";
+
+                var queryResult = CreateSafeContentQuery(query).Execute();
+
+                Assert.IsTrue(1 <= queryResult.Count);
+
+                return true;
+            });
+        }
+
         //[TestMethod, TestCategory("IR, L29")]
         //public void L29_StartUpFail()
         //{
