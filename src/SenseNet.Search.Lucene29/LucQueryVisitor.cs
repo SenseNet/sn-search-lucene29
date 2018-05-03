@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using Lucene.Net.Search;
@@ -400,11 +401,35 @@ namespace SenseNet.Search.Lucene29
 
             return base.VisitTermRangeQuery(termRangeq);
         }
+        [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
         public override Query VisitNumericRangeQuery(NumericRangeQuery numericRangeq)
         {
             var field = numericRangeq.GetField();
+
             var min = numericRangeq.GetMin();
+            if (min is float floatMinValue)
+            {
+                if (floatMinValue == float.MinValue)
+                    min = null;
+            }
+            else if (min is double dblMinValue)
+            {
+                if (dblMinValue == double.MinValue)
+                    min = null;
+            }
+
             var max = numericRangeq.GetMax();
+            if (max is float floatMaxValue)
+            {
+                if (floatMaxValue == float.MaxValue)
+                    max = null;
+            }
+            else if (max is double dblMaxValue)
+            {
+                if (dblMaxValue == double.MaxValue)
+                    max = null;
+            }
+
             var includesMin = numericRangeq.IncludesMin();
             var includesMax = numericRangeq.IncludesMax();
             ValueType oneValue = null;

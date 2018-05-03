@@ -122,6 +122,13 @@ namespace SenseNet.Search.Lucene29.Tests
             CheckNumericRange(Test($"DoubleField1:>{value}"), typeof(double));
             CheckNumericRange(Test($"DoubleField1:<={value}"), typeof(double));
             CheckNumericRange(Test($"DoubleField1:>={value}"), typeof(double));
+
+            value = "2016-01-01 10:10:00";
+            var ticks = DateTime.Parse(value).Ticks;
+            CheckNumericRange(Test($"DateTimeField1:<'{value}'", $"DateTimeField1:<{ticks}"), typeof(long));
+            CheckNumericRange(Test($"DateTimeField1:>'{value}'", $"DateTimeField1:>{ticks}"), typeof(long));
+            CheckNumericRange(Test($"DateTimeField1:<='{value}'", $"DateTimeField1:<={ticks}"), typeof(long));
+            CheckNumericRange(Test($"DateTimeField1:>='{value}'", $"DateTimeField1:>={ticks}"), typeof(long));
         }
 
         public Query Test(string queryText, string expected = null)
@@ -152,6 +159,7 @@ namespace SenseNet.Search.Lucene29.Tests
                 {"LongField1", new TestPerfieldIndexingInfoLong()},
                 {"SingleField1", new TestPerfieldIndexingInfoSingle()},
                 {"DoubleField1", new TestPerfieldIndexingInfoDouble()},
+                {"DateTimeField1", new TestPerfieldIndexingInfoDateTime()},
             };
 
             //using (new ContentRepository.Tests.Tools.RepositorySupportSwindler(new TestSearchEngineSupport(indexingInfo)))
