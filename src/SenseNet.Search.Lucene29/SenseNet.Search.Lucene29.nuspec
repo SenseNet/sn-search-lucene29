@@ -18,10 +18,10 @@
       <dependency id="SenseNet.Search" version="1.1.0" />
       <dependency id="SenseNet.Tools" version="2.1.1" />
       <dependency id="SenseNet.Security" version="2.3.1" />
+      <dependency id="SenseNet.Search.Lucene29.Lucene.Net" version="2.9.4" />
     </dependencies>
   </metadata>
   <files>
     <file src="bin\Release\SenseNet.Search.Lucene29.*" target="lib\net451" />
-    <file src="bin\Release\Lucene.Net.*" target="lib\net451" />
   </files>
 </package>
