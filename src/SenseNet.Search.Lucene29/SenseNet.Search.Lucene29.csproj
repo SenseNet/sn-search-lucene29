@@ -1,108 +1,34 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9E776EDA-681A-4330-8632-9ED0B67ED5A6}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SenseNet.Search.Lucene29</RootNamespace>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>SenseNet.Search.Lucene29</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <RootNamespace>SenseNet.Search.Lucene29</RootNamespace>
+    <AssemblyVersion>7.1.2</AssemblyVersion>
+    <FileVersion>7.1.2</FileVersion>
+    <Version>7.1.2</Version>
+    <Company>Sense/Net Inc.</Company>
+    <Description>Lucene29 library for the sensenet platform containing the core indexing layer that works with Lucene index files directly.</Description>
+    <Copyright>Copyright © Sense/Net Inc.</Copyright>
+    <PackageId>SenseNet.Search.Lucene29</PackageId>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/SenseNet/sn-search-lucene29</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/SenseNet/sn-search-lucene29/blob/master/LICENSE</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/SenseNet/sn-search-lucene29.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReleaseNotes>See release notes on GitHub.</PackageReleaseNotes>
+    <PackageTags>sensenet search indexing lucene</PackageTags>
+    <PackageIconUrl>https://raw.githubusercontent.com/SenseNet/sn-resources/master/images/sn-icon/sensenet-icon-64.png</PackageIconUrl>
+    <Authors>kavics,tusmester</Authors>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>
-    </DocumentationFile>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="Lucene.Net, Version=2.9.4.301, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SenseNet.Search.Lucene29.Lucene.Net.2.9.4.301\lib\netstandard2.0\Lucene.Net.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="SenseNet.Search, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SenseNet.Search.1.1.0\lib\net451\SenseNet.Search.dll</HintPath>
-    </Reference>
-    <Reference Include="SenseNet.Security, Version=2.3.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SenseNet.Security.2.3.1\lib\net45\SenseNet.Security.dll</HintPath>
-    </Reference>
-    <Reference Include="SenseNet.Tools, Version=2.1.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SenseNet.Tools.2.1.1\lib\net451\SenseNet.Tools.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.configuration" />
-    <Reference Include="System.Configuration.ConfigurationManager, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Configuration.ConfigurationManager.4.5.0\lib\net461\System.Configuration.ConfigurationManager.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data.OracleClient" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Net" />
-    <Reference Include="System.Security.AccessControl, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Security.AccessControl.4.5.0\lib\net461\System.Security.AccessControl.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Security.Permissions, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Security.Permissions.4.5.0\lib\net461\System.Security.Permissions.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Security.Principal.Windows, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Security.Principal.Windows.4.5.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
-    </Reference>
-    <Reference Include="System.ServiceProcess" />
-    <Reference Include="System.Transactions" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="SenseNet.Tools" Version="3.0.0" />
+    <PackageReference Include="SenseNet.Security" Version="2.5.0" />
+    <PackageReference Include="SenseNet.Search" Version="2.0" />
+    <PackageReference Include="SenseNet.Search.Lucene29.Lucene.Net" Version="2.9.4.301" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Configuration\Lucene29.cs" />
-    <Compile Include="DumpVisitor.cs" />
-    <Compile Include="EnumConverter.cs" />
-    <Compile Include="FieldNameVisitor.cs" />
-    <Compile Include="ILuceneIndexingEngine.cs" />
-    <Compile Include="IndexDirectory.cs" />
-    <Compile Include="IndexingInfo.cs" />
-    <Compile Include="IndexReaderFrame.cs" />
-    <Compile Include="IndexWriterFrame.cs" />
-    <Compile Include="LuceneSearchManager.cs" />
-    <Compile Include="LucObject.cs" />
-    <Compile Include="LucQuery.cs" />
-    <Compile Include="LucQueryVisitor.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QueryExecutors\IQueryExecutor.cs" />
-    <Compile Include="QueryExecutors\LuceneQueryExecutor.cs" />
-    <Compile Include="QueryExecutors\QueryExecutor20131012.cs" />
-    <Compile Include="QueryExecutors\QueryExecutor20131012CountOnly.cs" />
-    <Compile Include="SnCollector.cs" />
-    <Compile Include="SnPerFieldAnalyzerWrapper.cs" />
-    <Compile Include="SnQueryToLucQueryVisitor.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="SenseNet.Search.Lucene29.nuspec" />
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
 </Project>
