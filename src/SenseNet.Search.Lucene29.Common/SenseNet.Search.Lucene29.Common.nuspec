@@ -16,7 +16,7 @@
     <tags>sensenet ecm ecms indexing lucene</tags>
     <dependencies>
       <dependency id="SenseNet.Search" version="2.0.0" />
-      <dependency id="SenseNet.Services" version="7.1.1" />
+      <dependency id="SenseNet.Services" version="7.2.0" />
       <dependency id="SenseNet.Search.Lucene29" version="7.2" />
       <dependency id="SenseNet.Security" version="3.0.0" />
     </dependencies>
