@@ -5,7 +5,6 @@ using System.Linq;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
 using SenseNet.Configuration;
-using SenseNet.ContentRepository;
 using SenseNet.ContentRepository.Search;
 using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.Search.Indexing;
@@ -178,9 +177,6 @@ namespace SenseNet.Search.Lucene29
 
         private static void StartMessaging()
         {
-            // we have to start the message cluster here
-            var dummy = DistributedApplication.Cache.Count;
-            var dummy2 = DistributedApplication.ClusterChannel;
         }
     }
 }
