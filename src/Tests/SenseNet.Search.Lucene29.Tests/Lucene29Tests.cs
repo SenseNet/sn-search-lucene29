@@ -489,6 +489,101 @@ namespace SenseNet.Search.Lucene29.Tests
             Assert.AreEqual(null, diffs[0].Path);
         }
 
+        [TestMethod, TestCategory("IR, L29")]
+        public void L29_Query_MustAndShould()
+        {
+            L29Test(console =>
+            {
+                var indexPopulator = SearchManager.GetIndexPopulator();
+
+                var root = Repository.Root;
+                indexPopulator.RebuildIndex(root, false, IndexRebuildLevel.DatabaseAndIndex);
+                var admin = User.Administrator;
+                indexPopulator.RebuildIndex(admin, false, IndexRebuildLevel.DatabaseAndIndex);
+
+                var nameBase = "L29_Query_MustAndShould_";
+                for (var i = 0; i < 4; i++)
+                {
+                    var node = new SystemFolder(root) { Name = $"{nameBase}{i}", Description = $"D{i}", Index = 10000 + i };
+                    using (new SystemAccount())
+                        node.Save();
+                }
+
+                var query = $"+Name:'{nameBase}0' Index:1";
+                var queryResult = CreateSafeContentQuery(query).Execute();
+                var actual = string.Join(", ", queryResult.Nodes.Select(x => (x.Index - 10000).ToString()).OrderBy(x => x));
+                Assert.AreEqual("0", actual);
+
+                query = $"+Name:'{nameBase}0' Index:1 Index:2";
+                queryResult = CreateSafeContentQuery(query).Execute();
+                actual = string.Join(", ", queryResult.Nodes.Select(x => (x.Index - 10000).ToString()).OrderBy(x => x));
+                Assert.AreEqual("0", actual);
+
+                query = $"Name:'{nameBase}0' Index:10001 Index:10002";
+                queryResult = CreateSafeContentQuery(query).Execute();
+                actual = string.Join(", ", queryResult.Nodes.Select(x => (x.Index-10000).ToString()).OrderBy(x => x));
+                Assert.AreEqual("0, 1, 2", actual);
+
+                return true;
+            });
+        }
+
+        [TestMethod, TestCategory("IR, L29")]
+        public void L29_Query_MustShouldNot_Fulltext()
+        {
+            L29Test(console =>
+            {
+                var indexPopulator = SearchManager.GetIndexPopulator();
+
+                var root = Repository.Root;
+                indexPopulator.RebuildIndex(root, false, IndexRebuildLevel.DatabaseAndIndex);
+                var admin = User.Administrator;
+                indexPopulator.RebuildIndex(admin, false, IndexRebuildLevel.DatabaseAndIndex);
+
+                var nameBase = "L29_Query_MustAndShould_Fulltext_";
+                var descriptions = new[]
+                {
+                    "lucene",               // 0
+                    "dotnet",               // 1
+                    "jakarta",              // 2
+                    "lucene jakarta",       // 3
+                    "lucene dotnet",        // 4
+                    "dotnet jakarta",       // 5
+                    "lucene dotnet jakarta" // 6
+                };
+                var i = 0;
+                foreach(var description in descriptions)
+                {
+                    var node = new SystemFolder(root) { Name = $"{nameBase}{i++}", Description = description };
+                    using (new SystemAccount())
+                        node.Save();
+                }
+
+                string GetResult(string query)
+                {
+                    var queryResult = CreateSafeContentQuery(query).Execute();
+                    return string.Join(", ", queryResult.Nodes.Select(x => x.Name.Last().ToString()).OrderBy(x => x));
+                }
+
+                Assert.AreEqual("0, 3, 4, 6", GetResult("+lucene"));
+                Assert.AreEqual("0, 3, 4, 6", GetResult("+lucene jakarta"));
+                Assert.AreEqual("0, 3, 4, 6", GetResult("+lucene dotnet jakarta"));
+                Assert.AreEqual("0, 1, 2, 3, 4, 5, 6", GetResult("lucene dotnet jakarta"));
+
+                Assert.AreEqual("0, 3, 4, 6", GetResult("+lucene"));
+                Assert.AreEqual("0, 4", GetResult("+lucene -jakarta"));
+                Assert.AreEqual("0", GetResult("lucene -dotnet -jakarta"));
+
+                Assert.AreEqual("4, 6", GetResult("+lucene +dotnet"));
+                Assert.AreEqual("4", GetResult("+lucene +dotnet -jakarta"));
+
+                Assert.AreEqual("0, 1, 3, 4, 5, 6", GetResult("lucene dotnet"));
+                Assert.AreEqual("0, 1, 4", GetResult("lucene dotnet -jakarta"));
+
+                return true;
+            });
+        }
+
         /* ======================================================================================= */
 
         protected T L29Test<T>(Func<string, T> callback, [CallerMemberName]string memberName = "")
