@@ -509,19 +509,19 @@ namespace SenseNet.Search.Lucene29.Tests
                         node.Save();
                 }
 
-                var query = $"+Name:'{nameBase}0' Index:1";
+                var query = $"+Name:'{nameBase}0' Index:10001";
                 var queryResult = CreateSafeContentQuery(query).Execute();
                 var actual = string.Join(", ", queryResult.Nodes.Select(x => (x.Index - 10000).ToString()).OrderBy(x => x));
                 Assert.AreEqual("0", actual);
 
-                query = $"+Name:'{nameBase}0' Index:1 Index:2";
+                query = $"+Name:'{nameBase}0' Index:10001 Index:10002";
                 queryResult = CreateSafeContentQuery(query).Execute();
                 actual = string.Join(", ", queryResult.Nodes.Select(x => (x.Index - 10000).ToString()).OrderBy(x => x));
                 Assert.AreEqual("0", actual);
 
                 query = $"Name:'{nameBase}0' Index:10001 Index:10002";
                 queryResult = CreateSafeContentQuery(query).Execute();
-                actual = string.Join(", ", queryResult.Nodes.Select(x => (x.Index-10000).ToString()).OrderBy(x => x));
+                actual = string.Join(", ", queryResult.Nodes.Select(x => (x.Index - 10000).ToString()).OrderBy(x => x));
                 Assert.AreEqual("0, 1, 2", actual);
 
                 return true;
@@ -582,6 +582,211 @@ namespace SenseNet.Search.Lucene29.Tests
 
                 return true;
             });
+        }
+
+        [TestMethod, TestCategory("IR, L29")]
+        public void L29_Query_Specialities()
+        {
+            L29Test(console =>
+            {
+                #region infrastructure
+                var indexPopulator = SearchManager.GetIndexPopulator();
+
+                var root = Repository.Root;
+                indexPopulator.RebuildIndex(root, false, IndexRebuildLevel.DatabaseAndIndex);
+                var admin = User.Administrator;
+                indexPopulator.RebuildIndex(admin, false, IndexRebuildLevel.DatabaseAndIndex);
+
+                var nameBase = "L29_Query_Specialities_";
+                var data = new[]
+                {
+                    new {id = 0, desc = "a0 b0 c0 d0" },
+                    new {id = 1, desc = "a0 b0 c0 d1" },
+                    new {id = 2, desc = "a0 b0 c1 d0" },
+                    new {id = 3, desc = "a0 b0 c1 d1" },
+                    new {id = 4, desc = "a0 b1 c0 d0" },
+                    new {id = 5, desc = "a0 b1 c0 d1" },
+                    new {id = 6, desc = "a0 b1 c1 d0" },
+                    new {id = 7, desc = "a0 b1 c1 d1" },
+                    new {id = 8, desc = "a1 b0 c0 d0" },
+                    new {id = 9, desc = "a1 b0 c0 d1" },
+                    new {id =10, desc = "a1 b0 c1 d0" },
+                    new {id =11, desc = "a1 b0 c1 d1" },
+                    new {id =12, desc = "a1 b1 c0 d0" },
+                    new {id =13, desc = "a1 b1 c0 d1" },
+                    new {id =14, desc = "a1 b1 c1 d0" },
+                    new {id =15, desc = "a1 b1 c1 d1" },
+                };
+
+                using (new SystemAccount())
+                    for (var i = 0; i < data.Length; i++)
+                    {
+                        //GetData(data[i].desc, out var recordData, out var combinationData);
+                        var content = Content.CreateNew("SystemFolder", root, $"{nameBase}{i}");
+                        content["Description"] = data[i].desc;
+                        //content["ExtensionData"] = combinationData;
+                        content.Index = data[i].id;
+                        content.Save();
+                    }
+
+                string GetResult(string query)
+                {
+                    var queryResult = CreateSafeContentQuery(query).Execute();
+                    return string.Join(", ",
+                        queryResult.Nodes.Select(x => x.Index).OrderBy(x => x).Select(x => x.ToString()));
+                }
+                #endregion
+
+                var d = "Description";
+                //var e = "ExtensionData";
+
+                // One SHOULD is MUST 
+                Assert.AreEqual("0, 1, 2, 3, 4, 5, 6, 7", GetResult($"+{d}:a0"));
+                Assert.AreEqual(GetResult($"+{d}:a0"), GetResult($"{d}:a0"));
+
+                // One SHOULD sub level is MUST
+                Assert.AreEqual("0, 1, 2, 3", GetResult($"+{d}:a0 +{d}:b0"));
+                Assert.AreEqual(GetResult($"+{d}:a0 +{d}:b0"), GetResult($"+{d}:a0 +({d}:b0)"));
+
+                // One SHOULD is MUST even if there are any MUST NOT
+                Assert.AreEqual(GetResult($"+{d}:a0 -{d}:b0"), GetResult($"{d}:a0 -{d}:b0")); // result: 4, 5, 6, 7
+                Assert.AreEqual(GetResult($"+{d}:a0 -{d}:b0 -{d}:c0"), GetResult($"{d}:a0 -{d}:b0 -{d}:c0")); // result: 6, 7
+
+                // SHOULD is irrelevant if there is MUST.
+                Assert.AreEqual(GetResult($"+{d}:a0"), GetResult($"+{d}:a0 {d}:b0 {d}:c0")); // result: 0, 1, 2, 3, 4, 5, 6, 7
+                Assert.AreEqual(GetResult($"+{d}:a0 +{d}:b0"), GetResult($"+{d}:a0 +{d}:b0 {d}:c0")); // result: 0, 1, 2, 3
+
+                // SHOULD sub level is irrelevant next to a MUST.
+                Assert.AreEqual(GetResult($"+{d}:a0 ( {d}:b0  {d}:c0)"), GetResult($"+{d}:a0"));
+                Assert.AreEqual(GetResult($"+{d}:a0 (+{d}:b0 +{d}:c0)"), GetResult($"+{d}:a0"));
+
+                // SHOULD is irrelevant if there is MUST even if there are any MUST NOT
+                Assert.AreEqual(GetResult($"+{d}:a0 -{d}:c0 -{d}:d0"), GetResult($"+{d}:a0 {d}:b0 -{d}:c0 -{d}:d0")); // result: 3, 7
+
+                // SHOULD and MUST terms in one level cannot be separated to sub level with parentheses
+                Assert.AreNotEqual(GetResult($"+{d}:a0 {d}:b0 {d}:c0"), GetResult($"+{d}:a0 +({d}:b0 {d}:c0)"));
+                Assert.AreEqual(GetResult($"+{d}:a0 {d}:b0 {d}:c0"), GetResult($"+{d}:a0"));
+
+                // One SHOULD sub level is MUST even if there are any MUST NOT
+                Assert.AreEqual(GetResult($"({d}:a0 {d}:b0) -{d}:c0"), GetResult($"+({d}:a0 {d}:b0) -{d}:c0")); // result: 2, 3, 6, 7, 10, 11
+
+
+                // MORE INTERESTING QUERIES
+                // +a +b -c
+                Assert.AreEqual("2, 3", GetResult($"+{d}:a0 +{d}:b0 -{d}:c0"));
+                // a b -c
+                Assert.AreEqual("2, 3, 6, 7, 10, 11", GetResult($" {d}:a0  {d}:b0 -{d}:c0"));
+                // +a +b -c -d
+                Assert.AreEqual("3", GetResult($"+{d}:a0 +{d}:b0 -{d}:c0 -{d}:d0"));
+                //  a  b -c -d
+                Assert.AreEqual("3, 7, 11", GetResult($" {d}:a0  {d}:b0 -{d}:c0 -{d}:d0"));
+
+                return true;
+            });
+        }
+
+        [TestMethod, TestCategory("IR, L29")]
+        public void L29_Query_Combinations()
+        {
+            L29Test(console =>
+            {
+                #region infrastructure
+
+                var indexPopulator = SearchManager.GetIndexPopulator();
+
+                var root = Repository.Root;
+                indexPopulator.RebuildIndex(root, false, IndexRebuildLevel.DatabaseAndIndex);
+                var admin = User.Administrator;
+                indexPopulator.RebuildIndex(admin, false, IndexRebuildLevel.DatabaseAndIndex);
+
+                var nameBase = "L29_Query_Combinations_";
+                var data = new[]
+                {
+                    new {id = 0, desc = "a0 b0 c0 d0"},
+                    new {id = 1, desc = "a0 b0 c0 d1"},
+                    new {id = 2, desc = "a0 b0 c1 d0"},
+                    new {id = 3, desc = "a0 b0 c1 d1"},
+                    new {id = 4, desc = "a0 b1 c0 d0"},
+                    new {id = 5, desc = "a0 b1 c0 d1"},
+                    new {id = 6, desc = "a0 b1 c1 d0"},
+                    new {id = 7, desc = "a0 b1 c1 d1"},
+                    new {id = 8, desc = "a1 b0 c0 d0"},
+                    new {id = 9, desc = "a1 b0 c0 d1"},
+                    new {id = 10, desc = "a1 b0 c1 d0"},
+                    new {id = 11, desc = "a1 b0 c1 d1"},
+                    new {id = 12, desc = "a1 b1 c0 d0"},
+                    new {id = 13, desc = "a1 b1 c0 d1"},
+                    new {id = 14, desc = "a1 b1 c1 d0"},
+                    new {id = 15, desc = "a1 b1 c1 d1"},
+                };
+
+                using (new SystemAccount())
+                    for (var i = 0; i < data.Length; i++)
+                    {
+                        GetCombinationData(data[i].desc, out var recordData, out var combinationData);
+                        var content = Content.CreateNew("SystemFolder", root, $"{nameBase}{i}");
+                        content["Description"] = recordData;
+                        content["ExtensionData"] = combinationData;
+                        content.Index = data[i].id;
+                        content.Save();
+                    }
+
+                string GetResult(string query)
+                {
+                    var queryResult = CreateSafeContentQuery(query).Execute();
+                    return string.Join(", ",
+                        queryResult.Nodes.Select(x => x.Index).OrderBy(x => x).Select(x => x.ToString()));
+                }
+
+                #endregion
+
+                var d = "Description";
+                var e = "ExtensionData";
+
+                // +a +b  -->  +ab
+                Assert.AreEqual(GetResult($"+{d}:a0 +{d}:b0"), GetResult($"+{e}:a0b0")); // result: 0, 1, 2, 3
+
+                // +a +b +c  -->  +abc
+                Assert.AreEqual(GetResult($"+{d}:a0 +{d}:b0 +{d}:c0"), GetResult($"+{e}:a0b0c0")); // result:  0, 1
+
+                // +a +(b c)  -->  ab ac
+                Assert.AreEqual(GetResult($"+{d}:a0 +({d}:b0 {d}:c0)"), GetResult($"{e}:a0b0 {e}:a0c0")); // result: 0, 1, 2, 3, 4, 5
+
+                // (+a +b) (+c +d)  -->  ab cd
+                Assert.AreEqual(GetResult($"(+{d}:a0 +{d}:b0) (+{d}:c0 +{d}:d0)"), GetResult($"{e}:a0b0 {e}:c0d0")); // result: 0, 1, 2, 3, 4, 8, 12
+
+                return true;
+            });
+        }
+        private void GetCombinationData(string inputRecord, out string recordData, out string combinationData)
+        {
+            var fields = inputRecord.Split(' ');
+            var records = new[]
+            {
+                fields,
+                new[] {"a0", "b9", "c9", "d9"},
+                new[] {"a9", "b0", "c9", "d9"},
+                new[] {"a9", "b9", "c0", "d9"},
+                new[] {"a9", "b9", "c9", "d0"},
+                new[] {"a1", "b9", "c9", "d9"},
+                new[] {"a9", "b1", "c9", "d9"},
+                new[] {"a9", "b9", "c1", "d9"},
+                new[] {"a9", "b9", "c9", "d1"},
+            };
+
+            var combinations = new string[records.Length];
+            for (var i = 0; i < records.Length; i++)
+            {
+                var record = records[i];
+                var a = record[0];
+                var b = record[1];
+                var c = record[2];
+                var d = record[3];
+                combinations[i] = $"{a} {b} {c} {d} {a}{b} {a}{c} {a}{d} {b}{c} {b}{d} {c}{d} {a}{b}{c} {a}{b}{d} {a}{c}{d} {b}{c}{d} {a}{b}{c}{d}";
+            }
+
+            recordData = inputRecord; // string.Join(" | ", records.Select(x => string.Join(" ", x)).ToArray());
+            combinationData = string.Join(" | ", combinations.Select(x => string.Join(" ", x)).ToArray());
         }
 
         /* ======================================================================================= */
