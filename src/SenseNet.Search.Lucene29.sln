@@ -3,23 +3,29 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenseNet.Search.Lucene29", "SenseNet.Search.Lucene29\SenseNet.Search.Lucene29.csproj", "{9E776EDA-681A-4330-8632-9ED0B67ED5A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SenseNet.Search.Lucene29", "SenseNet.Search.Lucene29\SenseNet.Search.Lucene29.csproj", "{9E776EDA-681A-4330-8632-9ED0B67ED5A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenseNet.Search.Lucene29.Common", "SenseNet.Search.Lucene29.Common\SenseNet.Search.Lucene29.Common.csproj", "{FF0B1AF9-753B-4660-8BD0-B84492321808}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SenseNet.Search.Lucene29.Common", "SenseNet.Search.Lucene29.Common\SenseNet.Search.Lucene29.Common.csproj", "{FF0B1AF9-753B-4660-8BD0-B84492321808}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenseNet.Search.Lucene29.Local", "SenseNet.Search.Lucene29.Local\SenseNet.Search.Lucene29.Local.csproj", "{EF7844BE-E78F-43CE-9CB0-364117228DD7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SenseNet.Search.Lucene29.Local", "SenseNet.Search.Lucene29.Local\SenseNet.Search.Lucene29.Local.csproj", "{EF7844BE-E78F-43CE-9CB0-364117228DD7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B4F558A3-EB20-4AF6-849C-6CF719C5F483}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenseNet.Search.Lucene29.Tests", "Tests\SenseNet.Search.Lucene29.Tests\SenseNet.Search.Lucene29.Tests.csproj", "{948CE434-4B01-4B5E-8E01-E7661891D159}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenseNet.Search.Lucene29.Centralized", "SenseNet.Search.Lucene29.Centralized\SenseNet.Search.Lucene29.Centralized.csproj", "{48A8AA39-10E9-4706-9681-99B421E89FED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SenseNet.Search.Lucene29.Centralized", "SenseNet.Search.Lucene29.Centralized\SenseNet.Search.Lucene29.Centralized.csproj", "{48A8AA39-10E9-4706-9681-99B421E89FED}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenseNet.Search.Lucene29.Centralized.Service", "SenseNet.Search.Lucene29.Centralized.Service\SenseNet.Search.Lucene29.Centralized.Service.csproj", "{730398D4-E856-48C9-8875-84902CC8D6F8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenseNet.Search.Lucene29.Centralized.Common", "SenseNet.Search.Lucene29.Centralized.Common\SenseNet.Search.Lucene29.Centralized.Common.csproj", "{0352738E-FDA0-4ADF-934B-4F9EA7922152}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SenseNet.Search.Lucene29.Centralized.Common", "SenseNet.Search.Lucene29.Centralized.Common\SenseNet.Search.Lucene29.Centralized.Common.csproj", "{0352738E-FDA0-4ADF-934B-4F9EA7922152}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenseNet.Search.Lucene29.Centralized.Index", "SenseNet.Search.Lucene29.Centralized.Index\SenseNet.Search.Lucene29.Centralized.Index.csproj", "{B408FF84-8D7E-4869-955B-A070623AB611}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution items", "{5C945C05-E3A8-4D91-BD42-8310CF1F9234}"
+	ProjectSection(SolutionItems) = preProject
+		..\tools\scripts\CreateNuGetPackages.ps1 = ..\tools\scripts\CreateNuGetPackages.ps1
+		nuget\content\Web.config.transform = nuget\content\Web.config.transform
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
