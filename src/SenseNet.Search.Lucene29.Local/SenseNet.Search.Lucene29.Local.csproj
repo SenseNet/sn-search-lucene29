@@ -55,9 +55,6 @@
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="OpenPop, Version=2.0.6.1120, Culture=neutral, PublicKeyToken=6bdb97f144b7efc8, processorArchitecture=MSIL">
-      <HintPath>..\packages\OpenPop.NET.2.0.6.1120\lib\net40\OpenPop.dll</HintPath>
-    </Reference>
     <Reference Include="SenseNet.BlobStorage, Version=7.3.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SenseNet.BlobStorage.7.3.3\lib\netstandard2.0\SenseNet.BlobStorage.dll</HintPath>
     </Reference>
