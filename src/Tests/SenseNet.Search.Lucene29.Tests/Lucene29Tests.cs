@@ -321,7 +321,8 @@ namespace SenseNet.Search.Lucene29.Tests
                 .UseSecurityDataProvider(securityDataProvider)
                 .UseCacheProvider(new EmptyCache())
                 .StartWorkflowEngine(false)
-                .UseTraceCategories("Test", "Event", "Repository", "System");
+                .UseTraceCategories("Test", "Event", "Repository", "System") 
+                as RepositoryBuilder;
 
             repoBuilder.Console = indxManConsole;
 
@@ -371,7 +372,8 @@ namespace SenseNet.Search.Lucene29.Tests
                 .UseSecurityDataProvider(GetSecurityDataProvider(dataProvider))
                 .UseCacheProvider(new EmptyCache())
                 .StartWorkflowEngine(false)
-                .UseTraceCategories("Test", "Event", "Repository", "System");
+                .UseTraceCategories("Test", "Event", "Repository", "System")
+                as RepositoryBuilder;
 
             repoBuilder.Console = indxManConsole;
 
@@ -820,7 +822,8 @@ namespace SenseNet.Search.Lucene29.Tests
                 .UseTraceCategories("ContentOperation", "Event", "Repository", "IndexQueue", "Index", "Query")
                 .DisableNodeObservers()
                 .EnableNodeObservers(typeof(SettingsCache))
-          .StartWorkflowEngine(false);
+                .StartWorkflowEngine(false)
+                as RepositoryBuilder;
 
             repoBuilder.Console = indxManConsole;
 

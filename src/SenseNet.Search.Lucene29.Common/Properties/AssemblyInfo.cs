@@ -6,22 +6,7 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("SenseNet.Search.Lucene29.Tests")]
 [assembly: InternalsVisibleTo("SenseNet.Search.IntegrationTests")]
 
-#if DEBUG
-[assembly: AssemblyTitle("SenseNet.Search.Lucene29.Common (Debug)")]
-#else
-[assembly: AssemblyTitle("SenseNet.Search.Lucene29.Common (Release)")]
-#endif
-
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Sense/Net Inc.")]
-[assembly: AssemblyCopyright("Copyright © Sense/Net Inc.")]
-[assembly: AssemblyProduct("sensenet")]
 [assembly: AssemblyTrademark("Sense/Net Inc.")]
-[assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("7.2.0.0")]
-[assembly: AssemblyFileVersion("7.2.0.0")]
-[assembly: AssemblyInformationalVersion("7.2.0")]
 
 [assembly: ComVisible(false)]
 [assembly: Guid("ff0b1af9-753b-4660-8bd0-b84492321808")]
