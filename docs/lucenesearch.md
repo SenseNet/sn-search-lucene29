@@ -24,6 +24,22 @@ A new approach that eliminates local indexes: there is a single Search Service (
 - [Search service](search-service.md)
 
 ## Configuration
+### Code configuration
+The easiest way to define the desired search engine is to set it when your application starts (usually this happens using the [RepositoryBuilder](/docs/build-repository) api). The following methods configure either the local or the centralized engine. For other optional configurations please take a look at the app config section below.
+
+Local engine:
+
+```csharp
+repositoryBuilder.UseLucene29LocalSearchEngine(indexDirectoryPath);
+```
+
+Centralized engine:
+
+```csharp
+repositoryBuilder.UseLucene29CentralizedSearchEngine();
+```
+
+### Application configuration
 There are several aspects of the Lucene search engine that you can configure in the web.config (or any other .Net configuration file where you use the engine).
 
 The following configuration entries can be found or added to the `sensenet/lucene29` section of the config file. If the `lucene29` config section is not defined, please add it to the config sections part:
