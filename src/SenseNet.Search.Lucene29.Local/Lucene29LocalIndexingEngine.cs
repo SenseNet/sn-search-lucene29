@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
 using SenseNet.Configuration;
@@ -73,12 +75,14 @@ namespace SenseNet.Search.Lucene29
         /// <summary>
         /// Starts the underlying Lucene search manager.
         /// </summary>
-        public void Start(TextWriter consoleOut)
+        public Task StartAsync(TextWriter consoleOut, CancellationToken cancellationToken)
         {
             LuceneSearchManager.Start(consoleOut);
 
             // execute a warmup query
             SnQuery.Query("+Id:1", SnQueryContext.CreateDefault());
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -92,36 +96,41 @@ namespace SenseNet.Search.Lucene29
         /// <summary>
         /// Stops the underlying Lucene search manager.
         /// </summary>
-        public void ShutDown()
+        public Task ShutDownAsync(CancellationToken cancellationToken)
         {
             //TODO: CommitState: maybe need to write the final state in the distributed environment.
             // IndexManager.GetCurrentIndexingActivityStatus()
             // WriteActivityStatusToIndex
             LuceneSearchManager.ShutDown();
+
+            return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-        public void ClearIndex()
+        public Task ClearIndexAsync(CancellationToken cancellationToken)
         {
             LuceneSearchManager.ClearIndex();
+            return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-        public IndexingActivityStatus ReadActivityStatusFromIndex()
+        public Task<IndexingActivityStatus> ReadActivityStatusFromIndexAsync(CancellationToken cancellationToken)
         {
-            return LuceneSearchManager.ReadActivityStatusFromIndex();
+            return Task.FromResult(LuceneSearchManager.ReadActivityStatusFromIndex());
         }
 
         /// <inheritdoc />
-        public void WriteActivityStatusToIndex(IndexingActivityStatus state)
+        public Task WriteActivityStatusToIndexAsync(IndexingActivityStatus state, CancellationToken cancellationToken)
         {
             LuceneSearchManager.WriteActivityStatusToIndex(state);
+            return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-        public void WriteIndex(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates, IEnumerable<IndexDocument> additions)
+        public Task WriteIndexAsync(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates, IEnumerable<IndexDocument> additions, CancellationToken cancellationToken)
         {
             LuceneSearchManager.WriteIndex(deletions, updates, additions);
+            return Task.CompletedTask;
         }
 
         //===================================================================================== IndexReader
