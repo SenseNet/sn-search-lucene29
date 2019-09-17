@@ -18,28 +18,9 @@ namespace SenseNet.Packaging.Steps
 
         public override void Execute(ExecutionContext context)
         {
-            context.AssertRepositoryStarted();
+            Logger.LogMessage("CheckIndexIntegrity step is not supported anymore.");
 
-            var path = Path;
-            if (!string.IsNullOrEmpty(path))
-                path = path.Trim();
-
-            Logger.LogMessage((Recursive ? "Recursive integrity check. Scope: " : "Integrity check on: ") + (path ?? "/Root"));
-
-            var diff = IntegrityChecker.Check(path, Recursive).ToArray();
-            Logger.LogMessage("Integrity check finished. Count of differences: " + diff.Length);
-
-            var outputLimit = OutputLimit == 0 ? int.MaxValue : OutputLimit;
-            var lines = 0;
-            foreach (var d in diff)
-            {
-                Logger.LogMessage("  " + d);
-                if (++lines >= outputLimit)
-                {
-                    Logger.LogMessage("...truncated...");
-                    break;
-                }
-            }
+            throw new SnNotSupportedException("CheckIndexIntegrity step is not supported anymore.");
         }
     }
 }

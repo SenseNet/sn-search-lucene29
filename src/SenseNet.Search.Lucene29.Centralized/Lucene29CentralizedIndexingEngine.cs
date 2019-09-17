@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.ServiceModel;
+using System.Threading;
+using System.Threading.Tasks;
 using Lucene.Net.Analysis;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
@@ -34,34 +36,39 @@ namespace SenseNet.Search.Lucene29
         public bool IndexIsCentralized => true;
         public LuceneSearchManager LuceneSearchManager => throw new NotImplementedException(); // this is not necessary in a centralized environment
 
-        public void Start(TextWriter consoleOut)
+        public Task StartAsync(TextWriter consoleOut, CancellationToken cancellationToken)
         {
             // warmup
             var unused = SearchServiceClient.Instance;
 
             _running = true;
+            return Task.CompletedTask;
         }
 
-        public void ShutDown()
+        public Task ShutDownAsync(CancellationToken cancellationToken)
         {
             //TODO: we may write the indexing state (last activity id) to the index in the future
             // to make the centralized index compatible with the local version. Currently the state
             // is not written there because it is not needed for a centralized index to work.
+            return Task.CompletedTask;
         }
 
-        public void ClearIndex()
+        public Task ClearIndexAsync(CancellationToken cancellationToken)
         {
             Retrier.Retry(SearchServiceClient.RetryCount, SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
                 () => SearchServiceClient.Instance.ClearIndex());
+
+            return Task.CompletedTask;
         }
 
-        public IndexingActivityStatus ReadActivityStatusFromIndex()
+        public Task<IndexingActivityStatus> ReadActivityStatusFromIndexAsync(CancellationToken cancellationToken)
         {
-            return Retrier.Retry(SearchServiceClient.RetryCount, SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
-                () => SearchServiceClient.Instance.ReadActivityStatusFromIndex());
+            return Task.FromResult(Retrier.Retry(SearchServiceClient.RetryCount,
+                SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
+                () => SearchServiceClient.Instance.ReadActivityStatusFromIndex()));
         }
 
-        public void WriteActivityStatusToIndex(IndexingActivityStatus state)
+        public Task WriteActivityStatusToIndexAsync(IndexingActivityStatus state, CancellationToken cancellationToken)
         {
             //TODO: we may write the indexing state (last activity id) to the index in the future
             // to make the centralized index compatible with the local version. Currently the state
@@ -69,9 +76,11 @@ namespace SenseNet.Search.Lucene29
 
             Retrier.Retry(SearchServiceClient.RetryCount, SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
                 () => SearchServiceClient.Instance.WriteActivityStatusToIndex(state));
+
+            return Task.CompletedTask;
         }
         
-        public void WriteIndex(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates, IEnumerable<IndexDocument> additions)
+        public Task WriteIndexAsync(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates, IEnumerable<IndexDocument> additions, CancellationToken cancellationToken)
         {
             // local function for partitioning index document collections
             void WriteIndex<T>(IEnumerable<T> source, Action<T[]> write)
@@ -116,9 +125,12 @@ namespace SenseNet.Search.Lucene29
                     });
             }
 
+            //UNDONE: [async] make this async
             WriteIndex(deletions, deleteTerms => SearchServiceClient.Instance.WriteIndex(deleteTerms, null, null));
             WriteIndex(updates, updateDocuments => SearchServiceClient.Instance.WriteIndex(null, updateDocuments, null));
             WriteIndex(additions, indexDocuments => SearchServiceClient.Instance.WriteIndex(null, null, indexDocuments));
+
+            return Task.CompletedTask;
         }
         
         public void SetIndexingInfo(IDictionary<string, IPerFieldIndexingInfo> indexingInfo)
