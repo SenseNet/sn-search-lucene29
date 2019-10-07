@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <PackageReference Include="SenseNet.Tools" Version="3.2.0" />
-    <PackageReference Include="SenseNet.ContentRepository" Version="7.6.4.1" />
+    <PackageReference Include="SenseNet.ContentRepository" Version="7.7.0" />
     <PackageReference Include="SenseNet.Search.Lucene29.Lucene.Net" Version="2.9.4.301" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
   </ItemGroup>
