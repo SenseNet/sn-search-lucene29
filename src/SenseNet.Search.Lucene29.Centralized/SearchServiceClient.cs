@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ServiceModel;
+using System.ServiceModel.Channels;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized.Common;
@@ -17,6 +19,18 @@ namespace SenseNet.Search.Lucene29.Centralized
         private static DateTime _lastErrorLog;
         private static Lazy<ISearchServiceContract> LazyInstance { get; set; } = new Lazy<ISearchServiceContract>(GetSearchServiceContract);
 
+        private static Binding Binding { get; set; }
+        private static EndpointAddress EndPointAddress { get; set; }
+
+        internal static void InitializeServiceEndpoint(Binding binding, EndpointAddress address)
+        {
+            Binding = binding;
+            EndPointAddress = address;
+
+            // re-set the instance to force reload on first access
+            LazyInstance = new Lazy<ISearchServiceContract>(GetSearchServiceContract);
+        }
+
         private static void SearchServiceChannelOnFaulted(object sender, EventArgs eventArgs)
         {
             SnTrace.Index.WriteError("Centralized search service channel error.");
@@ -33,7 +47,13 @@ namespace SenseNet.Search.Lucene29.Centralized
         }
         private static ISearchServiceContract GetSearchServiceContract()
         {
-            var ssc = new SearchServiceClient();
+            // If the caller provided  a binding and address, use that.
+            // Otherwise rely on configuration.
+
+            var ssc = Binding != null 
+                ? new SearchServiceClient(Binding, EndPointAddress) 
+                : new SearchServiceClient();
+
             ssc.InnerChannel.Faulted += SearchServiceChannelOnFaulted;
 
             return ssc;
