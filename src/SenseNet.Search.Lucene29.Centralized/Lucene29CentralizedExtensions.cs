@@ -1,4 +1,8 @@
-﻿using SenseNet.ContentRepository;
+﻿using System;
+using System.ServiceModel;
+using System.ServiceModel.Channels;
+using SenseNet.ContentRepository;
+using SenseNet.Search.Lucene29.Centralized;
 using SenseNet.Tools;
 
 namespace SenseNet.Search.Lucene29
@@ -16,6 +20,22 @@ namespace SenseNet.Search.Lucene29
             repositoryBuilder.UseSearchEngine(searchEngine);
 
             return repositoryBuilder;
+        }
+        /// <summary>
+        /// Set the centralized Lucene engine as the search engine and initialize it
+        /// using the provided WCF endpoint binding.
+        /// </summary>
+        public static IRepositoryBuilder UseLucene29CentralizedSearchEngine(this IRepositoryBuilder repositoryBuilder,
+            Binding binding, EndpointAddress address)
+        {
+            if (binding == null)
+                throw new ArgumentNullException(nameof(binding));
+            if (address == null)
+                throw new ArgumentNullException(nameof(address));
+
+            SearchServiceClient.InitializeServiceEndpoint(binding, address);
+
+            return repositoryBuilder.UseLucene29CentralizedSearchEngine();
         }
     }
 }
