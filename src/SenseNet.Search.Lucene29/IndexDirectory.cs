@@ -86,7 +86,7 @@ namespace SenseNet.Search.Lucene29
 
         //================================================================================== Helper methods
 
-        private string CreateNew()
+        internal string CreateNew()
         {
             var name = Name ?? DateTime.UtcNow.ToString("yyyyMMddHHmmss");
             var path = Path.Combine(IndexDirectoryPath, name);

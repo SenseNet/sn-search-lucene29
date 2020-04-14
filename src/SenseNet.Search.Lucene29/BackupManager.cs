@@ -52,48 +52,41 @@ namespace SenseNet.Search.Lucene29
             Console.WriteLine("CreateMultipleIndex starts.");
             var timer = Stopwatch.StartNew();
 
-            //var snapshot = GetCurrentIndexDirectory();
-            //var current = CreateNewIndexDirectory();
-            //CloseReaderAndWriter();
-            //PauseIndexWriting();
-            //var snapshotReader = OpenReader(snapshot);
-            //var currentReader = OpenWriterAndReader(current, out var writer);
-            //var multipleReader = OpenMultipleReader(snapshotReader, currentReader);
-            //ContinueIndexWriting(writer);
+            var snapshotPath = _indexManager.IndexDirectory.CurrentDirectory;
+            var currentPath = _indexManager.IndexDirectory.CreateNew();
+            _indexManager.ShutDown();
+
+            PauseIndexWriting();
+
+            var snapshotReader = OpenReader(snapshotPath);
+
+            var currentReader = OpenWriterAndReader(currentPath);
+
+            var multipleReader = OpenMultipleReader(snapshotReader, currentReader);
+
+            ContinueIndexWriting();
             Task.Delay(TimeSpan.FromSeconds(1)).Wait();
 
             timer.Stop();
             Console.WriteLine("CreateMultipleIndex finished. Elapsed time: " + timer.Elapsed);
         }
-        private string GetCurrentIndexDirectory()
-        {
-            return _indexManager.IndexDirectory.CurrentDirectory;
-        }
-        private string CreateNewIndexDirectory()
-        {
-            return _indexManager.IndexDirectory.CreateNew();
-        }
-        private void CloseReaderAndWriter()
-        {
-            throw new NotImplementedException();
-        }
         private void PauseIndexWriting()
         {
-            throw new NotImplementedException();
+            //UNDONE: PauseIndexWriting
         }
-        private IndexReader OpenReader(object snapshot)
+        private IndexReader OpenReader(string snapshot)
         {
             throw new NotImplementedException();
         }
-        private IndexReader OpenWriterAndReader(string current, out IndexWriter writer)
+        private IndexReader OpenWriterAndReader(string current)
         {
             throw new NotImplementedException();
         }
-        private IndexReader OpenMultipleReader(IndexReader snapshot, IndexReader currentReader)
+        private IndexReader OpenMultipleReader(IndexReader snapshotReader, IndexReader currentReader)
         {
             throw new NotImplementedException();
         }
-        private void ContinueIndexWriting(IndexWriter writer)
+        private void ContinueIndexWriting()
         {
             throw new NotImplementedException();
         }

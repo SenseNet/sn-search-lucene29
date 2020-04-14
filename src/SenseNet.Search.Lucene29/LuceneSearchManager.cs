@@ -64,7 +64,7 @@ namespace SenseNet.Search.Lucene29
         public event Action OnLockFileRemoved;
 
         private readonly object _startSync = new object();
-        public void Start(TextWriter consoleOut)
+        public void Start(TextWriter consoleOut, IndexReader snapshotReader = null)
         {
             if (!Running)
             {
@@ -72,7 +72,7 @@ namespace SenseNet.Search.Lucene29
                 {
                     if (!Running)
                     {
-                        Startup(consoleOut);
+                        Startup(consoleOut, snapshotReader);
                         OnStarted?.Invoke(consoleOut);
                         Running = true;
                     }
@@ -80,7 +80,7 @@ namespace SenseNet.Search.Lucene29
             }
         }
         [SuppressMessage("ReSharper", "UnusedVariable")]
-        private void Startup(TextWriter consoleOut)
+        private void Startup(TextWriter consoleOut, IndexReader snapshotReader)
         {
             WaitForWriterLockFileIsReleased(WaitForLockFileType.OnStart);
 
@@ -95,9 +95,8 @@ namespace SenseNet.Search.Lucene29
             var y = Field.Store.NO;
             var z = Field.TermVector.NO;
 
-            CreateWriterAndReader();
+            CreateWriterAndReader(snapshotReader);
         }
-
         public void ShutDown()
         {
             using (var op = SnTrace.Index.StartOperation("LUCENEMANAGER SHUTDOWN"))
@@ -142,7 +141,7 @@ namespace SenseNet.Search.Lucene29
                 writer.Commit();
                 writer.Close();
 
-                CreateWriterAndReader();
+                CreateWriterAndReader(null);
 
                 op.Successful = true;
             }
@@ -159,7 +158,7 @@ namespace SenseNet.Search.Lucene29
             Commit(true, state);
         }
 
-        //================================================================================== Lock file operationss
+        //================================================================================== Lock file operations
 
         public enum WaitForLockFileType { OnStart = 0, OnEnd }
 
@@ -578,8 +577,10 @@ namespace SenseNet.Search.Lucene29
             return new IndexReaderFrame(_reader);
         }
 
-        private void CreateWriterAndReader()
+        private void CreateWriterAndReader(IndexReader snapshotReader)
         {
+            //?? new IndexReader
+
             var path = IndexDirectory.CurrentDirectory;
             var directory = FSDirectory.Open(new DirectoryInfo(path));
             EnsureIndex(path);
