@@ -3,6 +3,7 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 using SenseNet.ContentRepository;
 using SenseNet.Search.Lucene29.Centralized;
+using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Tools;
 
 namespace SenseNet.Search.Lucene29
@@ -36,6 +37,14 @@ namespace SenseNet.Search.Lucene29
             SearchServiceClient.InitializeServiceEndpoint(binding, address);
 
             return repositoryBuilder.UseLucene29CentralizedSearchEngine();
+        }
+
+        public static IRepositoryBuilder UseLucene29CentralizedServiceClient(this IRepositoryBuilder repositoryBuilder,
+            ISearchServiceContract serviceClient)
+        {
+            SearchServiceClient.Instance = serviceClient;
+
+            return repositoryBuilder;
         }
     }
 }
