@@ -26,7 +26,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
         {
             services.AddGrpc();
 
-            // [sensenet] Ensure configuration
+            // [sensenet] Ensure configuration.
             _ = new EmptyRepositoryBuilder()
                 .UseConfiguration(Configuration);
 
@@ -64,8 +64,8 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
 
             // [sensenet] Start and stop the search service in the appropriate points
             // of the application life cycle.
-            appLifetime.ApplicationStarted.Register(() => Index.SearchService.Start());
-            appLifetime.ApplicationStopping.Register(() => Index.SearchService.ShutDown());
+            appLifetime.ApplicationStarted.Register(Index.SearchService.Start);
+            appLifetime.ApplicationStopping.Register(Index.SearchService.ShutDown);
         }
     }
 }

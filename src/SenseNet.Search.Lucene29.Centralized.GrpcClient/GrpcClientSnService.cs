@@ -1,4 +1,5 @@
 ﻿using SenseNet.ContentRepository.Storage;
+using SenseNet.Diagnostics;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 {
@@ -11,6 +12,8 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
         public void Shutdown()
         {
             var client = SearchServiceClient.Instance as GrpcServiceClient;
+
+            SnTrace.System.Write("Shutting down GrpcServiceClient.");
 
             client?.ShutDown();
         }

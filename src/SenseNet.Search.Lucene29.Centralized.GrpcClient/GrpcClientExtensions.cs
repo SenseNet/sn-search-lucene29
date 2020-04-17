@@ -1,5 +1,6 @@
 ﻿using System;
 using Grpc.Net.Client;
+using SenseNet.Diagnostics;
 using SenseNet.Tools;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
@@ -18,6 +19,8 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             var serviceClient = new GrpcServiceClient(searchClient, channel);
 
             repositoryBuilder.UseLucene29CentralizedServiceClient(serviceClient);
+
+            SnLog.WriteInformation("GrpcServiceClient set as Lucene29 Centralized Service Client.");
 
             return repositoryBuilder;
         }
