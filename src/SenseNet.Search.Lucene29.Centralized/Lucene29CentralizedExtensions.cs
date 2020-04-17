@@ -39,6 +39,11 @@ namespace SenseNet.Search.Lucene29
             return repositoryBuilder.UseLucene29CentralizedSearchEngine();
         }
 
+        /// <summary>
+        /// Sets the provided instance as the client for search service communication.
+        /// </summary>
+        /// <param name="repositoryBuilder">The <see cref="IRepositoryBuilder"/> instance.</param>
+        /// <param name="serviceClient">The client instance.</param>
         public static IRepositoryBuilder UseLucene29CentralizedServiceClient(this IRepositoryBuilder repositoryBuilder,
             ISearchServiceContract serviceClient)
         {

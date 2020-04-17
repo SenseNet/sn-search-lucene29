@@ -7,6 +7,13 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 {
     public static class GrpcClientExtensions
     {
+        /// <summary>
+        /// Sets the <see cref="GrpcServiceClient"/> as the client for
+        /// search service communication.
+        /// </summary>
+        /// <param name="repositoryBuilder">The <see cref="IRepositoryBuilder"/> instance.</param>
+        /// <param name="serviceAddress">Url of the gRPC search service.</param>
+        /// <param name="configure">Optional configure method.</param>
         public static IRepositoryBuilder UseLucene29CentralizedGrpcServiceClient(this IRepositoryBuilder repositoryBuilder,
             string serviceAddress,
             Action<GrpcChannelOptions> configure = null)
