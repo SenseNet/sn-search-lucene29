@@ -3,17 +3,36 @@ using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Search.Querying;
 using System.Collections.Generic;
 using System.Linq;
+using Grpc.Net.Client;
 using static SenseNet.Search.Lucene29.Centralized.GrpcService.GrpcSearch;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 {
+    /// <summary>
+    /// Implements the <see cref="ISearchServiceContract"/> interface and serves as a
+    /// translator between the generic sensenet types and the grpc-specific
+    /// communication classes.
+    /// </summary>
     public class GrpcServiceClient : ISearchServiceContract
     {
         private readonly GrpcSearchClient _searchClient;
-        public GrpcServiceClient(GrpcSearchClient searchClient)
+        private readonly GrpcChannel _channel;
+        public GrpcServiceClient(GrpcSearchClient searchClient, GrpcChannel channel)
         {
             _searchClient = searchClient;
+
+            // we pin this object only to be able to shut it down properly later
+            _channel = channel;
         }
+
+        public void ShutDown()
+        {
+            // as the channel was created on app start, we need to
+            // dispose it properly when the connection is closed
+            _channel?.Dispose();
+        }
+
+        #region ISearchServiceContract implementation
         public void ClearIndex()
         {
             _searchClient.ClearIndex(new GrpcService.ClearIndexRequest());            
@@ -100,5 +119,6 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
             return new QueryResult<string>(result.Hits, result.TotalCount);
         }
+        #endregion
     }
 }

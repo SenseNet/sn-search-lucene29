@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Xml;
@@ -9,6 +7,9 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 {
     internal static class Tools
     {
+        /// <summary>
+        /// Serialize an object to an xml string. Uses <see cref="DataContractSerializer"/>.
+        /// </summary>
         internal static string Serialize(object obj)
         {
             var serializer = new DataContractSerializer(obj.GetType());
