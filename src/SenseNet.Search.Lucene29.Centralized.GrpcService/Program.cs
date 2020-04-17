@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using SenseNet.Diagnostics;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcService
 {
@@ -12,6 +8,10 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
     {
         public static void Main(string[] args)
         {
+            // [sensenet] set log and trace before anything happens
+            SnLog.Instance = new SnFileSystemEventLogger();
+            SnTrace.SnTracers.Add(new SnFileSystemTracer());
+
             CreateHostBuilder(args).Build().Run();
         }
 
