@@ -21,6 +21,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             var options = new GrpcChannelOptions();
             configure?.Invoke(options);
 
+            // this channel will be disposed later, by the GrpcClientSnService class
             var channel = GrpcChannel.ForAddress(serviceAddress, options);
             var searchClient = new GrpcService.GrpcSearch.GrpcSearchClient(channel);
             var serviceClient = new GrpcServiceClient(searchClient, channel);
