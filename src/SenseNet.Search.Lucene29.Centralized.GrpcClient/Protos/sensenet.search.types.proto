@@ -1,0 +1,75 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "SenseNet.Search.Lucene29.Centralized.GrpcService";
+
+package SenseNet.Search.Lucene29.Centralized.GrpcService;
+
+/* --------------------------------- INDEXING types --------------------------------- */
+
+message ClearIndexRequest {
+}
+message ClearIndexResponse {
+}
+message ReadActivityStatusRequest {
+}
+message WriteActivityStatusResponse {
+}
+
+message WriteIndexRequest {
+    repeated string deletions = 1;
+    repeated string updates = 2;
+    repeated string additions = 3;
+}
+message WriteIndexResponse {
+}
+
+message IndexingActivityStatus {
+    int32 LastActivityId = 1;
+    repeated int32 Gaps = 2;
+}
+
+message SetIndexingInfoRequest {
+    map<string, IndexFieldAnalyzer> AnalyzerTypes = 1;
+    map<string, IndexValueType> IndexFieldTypes = 2;
+    map<string, string> SortFieldNames = 3;
+}
+message SetIndexingInfoResponse {
+}
+
+enum IndexFieldAnalyzer {
+    Default = 0;
+    Keyword = 1;
+    Standard = 2;
+    Whitespace = 3;
+}
+enum IndexValueType {
+    String = 0;
+    StringArray = 1;
+    Bool = 2;
+    Int = 3;
+    Long = 4;
+    Float = 5;
+    Double = 6;
+    DateTime = 7;
+}
+
+/* --------------------------------- QUERYING types --------------------------------- */
+
+message QueryRequest {
+    string Query = 1;
+    ServiceQueryContext Context = 2;
+}
+message QueryResultIds {
+    repeated int32 Hits = 1;
+    int32 TotalCount = 2;
+}
+message QueryResultProjections {
+    repeated string Hits = 1;
+    int32 TotalCount = 2;
+}
+
+message ServiceQueryContext {
+    int32 UserId = 1;
+    repeated int32 DynamicGroups = 2;
+    string FieldLevel = 3;
+}
