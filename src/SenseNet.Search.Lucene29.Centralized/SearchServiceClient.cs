@@ -91,7 +91,7 @@ namespace SenseNet.Search.Lucene29.Centralized
             Channel.WriteActivityStatusToIndex(state);
         }
 
-        public void Backup(IndexingActivityStatus state, string backupDirectoryPath = null)
+        public void Backup(IndexingActivityStatus state, string backupDirectoryPath)
         {
             Channel.Backup(state, backupDirectoryPath);
         }
@@ -105,6 +105,7 @@ namespace SenseNet.Search.Lucene29.Centralized
             IDictionary<string, IndexValueType> indexFieldTypes,
             IDictionary<string, string> sortFieldNames)
         {
+            
             Channel.SetIndexingInfo(analyzerTypes, indexFieldTypes, sortFieldNames);
         }
 

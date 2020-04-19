@@ -98,7 +98,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             SearchManager.Instance.WriteActivityStatusToIndex(state);
         }
 
-        public void Backup(IndexingActivityStatus state, string backupDirectoryPath = null)
+        public void Backup(IndexingActivityStatus state, string backupDirectoryPath)
         {
             var manager = new BackupManager(SearchManager.Instance, backupDirectoryPath);
             manager.BackupAsync(state, CancellationToken.None)
