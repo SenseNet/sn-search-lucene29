@@ -156,6 +156,12 @@ namespace SenseNet.Search.Lucene29
             return LuceneSearchManager.GetAnalyzer();
         }
 
+        public void Backup(string backupDirectoryPath = null)
+        {
+            //UNDONE: Backup is not implemented in the Lucene29LocalIndexingEngine
+            throw new NotImplementedException();
+        }
+
         /// <inheritdoc />
         public void SetIndexingInfo(IDictionary<string, IPerFieldIndexingInfo> indexingInfo)
         {

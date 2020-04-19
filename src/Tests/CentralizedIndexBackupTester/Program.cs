@@ -57,7 +57,7 @@ namespace CentralizedIndexBackupTester
                     Console.WriteLine(NodeHead.Get(id).Path);
                 Console.WriteLine();
 
-                Console.WriteLine("CHECK INDEX INTEGRITY");
+                Console.WriteLine("CHECK INDEX INTEGRITY BEFORE");
                 Console.Write("Index integrity: ... ");
                 //AssertIndexIntegrity();
                 Console.WriteLine("skipped.");
@@ -65,6 +65,11 @@ namespace CentralizedIndexBackupTester
                 var engine = (ILuceneIndexingEngine)Providers.Instance.SearchEngine.IndexingEngine;
                 new BackupTest(engine).Run(CancellationToken.None)
                     .ConfigureAwait(false).GetAwaiter().GetResult();
+
+                Console.WriteLine("CHECK INDEX INTEGRITY AFTER");
+                Console.Write("Index integrity: ... ");
+                //AssertIndexIntegrity();
+                Console.WriteLine("skipped.");
             }
         }
     }

@@ -5,26 +5,25 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Lucene.Net.Index;
+using SenseNet.Search.Indexing;
 
 namespace SenseNet.Search.Lucene29
 {
-    public class BackupManager
+    internal class BackupManager
     {
         private readonly string _backupDirectoryPath;
-        private readonly ILuceneIndexingEngine _engine;
         private readonly LuceneSearchManager _indexManager;
 
-        public BackupManager(string backupDirectoryPath, ILuceneIndexingEngine engine)
+        public BackupManager(string backupDirectoryPath, LuceneSearchManager indexManager)
         {
             _backupDirectoryPath = backupDirectoryPath;
-            _engine = engine;
-            _indexManager = engine.LuceneSearchManager;
+            _indexManager = indexManager;
         }
 
-        public Task BackupAsync()
+        public Task BackupAsync(IndexingActivityStatus state)
         {
             EnsureEmptyBackupDirectory(_backupDirectoryPath);
-            CreateMultipleIndex();
+            CreateMultipleIndex(state);
             CopyIndexFiles();
             NotifyCallerThatTheBackupIsComplete();
             MergeIndexes();
@@ -47,7 +46,7 @@ namespace SenseNet.Search.Lucene29
         }
 
         /* ======================================================================= CREATE MULTIPLE INDEX */
-        private void CreateMultipleIndex()
+        private void CreateMultipleIndex(IndexingActivityStatus state)
         {
             Console.WriteLine("CreateMultipleIndex starts.");
             var timer = Stopwatch.StartNew();
@@ -72,7 +71,7 @@ namespace SenseNet.Search.Lucene29
         }
         private void PauseIndexWriting()
         {
-            //UNDONE: PauseIndexWriting
+            //UNDONE:-- PauseIndexWriting
         }
         private IndexReader OpenReader(string snapshot)
         {
@@ -115,7 +114,7 @@ namespace SenseNet.Search.Lucene29
         private void NotifyCallerThatTheBackupIsComplete()
         {
             Console.WriteLine("NotifyCallerThatTheBackupIsComplete");
-            //UNDONE: NotifyCallerThatTheBackupIsComplete
+            //UNDONE:-- NotifyCallerThatTheBackupIsComplete
         }
 
         /* ======================================================================= MERGE */
@@ -124,7 +123,7 @@ namespace SenseNet.Search.Lucene29
             Console.WriteLine("MergeIndexes starts.");
             var timer = Stopwatch.StartNew();
 
-            //UNDONE: MergeIndexes
+            //UNDONE:-- MergeIndexes
             Task.Delay(TimeSpan.FromSeconds(1.5)).Wait();
 
             timer.Stop();
@@ -135,7 +134,7 @@ namespace SenseNet.Search.Lucene29
         private void NotifySystemThatTheBackupIsComplete()
         {
             Console.WriteLine("NotifySystemThatTheBackupIsComplete");
-            //UNDONE: NotifySystemThatTheBackupIsComplete
+            //UNDONE:-- NotifySystemThatTheBackupIsComplete
         }
     }
 }

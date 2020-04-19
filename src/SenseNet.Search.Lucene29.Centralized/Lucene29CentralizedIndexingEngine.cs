@@ -150,5 +150,17 @@ namespace SenseNet.Search.Lucene29
             // this is not needed on the web server in a centralized environment
             throw new NotImplementedException();
         }
+
+        public void Backup(string backupDirectoryPath = null)
+        {
+            //UNDONE:--- Backup is not implemented
+            var state = GetCurrentCentralizedIndexingActivityStatus();
+            throw new NotImplementedException();
+        }
+        private IndexingActivityStatus GetCurrentCentralizedIndexingActivityStatus()
+        {
+            //UNDONE:--- Return real IndexingActivityStatus
+            return new IndexingActivityStatus { LastActivityId = 42, Gaps = new[] { 38, 40 } };
+        }
     }
 }

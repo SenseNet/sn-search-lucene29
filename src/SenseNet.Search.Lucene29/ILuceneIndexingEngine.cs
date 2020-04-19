@@ -20,5 +20,8 @@ namespace SenseNet.Search.Lucene29
         /// Returns an <see cref="SnPerFieldAnalyzerWrapper"/> containing the data set by the <see cref="SetIndexingInfo"/> method.
         /// </summary>
         Analyzer GetAnalyzer();
+
+        //UNDONE:---- This need to be moved to the base interface in the final solution.
+        void Backup(string backupDirectoryPath = null);
     }
 }

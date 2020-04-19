@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Search;
@@ -78,13 +79,14 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
             if (!Enum.TryParse(queryContext.FieldLevel, true, out QueryFieldLevel queryFieldLevel))
                 queryFieldLevel = QueryFieldLevel.HeadOnly;
-            
+
             return new ServicePermissionFilter(security, queryFieldLevel, query.AllVersions);
         }
 
         public void WriteIndex(SnTerm[] deletions, DocumentUpdate[] updates, IndexDocument[] additions)
         {
-            using (var op = SnTrace.Index.StartOperation($"WriteIndex: deletions:{deletions?.Length} updates:{updates?.Length} additions:{additions?.Length}"))
+            using (var op = SnTrace.Index.StartOperation(
+                $"WriteIndex: deletions:{deletions?.Length} updates:{updates?.Length} additions:{additions?.Length}"))
             {
                 SearchManager.Instance.WriteIndex(deletions, updates, additions);
                 op.Successful = true;
@@ -94,6 +96,12 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         public void WriteActivityStatusToIndex(IndexingActivityStatus state)
         {
             SearchManager.Instance.WriteActivityStatusToIndex(state);
+        }
+
+        public void Backup(IndexingActivityStatus state, string backupDirectoryPath = null)
+        {
+            SearchManager.Instance.BackupAsync(state, backupDirectoryPath, CancellationToken.None)
+                .ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         public void SetIndexingInfo(IDictionary<string, IndexFieldAnalyzer> analyzerTypes, 

@@ -5,7 +5,10 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using SenseNet.ContentRepository;
+using SenseNet.ContentRepository.Search.Indexing;
+using SenseNet.ContentRepository.Search.Indexing.Activities;
 using SenseNet.ContentRepository.Storage;
+using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29;
 using Task = System.Threading.Tasks.Task;
 
@@ -44,13 +47,13 @@ namespace CentralizedIndexBackupTester
             var editorTask = Work(finisher.Token);
 
             // Wait for backup
-            await Task.Delay(_wait5Sec);
+            await Task.Delay(_wait5Sec, cancellationToken);
 
             // Do backup
             await Backup();
 
             // Wait for finish
-            await Task.Delay(_wait5Sec);
+            await Task.Delay(_wait5Sec, cancellationToken);
 
             // Stop worker agent
             finisher.Cancel();
@@ -73,16 +76,19 @@ namespace CentralizedIndexBackupTester
             }
         }
 
-        private async Task Backup()
+        private Task Backup()
         {
+            //IndexManager.LoadCurrentIndexingActivityStatus();
+
             Console.WriteLine("Backup start");
             var timer = Stopwatch.StartNew();
 
-            var backupController = new BackupManager(_backupDirectoryPath, _engine);
-            await backupController.BackupAsync();
+            _engine.Backup(_backupDirectoryPath);
 
             timer.Stop();
             Console.WriteLine("Backup finished. Elapsed time: " + timer.Elapsed);
+
+            return Task.CompletedTask;
         }
 
         private void Check()

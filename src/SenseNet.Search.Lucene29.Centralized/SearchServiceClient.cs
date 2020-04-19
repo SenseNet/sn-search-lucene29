@@ -91,6 +91,11 @@ namespace SenseNet.Search.Lucene29.Centralized
             Channel.WriteActivityStatusToIndex(state);
         }
 
+        public void Backup(IndexingActivityStatus state, string backupDirectoryPath = null)
+        {
+            Channel.Backup(state, backupDirectoryPath);
+        }
+
         public void WriteIndex(SnTerm[] deletions, DocumentUpdate[] updates, IndexDocument[] additions)
         {
             Channel.WriteIndex(deletions, updates, additions);
