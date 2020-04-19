@@ -158,13 +158,6 @@ namespace SenseNet.Search.Lucene29
             Commit(true, state);
         }
 
-        //================================================================================== Backup
-
-        public Task BackupAsync(IndexingActivityStatus state, string backupDirectoryPath, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
         //================================================================================== Lock file operations
 
         public enum WaitForLockFileType { OnStart = 0, OnEnd }

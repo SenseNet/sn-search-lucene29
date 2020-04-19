@@ -83,7 +83,8 @@ namespace CentralizedIndexBackupTester
             Console.WriteLine("Backup start");
             var timer = Stopwatch.StartNew();
 
-            _engine.Backup(_backupDirectoryPath);
+            _engine.BackupAsync(_backupDirectoryPath, CancellationToken.None)
+                .ConfigureAwait(false).GetAwaiter().GetResult();
 
             timer.Stop();
             Console.WriteLine("Backup finished. Elapsed time: " + timer.Elapsed);

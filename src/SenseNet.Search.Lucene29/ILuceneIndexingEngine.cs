@@ -21,7 +21,5 @@ namespace SenseNet.Search.Lucene29
         /// </summary>
         Analyzer GetAnalyzer();
 
-        //UNDONE:---- This need to be moved to the base interface in the final solution.
-        void Backup(string backupDirectoryPath = null);
     }
 }

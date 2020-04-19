@@ -6,6 +6,7 @@ using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Lucene.Net.Analysis;
+using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized;
@@ -50,6 +51,17 @@ namespace SenseNet.Search.Lucene29
             //TODO: we may write the indexing state (last activity id) to the index in the future
             // to make the centralized index compatible with the local version. Currently the state
             // is not written there because it is not needed for a centralized index to work.
+            return Task.CompletedTask;
+        }
+
+        public Task BackupAsync(CancellationToken cancellationToken)
+        {
+            return BackupAsync(null, cancellationToken);
+        }
+        public Task BackupAsync(string target, CancellationToken cancellationToken)
+        {
+            var state = IndexManager.LoadCurrentIndexingActivityStatus();
+            SearchServiceClient.Instance.Backup(state, target);
             return Task.CompletedTask;
         }
 
@@ -149,18 +161,6 @@ namespace SenseNet.Search.Lucene29
         {
             // this is not needed on the web server in a centralized environment
             throw new NotImplementedException();
-        }
-
-        public void Backup(string backupDirectoryPath = null)
-        {
-            //UNDONE:--- Backup is not implemented
-            var state = GetCurrentCentralizedIndexingActivityStatus();
-            throw new NotImplementedException();
-        }
-        private IndexingActivityStatus GetCurrentCentralizedIndexingActivityStatus()
-        {
-            //UNDONE:--- Return real IndexingActivityStatus
-            return new IndexingActivityStatus { LastActivityId = 42, Gaps = new[] { 38, 40 } };
         }
     }
 }

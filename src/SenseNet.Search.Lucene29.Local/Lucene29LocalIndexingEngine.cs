@@ -106,6 +106,17 @@ namespace SenseNet.Search.Lucene29
             return Task.CompletedTask;
         }
 
+        public Task BackupAsync(CancellationToken cancellationToken)
+        {
+            return BackupAsync(null, cancellationToken);
+        }
+
+        public Task BackupAsync(string target, CancellationToken cancellationToken)
+        {
+            //UNDONE:- Backup is not implemented in Lucene29LocalIndexingEngine
+            throw new NotImplementedException();
+        }
+
         /// <inheritdoc />
         public Task ClearIndexAsync(CancellationToken cancellationToken)
         {
@@ -154,12 +165,6 @@ namespace SenseNet.Search.Lucene29
         public Analyzer GetAnalyzer()
         {
             return LuceneSearchManager.GetAnalyzer();
-        }
-
-        public void Backup(string backupDirectoryPath = null)
-        {
-            //UNDONE: Backup is not implemented in the Lucene29LocalIndexingEngine
-            throw new NotImplementedException();
         }
 
         /// <inheritdoc />

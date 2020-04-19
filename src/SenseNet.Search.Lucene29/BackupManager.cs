@@ -3,31 +3,34 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Lucene.Net.Index;
 using SenseNet.Search.Indexing;
 
 namespace SenseNet.Search.Lucene29
 {
-    internal class BackupManager
+    public class BackupManager
     {
-        private readonly string _backupDirectoryPath;
         private readonly LuceneSearchManager _indexManager;
+        private readonly string _backupDirectoryPath;
 
-        public BackupManager(string backupDirectoryPath, LuceneSearchManager indexManager)
+        public BackupManager(LuceneSearchManager indexManager, string backupDirectoryPath)
         {
-            _backupDirectoryPath = backupDirectoryPath;
             _indexManager = indexManager;
+            _backupDirectoryPath = backupDirectoryPath;
         }
 
-        public Task BackupAsync(IndexingActivityStatus state)
+        public Task BackupAsync(IndexingActivityStatus state, CancellationToken cancellationToken)
         {
-            EnsureEmptyBackupDirectory(_backupDirectoryPath);
-            CreateMultipleIndex(state);
-            CopyIndexFiles();
-            NotifyCallerThatTheBackupIsComplete();
-            MergeIndexes();
-            NotifySystemThatTheBackupIsComplete();
+            //EnsureEmptyBackupDirectory(_backupDirectoryPath);
+            //CreateMultipleIndex(state);
+            //CopyIndexFiles();
+            //NotifyCallerThatTheBackupIsComplete();
+            //MergeIndexes();
+            //NotifySystemThatTheBackupIsComplete();
+
+            Console.WriteLine(">>>> BackupManager.BackupAsync called.");
 
             return Task.CompletedTask;
         }
