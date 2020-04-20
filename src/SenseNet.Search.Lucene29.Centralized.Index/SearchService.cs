@@ -34,6 +34,11 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
         #region ISearchServiceContract implementation
 
+        public bool Alive()
+        {
+            return true;
+        }
+
         public void ClearIndex()
         {
             SearchManager.Instance.ClearIndex();

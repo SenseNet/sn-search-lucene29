@@ -76,6 +76,11 @@ namespace SenseNet.Search.Lucene29.Centralized
 
         #endregion
 
+        public bool Alive()
+        {
+            return Channel.Alive();
+        }
+
         public void ClearIndex()
         {
             Channel.ClearIndex();
@@ -105,7 +110,6 @@ namespace SenseNet.Search.Lucene29.Centralized
             IDictionary<string, IndexValueType> indexFieldTypes,
             IDictionary<string, string> sortFieldNames)
         {
-            
             Channel.SetIndexingInfo(analyzerTypes, indexFieldTypes, sortFieldNames);
         }
 
