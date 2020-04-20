@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ServiceModel;
+using System.ServiceModel.Channels;
 using System.Threading;
 using Microsoft.Extensions.Configuration;
 using SenseNet.Configuration;
@@ -10,9 +11,11 @@ using SenseNet.ContentRepository.Storage.Search;
 using SenseNet.Diagnostics;
 using SenseNet.Search;
 using SenseNet.Search.Lucene29;
+using SenseNet.Search.Lucene29.Centralized;
 using SenseNet.Search.Querying;
 using SenseNet.Security.EFCSecurityStore;
 using SenseNet.Security.Messaging.RabbitMQ;
+using Task = System.Threading.Tasks.Task;
 
 namespace CentralizedIndexBackupTester
 {
@@ -20,10 +23,15 @@ namespace CentralizedIndexBackupTester
     {
         static void Main(string[] args)
         {
+
             IConfiguration configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", true, true)
                 .AddEnvironmentVariables()
                 .Build();
+
+            var serviceBinding = new NetTcpBinding {Security = {Mode = SecurityMode.None}};
+            var serviceEndpoint = new EndpointAddress(configuration["sensenet:search:service:address"]);
+            WaitForServiceStarted(serviceBinding, serviceEndpoint);
 
             var builder = new RepositoryBuilder()
                 .SetConsole(Console.Out)
@@ -34,9 +42,7 @@ namespace CentralizedIndexBackupTester
                 .UseSecurityDataProvider(
                     new EFCSecurityDataProvider(connectionString: ConnectionStrings.ConnectionString))
                 .UseSecurityMessageProvider(new RabbitMQMessageProvider())
-                .UseLucene29CentralizedSearchEngine(
-                    new NetTcpBinding {Security = {Mode = SecurityMode.None}},
-                    new EndpointAddress(configuration["sensenet:search:service:address"]))
+                .UseLucene29CentralizedSearchEngine(serviceBinding, serviceEndpoint)
                 .StartWorkflowEngine(false)
                 .DisableNodeObservers()
                 .UseTraceCategories("Event", "Custom", "System") as RepositoryBuilder;
@@ -70,6 +76,27 @@ namespace CentralizedIndexBackupTester
                 Console.Write("Index integrity: ... ");
                 //AssertIndexIntegrity();
                 Console.WriteLine("skipped.");
+            }
+        }
+
+        private static void WaitForServiceStarted(Binding serviceBinding, EndpointAddress serviceEndpoint)
+        {
+            Console.WriteLine($"Is write.lock deleted? :)");
+
+            while (true)
+            {
+                try
+                {
+                    var client = new SearchServiceClient(serviceBinding, serviceEndpoint);
+                    client.Alive();
+                    return;
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine($"Wait for service ({e.Message})");
+                }
+
+                Task.Delay(1000).ConfigureAwait(false).GetAwaiter().GetResult();
             }
         }
     }
