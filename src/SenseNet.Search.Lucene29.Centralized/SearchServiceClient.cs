@@ -59,7 +59,11 @@ namespace SenseNet.Search.Lucene29.Centralized
             return ssc;
         }
 
-        public static ISearchServiceContract Instance => LazyInstance.Value;
+        public static ISearchServiceContract Instance 
+        { 
+            get => LazyInstance.Value;
+            internal set => LazyInstance = new Lazy<ISearchServiceContract>(() => value);
+        }
 
         #endregion
 

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-VisualStudioVersion = 16.0.29905.134
+VisualStudioVersion = 16.0.30002.166
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SenseNet.Search.Lucene29", "SenseNet.Search.Lucene29\SenseNet.Search.Lucene29.csproj", "{9E776EDA-681A-4330-8632-9ED0B67ED5A6}"
 EndProject
@@ -27,7 +27,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution 
 		nuget\content\Web.config.transform = nuget\content\Web.config.transform
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CentralizedIndexBackupTester", "Tests\CentralizedIndexBackupTester\CentralizedIndexBackupTester.csproj", "{19E0F24A-294C-416D-84E7-E9E659DA4304}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SenseNet.Search.Lucene29.Centralized.GrpcService", "SenseNet.Search.Lucene29.Centralized.GrpcService\SenseNet.Search.Lucene29.Centralized.GrpcService.csproj", "{E12541F3-F183-4AD0-98B3-65330CEB87A2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenseNet.Search.Lucene29.Centralized.GrpcClient", "SenseNet.Search.Lucene29.Centralized.GrpcClient\SenseNet.Search.Lucene29.Centralized.GrpcClient.csproj", "{189923A4-8B7F-439C-BD68-8999B1FF91C2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,17 +69,20 @@ Global
 		{B408FF84-8D7E-4869-955B-A070623AB611}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B408FF84-8D7E-4869-955B-A070623AB611}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B408FF84-8D7E-4869-955B-A070623AB611}.Release|Any CPU.Build.0 = Release|Any CPU
-		{19E0F24A-294C-416D-84E7-E9E659DA4304}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{19E0F24A-294C-416D-84E7-E9E659DA4304}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{19E0F24A-294C-416D-84E7-E9E659DA4304}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{19E0F24A-294C-416D-84E7-E9E659DA4304}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E12541F3-F183-4AD0-98B3-65330CEB87A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E12541F3-F183-4AD0-98B3-65330CEB87A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E12541F3-F183-4AD0-98B3-65330CEB87A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E12541F3-F183-4AD0-98B3-65330CEB87A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{189923A4-8B7F-439C-BD68-8999B1FF91C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{189923A4-8B7F-439C-BD68-8999B1FF91C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{189923A4-8B7F-439C-BD68-8999B1FF91C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{189923A4-8B7F-439C-BD68-8999B1FF91C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{948CE434-4B01-4B5E-8E01-E7661891D159} = {B4F558A3-EB20-4AF6-849C-6CF719C5F483}
-		{19E0F24A-294C-416D-84E7-E9E659DA4304} = {B4F558A3-EB20-4AF6-849C-6CF719C5F483}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D3B8C994-B98E-4357-AB4E-9D96D41BA6CD}

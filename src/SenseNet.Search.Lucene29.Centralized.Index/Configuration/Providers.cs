@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Configuration;
 using SenseNet.Configuration;
 using SenseNet.Diagnostics;
 using SenseNet.Security;
-using SenseNet.Security.EF6SecurityStore;
 using SenseNet.Security.Messaging;
 using SenseNet.Tools;
 
@@ -25,9 +23,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index.Configuration
 
             try
             {
-                // if other than the known implementation, create it automatically
-                if (string.Compare(SecurityDataProviderClassName, typeof(EF6SecurityDataProvider).FullName, StringComparison.Ordinal) != 0)
-                    securityDataProvider = (ISecurityDataProvider)TypeResolver.CreateInstance(SecurityDataProviderClassName);
+                securityDataProvider = (ISecurityDataProvider)TypeResolver.CreateInstance(SecurityDataProviderClassName);
             }
             catch (TypeNotFoundException)
             {
@@ -40,10 +36,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index.Configuration
 
             if (securityDataProvider == null)
             {
-                // default implementation
-                securityDataProvider = new EF6SecurityDataProvider(
-                    Security.SecurityDatabaseCommandTimeoutInSeconds,
-                    ConnectionStrings.SecurityDatabaseConnectionString);
+                throw new InvalidOperationException("SecurityDataProvider is not configured.");
             }
 
             SnLog.WriteInformation("SecurityDataProvider created: " + securityDataProvider.GetType().FullName);
