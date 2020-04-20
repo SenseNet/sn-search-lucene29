@@ -33,10 +33,18 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
         }
 
         #region ISearchServiceContract implementation
+
+        public bool Alive()
+        {
+            //UNDONE:---- GrpcServiceClient.Alive is not implemented.
+            throw new System.NotImplementedException();
+        }
+
         public void ClearIndex()
         {
             _searchClient.ClearIndex(new GrpcService.ClearIndexRequest());            
         }
+
         public IndexingActivityStatus ReadActivityStatusFromIndex()
         {
             var result = _searchClient.ReadActivityStatusFromIndex(new GrpcService.ReadActivityStatusRequest());
@@ -57,6 +65,12 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             request.Gaps.AddRange(state.Gaps);
 
             _searchClient.WriteActivityStatusToIndex(request);
+        }
+
+        public void Backup(IndexingActivityStatus state, string backupDirectoryPath)
+        {
+            //UNDONE:- GrpcServiceClient.Backup is not implemented
+            throw new System.NotImplementedException();
         }
 
         public void SetIndexingInfo(IDictionary<string, IndexFieldAnalyzer> analyzerTypes, IDictionary<string, IndexValueType> indexFieldTypes, IDictionary<string, string> sortFieldNames)
