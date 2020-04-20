@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\SenseNet.Search.Lucene29.Centralized\SenseNet.Search.Lucene29.Centralized.csproj" />
+    <ProjectReference Include="..\..\SenseNet.Search.Lucene29.Local\SenseNet.Search.Lucene29.Local.csproj" />
   </ItemGroup>
 
   <ItemGroup>
