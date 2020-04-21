@@ -40,6 +40,9 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.1.2\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="Lucene.Net, Version=2.9.4.301, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SenseNet.Search.Lucene29.Lucene.Net.2.9.4.301\lib\netstandard2.0\Lucene.Net.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Diagnostics.Tracing.EventSource, Version=1.1.28.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Diagnostics.Tracing.EventSource.Redist.1.1.28\lib\net46\Microsoft.Diagnostics.Tracing.EventSource.dll</HintPath>
     </Reference>
@@ -58,11 +61,17 @@
     <Reference Include="RabbitMQ.Client, Version=5.0.0.0, Culture=neutral, PublicKeyToken=89e7d7c5feba84ce, processorArchitecture=MSIL">
       <HintPath>..\packages\RabbitMQ.Client.5.1.2\lib\net451\RabbitMQ.Client.dll</HintPath>
     </Reference>
+    <Reference Include="SenseNet.Common, Version=7.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SenseNet.Common.7.4.0\lib\netstandard2.0\SenseNet.Common.dll</HintPath>
+    </Reference>
     <Reference Include="SenseNet.Search, Version=2.3.1.1, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SenseNet.Search.2.3.1.1\lib\netstandard2.0\SenseNet.Search.dll</HintPath>
     </Reference>
     <Reference Include="SenseNet.Security, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SenseNet.Security.4.1.0\lib\netstandard2.0\SenseNet.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="SenseNet.Security.EF6SecurityStore, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SenseNet.Security.EF6SecurityStore.4.1.0\lib\net461\SenseNet.Security.EF6SecurityStore.dll</HintPath>
     </Reference>
     <Reference Include="SenseNet.Security.Messaging.RabbitMQ, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SenseNet.Security.Messaging.RabbitMQ.1.2.0\lib\netstandard2.0\SenseNet.Security.Messaging.RabbitMQ.dll</HintPath>
