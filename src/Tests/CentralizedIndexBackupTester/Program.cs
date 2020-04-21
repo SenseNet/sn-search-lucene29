@@ -24,8 +24,16 @@ namespace CentralizedIndexBackupTester
 {
     class Program
     {
+        private static string _serviceIndexDirectory;
+
         static void Main(string[] args)
         {
+            _serviceIndexDirectory = Path.GetFullPath($"{Environment.CurrentDirectory}\\..\\..\\..\\..\\..\\" +
+                                                      "SenseNet.Search.Lucene29.Centralized.Service\\" +
+                                                      "bin\\Debug\\App_Data\\LocalIndex");
+            Console.WriteLine("IndexDirectory of the service: ");
+            Console.WriteLine(_serviceIndexDirectory);
+
             IConfiguration configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", true, true)
                 .AddEnvironmentVariables()
@@ -73,11 +81,6 @@ namespace CentralizedIndexBackupTester
                 IndexManager.IndexingEngine.ShutDownAsync(CancellationToken.None)
                     .ConfigureAwait(false).GetAwaiter().GetResult();
             }
-
-            // Check index integrity.
-            Console.WriteLine("CHECK INDEX INTEGRITY AFTER");
-            Console.Write("Index integrity: ... ");
-            CheckIndexIntegrity(configuration);
         }
 
         private static void WaitForServiceStarted(Binding serviceBinding, EndpointAddress serviceEndpoint)
@@ -98,54 +101,6 @@ namespace CentralizedIndexBackupTester
                 }
 
                 Task.Delay(1000).ConfigureAwait(false).GetAwaiter().GetResult();
-            }
-        }
-
-        static void CheckIndexIntegrity(IConfiguration config)
-        {
-            var indexPath =
-                $"{Environment.CurrentDirectory}\\..\\..\\..\\..\\..\\SenseNet.Search.Lucene29.Centralized.Service\\bin\\Debug\\App_Data\\LocalIndex";
-            indexPath = Path.GetFullPath(indexPath);
-
-            var builder = new RepositoryBuilder()
-                .SetConsole(Console.Out)
-                .UseLogger(new SnFileSystemEventLogger())
-                .UseTracer(new SnFileSystemTracer())
-                .UseConfiguration(config)
-                .UseDataProvider(new MsSqlDataProvider())
-                .UseSecurityDataProvider(
-                    new EFCSecurityDataProvider(connectionString: ConnectionStrings.ConnectionString))
-                .UseLucene29LocalSearchEngine(indexPath) as RepositoryBuilder;
-
-            using (Repository.Start(builder))
-            {
-                Console.WriteLine("Top level nodes:");
-                var root = Node.LoadNode(Repository.RootPath);
-                foreach (var node in NodeQuery.QueryChildren(Repository.RootPath).Nodes)
-                    Console.WriteLine(node.Path);
-
-                Console.WriteLine();
-                Console.Write("Index integrity: ");
-                // ----------------------------------------
-                var diffs = IndexIntegrityChecker.Check("/Root", true).ToArray();
-                if (diffs.Length != 0)
-                {
-                    Console.WriteLine($"Check index integrity failed. Diff count: {diffs.Length}");
-                    var count = 0;
-                    foreach (var diff in diffs)
-                    {
-                        Console.WriteLine($"  {diff}");
-                        if (++count > 20)
-                        {
-                            Console.WriteLine($"  ...etc");
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("ok.");
-                }
             }
         }
     }

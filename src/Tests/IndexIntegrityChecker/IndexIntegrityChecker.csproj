@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -10,14 +10,12 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.3" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="SenseNet.Security.EFCSecurityStore" Version="3.0.0" />
-    <PackageReference Include="SenseNet.Security.Messaging.RabbitMQ" Version="1.2.0" />
     <PackageReference Include="SenseNet.Services.Core" Version="0.0.7.2" />
     <PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
-    <PackageReference Include="System.ServiceModel.NetTcp" Version="4.7.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\SenseNet.Search.Lucene29.Centralized\SenseNet.Search.Lucene29.Centralized.csproj" />
+    <ProjectReference Include="..\..\SenseNet.Search.Lucene29.Local\SenseNet.Search.Lucene29.Local.csproj" />
   </ItemGroup>
 
   <ItemGroup>

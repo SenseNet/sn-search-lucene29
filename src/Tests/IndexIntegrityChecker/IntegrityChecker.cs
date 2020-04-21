@@ -23,7 +23,7 @@ using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29;
 using SenseNet.Search.Querying;
 
-namespace CentralizedIndexBackupTester
+namespace IndexIntegrityChecker
 {
     public enum IndexDifferenceKind { NotInIndex, NotInDatabase, MoreDocument, DifferentNodeTimestamp, DifferentVersionTimestamp, DifferentLastPublicFlag, DifferentLastDraftFlag }
 

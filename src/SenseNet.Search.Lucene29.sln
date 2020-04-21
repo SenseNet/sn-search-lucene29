@@ -33,6 +33,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SenseNet.Search.Lucene29.Ce
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CentralizedIndexBackupTester", "Tests\CentralizedIndexBackupTester\CentralizedIndexBackupTester.csproj", "{7B79DA0B-CE52-48B4-A3E2-58F77BC4E74F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndexIntegrityChecker", "Tests\IndexIntegrityChecker\IndexIntegrityChecker.csproj", "{311AFDF1-081C-46A7-8B5D-F7A50B67B103}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,10 @@ Global
 		{7B79DA0B-CE52-48B4-A3E2-58F77BC4E74F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7B79DA0B-CE52-48B4-A3E2-58F77BC4E74F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7B79DA0B-CE52-48B4-A3E2-58F77BC4E74F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{311AFDF1-081C-46A7-8B5D-F7A50B67B103}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{311AFDF1-081C-46A7-8B5D-F7A50B67B103}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{311AFDF1-081C-46A7-8B5D-F7A50B67B103}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{311AFDF1-081C-46A7-8B5D-F7A50B67B103}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -90,6 +96,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{948CE434-4B01-4B5E-8E01-E7661891D159} = {B4F558A3-EB20-4AF6-849C-6CF719C5F483}
 		{7B79DA0B-CE52-48B4-A3E2-58F77BC4E74F} = {B4F558A3-EB20-4AF6-849C-6CF719C5F483}
+		{311AFDF1-081C-46A7-8B5D-F7A50B67B103} = {B4F558A3-EB20-4AF6-849C-6CF719C5F483}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D3B8C994-B98E-4357-AB4E-9D96D41BA6CD}
