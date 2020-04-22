@@ -11,6 +11,7 @@ using Lucene.Net.Search;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using SenseNet.Configuration;
+using SenseNet.ContentRepository;
 using SenseNet.ContentRepository.Schema;
 using SenseNet.ContentRepository.Search;
 using SenseNet.ContentRepository.Search.Indexing;
@@ -175,11 +176,11 @@ namespace IndexIntegrityChecker
             if (recurse)
             {
                 if (path != null)
-                    if (path.ToLower() == SenseNet.ContentRepository.Repository.RootPath.ToLower())
+                    if (string.Equals(path, Repository.RootPath, StringComparison.CurrentCultureIgnoreCase))
                         path = null;
                 return new IndexIntegrityChecker().CheckRecurse(path);
             }
-            return new IndexIntegrityChecker().CheckNode(path ?? SenseNet.ContentRepository.Repository.RootPath);
+            return new IndexIntegrityChecker().CheckNode(path ?? Repository.RootPath);
         }
 
         /*==================================================================================== Instance part */

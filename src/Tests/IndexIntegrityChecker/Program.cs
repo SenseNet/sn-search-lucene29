@@ -58,10 +58,11 @@ namespace IndexIntegrityChecker
 
             using (Repository.Start(builder))
             {
-                Console.WriteLine();
-                Console.WriteLine("Index integrity: ");
+                Console.WriteLine("================================");
+                Console.WriteLine("Index integrity:");
                 // ----------------------------------------
-                var diffs = IndexIntegrityChecker.Check("/Root", true).ToArray();
+                //var diffs = IndexIntegrityChecker.Check("/Root", true).ToArray();
+                var diffs = IndexIntegrityChecker.Check().ToArray();
                 if (diffs.Length != 0)
                 {
                     Console.WriteLine($"  Check index integrity failed. Diff count: {diffs.Length}");
@@ -80,6 +81,7 @@ namespace IndexIntegrityChecker
                 {
                     Console.WriteLine("ok.");
                 }
+                Console.WriteLine("================================");
             }
         }
     }
