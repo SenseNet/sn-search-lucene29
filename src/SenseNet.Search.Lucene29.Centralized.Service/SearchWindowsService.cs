@@ -25,8 +25,8 @@ namespace SenseNet.Search.Lucene29.Centralized.Service
                 Console.WriteLine("Starting service.");
                 service.OnStart(args);
                 Console.WriteLine("Service started.");
-                Console.Write("Press any key to stop ...");
-                Console.Read();
+                Console.WriteLine("Press any key to stop.");
+                Console.ReadKey();
                 service.OnStop();
                 Console.WriteLine("Service stopped.");
             }
