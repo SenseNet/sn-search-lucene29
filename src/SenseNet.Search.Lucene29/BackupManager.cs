@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +11,27 @@ using SenseNet.Search.Indexing;
 
 namespace SenseNet.Search.Lucene29
 {
+    internal class IndexSnapshot : IDisposable
+    {
+        private readonly SnapshotDeletionPolicy _snapshotMaker;
+
+        public string[] FileNames { get; }
+        public string SegmentFileName { get; }
+
+        public IndexSnapshot(SnapshotDeletionPolicy snapshotMaker)
+        {
+            _snapshotMaker = snapshotMaker;
+
+            var indexCommitPoint = _snapshotMaker.Snapshot();
+            FileNames = indexCommitPoint.GetFileNames().ToArray();
+            SegmentFileName = indexCommitPoint.GetSegmentsFileName();
+        }
+        public void Dispose()
+        {
+            _snapshotMaker.Release();
+        }
+    }
+
     public class BackupManager
     {
         private readonly LuceneSearchManager _indexManager;
@@ -23,14 +45,12 @@ namespace SenseNet.Search.Lucene29
 
         public Task BackupAsync(IndexingActivityStatus state, CancellationToken cancellationToken)
         {
-            //EnsureEmptyBackupDirectory(_backupDirectoryPath);
-            //CreateMultipleIndex(state);
-            //CopyIndexFiles();
-            //NotifyCallerThatTheBackupIsComplete();
-            //MergeIndexes();
-            //NotifySystemThatTheBackupIsComplete();
+            Console.WriteLine("BACKUP START");
+            Console.WriteLine("  IndexingActivityStatus: " + state);
+            EnsureEmptyBackupDirectory(_backupDirectoryPath);
 
-            Console.WriteLine(">>>> BackupManager.BackupAsync called.");
+            using (var snapshot = _indexManager.CreateSnapshot(state))
+                CopyIndexFiles(snapshot);
 
             return Task.CompletedTask;
         }
@@ -38,106 +58,60 @@ namespace SenseNet.Search.Lucene29
         /* ======================================================================= ENSURE BACKUP DIRECTORY */
         private void EnsureEmptyBackupDirectory(string backupDirectoryPath)
         {
+            Console.Write("Prepare backup directory: ");
+
             if (!Directory.Exists(backupDirectoryPath))
             {
                 Directory.CreateDirectory(backupDirectoryPath);
+                Console.WriteLine("created");
                 return;
             }
 
-            foreach(var path in Directory.GetFiles(backupDirectoryPath))
+            var deleted = 0;
+            foreach (var path in Directory.GetFiles(backupDirectoryPath))
+            {
                 File.Delete(path);
-        }
-
-        /* ======================================================================= CREATE MULTIPLE INDEX */
-        private void CreateMultipleIndex(IndexingActivityStatus state)
-        {
-            Console.WriteLine("CreateMultipleIndex starts.");
-            var timer = Stopwatch.StartNew();
-
-            var snapshotPath = _indexManager.IndexDirectory.CurrentDirectory;
-            var currentPath = _indexManager.IndexDirectory.CreateNew();
-            _indexManager.ShutDown();
-
-            PauseIndexWriting();
-
-            var snapshotReader = OpenReader(snapshotPath);
-
-            var currentReader = OpenWriterAndReader(currentPath);
-
-            var multipleReader = OpenMultipleReader(snapshotReader, currentReader);
-
-            ContinueIndexWriting();
-            Task.Delay(TimeSpan.FromSeconds(1)).Wait();
-
-            timer.Stop();
-            Console.WriteLine("CreateMultipleIndex finished. Elapsed time: " + timer.Elapsed);
-        }
-        private void PauseIndexWriting()
-        {
-            //UNDONE:-- PauseIndexWriting
-        }
-        private IndexReader OpenReader(string snapshot)
-        {
-            throw new NotImplementedException();
-        }
-        private IndexReader OpenWriterAndReader(string current)
-        {
-            throw new NotImplementedException();
-        }
-        private IndexReader OpenMultipleReader(IndexReader snapshotReader, IndexReader currentReader)
-        {
-            throw new NotImplementedException();
-        }
-        private void ContinueIndexWriting()
-        {
-            throw new NotImplementedException();
+                deleted++;
+            }
+            Console.WriteLine($"{deleted} files deleted.");
         }
 
         /* ======================================================================= COPY */
-        private void CopyIndexFiles()
+        private void CopyIndexFiles(IndexSnapshot snapshot)
         {
-            Console.WriteLine("CopyIndexFiles starts.");
             var timer = Stopwatch.StartNew();
 
             var source = _indexManager.IndexDirectory.CurrentDirectory;
-            var target = _backupDirectoryPath;
-            CopyFiles(source, target);
+
+            Console.WriteLine("CopyIndexFiles starts.");
+            Console.WriteLine("  Source: " + source);
+            Console.WriteLine("  Target: " + _backupDirectoryPath);
+
+            Console.WriteLine("  SegmentFile: ");
+            CopyFile(source, _backupDirectoryPath, snapshot.SegmentFileName);
+
+            Console.WriteLine("  Files: ");
+            foreach (var fileName in snapshot.FileNames)
+                CopyFile(source, _backupDirectoryPath, fileName);
 
             timer.Stop();
             Console.WriteLine("CopyIndexFiles finished. Elapsed time: " + timer.Elapsed);
         }
-        private void CopyFiles(string source, string target)
+        private void CopyFile(string source, string target, string fileName)
         {
-            foreach (var filePath in Directory.GetFiles(source))
-                if (!filePath.EndsWith("write.lock", StringComparison.InvariantCultureIgnoreCase))
-                    File.Copy(filePath, Path.Combine(target, Path.GetFileName(filePath)));
-        }
+            Console.Write("    " + fileName + ": ");
 
-        /* ======================================================================= NOTIFY CALLER */
-        private void NotifyCallerThatTheBackupIsComplete()
-        {
-            Console.WriteLine("NotifyCallerThatTheBackupIsComplete");
-            //UNDONE:-- NotifyCallerThatTheBackupIsComplete
-        }
-
-        /* ======================================================================= MERGE */
-        private void MergeIndexes()
-        {
-            Console.WriteLine("MergeIndexes starts.");
-            var timer = Stopwatch.StartNew();
-
-            //UNDONE:-- MergeIndexes
-            Task.Delay(TimeSpan.FromSeconds(1.5)).Wait();
-
-            timer.Stop();
-            Console.WriteLine("MergeIndexes finished. Elapsed time: " + timer.Elapsed);
-        }
-
-        /* ======================================================================= NOTIFY SYSTEM */
-        private void NotifySystemThatTheBackupIsComplete()
-        {
-            Console.WriteLine("NotifySystemThatTheBackupIsComplete");
-            //UNDONE:-- NotifySystemThatTheBackupIsComplete
+            var targetPath = Path.Combine(target, fileName);
+            if (!File.Exists(targetPath))
+            {
+                var sourcePath = Path.Combine(source, fileName);
+                File.Copy(sourcePath, targetPath);
+                Console.WriteLine("ok.");
+            }
+            else
+            {
+                Console.WriteLine("skipped.");
+            }
         }
     }
 }

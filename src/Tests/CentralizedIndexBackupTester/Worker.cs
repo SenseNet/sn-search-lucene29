@@ -28,23 +28,23 @@ namespace CentralizedIndexBackupTester
             for (var i = 0; ; i++)
             {
                 await Task.Delay(_wait1Sec, cancellationToken);
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    Console.WriteLine("Work finished");
-                    return;
-                }
-                Console.WriteLine("Work");
+                //if (cancellationToken.IsCancellationRequested)
+                //{
+                //    Console.WriteLine("Work finished");
+                //    return;
+                //}
+                //Console.WriteLine("Work");
 
-                var queryResult = ContentQuery.Query($"Name:'{testFile.Name}' .AUTOFILTERS:OFF");
-                var file = queryResult.Nodes.FirstOrDefault() as File;
-                if (file == null)
-                    throw new ApplicationException("File not found: " + testFile.Path);
+                //var queryResult = ContentQuery.Query($"Name:'{testFile.Name}' .AUTOFILTERS:OFF");
+                //var file = queryResult.Nodes.FirstOrDefault() as File;
+                //if (file == null)
+                //    throw new ApplicationException("File not found: " + testFile.Path);
 
-                var text = RepositoryTools.GetStreamString(file.Binary.GetStream());
-                text += words[i % words.Length] + " ";
+                //var text = RepositoryTools.GetStreamString(file.Binary.GetStream());
+                //text += words[i % words.Length] + " ";
 
-                file.Binary.SetStream(RepositoryTools.GetStreamFromString(text));
-                file.Save();
+                //file.Binary.SetStream(RepositoryTools.GetStreamFromString(text));
+                //file.Save();
             }
         }
         private async Task<File> GetTestFile(CancellationToken cancellationToken)

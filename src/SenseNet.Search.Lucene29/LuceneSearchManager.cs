@@ -558,6 +558,7 @@ namespace SenseNet.Search.Lucene29
         private IndexWriter _writer;
         private IndexReader _reader;
         private readonly object _commitLock = new object();
+        private SnapshotDeletionPolicy _snapshotMaker;
 
         private readonly ReaderWriterLockSlim _writerRestartLock = new ReaderWriterLockSlim();
         private volatile int _recentlyUsedReaderFrames;
@@ -585,7 +586,8 @@ namespace SenseNet.Search.Lucene29
             var directory = FSDirectory.Open(new DirectoryInfo(path));
             EnsureIndex(path);
 
-            _writer = new IndexWriter(directory, GetAnalyzer(), false, IndexWriter.MaxFieldLength.LIMITED);
+            _snapshotMaker = new SnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy());
+            _writer = new IndexWriter(directory, GetAnalyzer(), false, _snapshotMaker, IndexWriter.MaxFieldLength.LIMITED);
 
             _writer.SetMaxMergeDocs(Configuration.Lucene29.LuceneMaxMergeDocs);
             _writer.SetMergeFactor(Configuration.Lucene29.LuceneMergeFactor);
@@ -622,6 +624,12 @@ namespace SenseNet.Search.Lucene29
             doc.Add(new Field(COMMITDATAFIELDNAME, value, Field.Store.YES, Field.Index.NOT_ANALYZED, Field.TermVector.NO));
 
             return doc;
+        }
+
+        internal IndexSnapshot CreateSnapshot(IndexingActivityStatus state)
+        {
+            Commit(true, state);
+            return new IndexSnapshot(_snapshotMaker);
         }
     }
 }
