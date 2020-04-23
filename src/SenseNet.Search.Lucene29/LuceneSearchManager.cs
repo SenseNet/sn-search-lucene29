@@ -64,7 +64,7 @@ namespace SenseNet.Search.Lucene29
         public event Action OnLockFileRemoved;
 
         private readonly object _startSync = new object();
-        public void Start(TextWriter consoleOut, IndexReader snapshotReader = null)
+        public void Start(TextWriter consoleOut)
         {
             if (!Running)
             {
@@ -72,7 +72,7 @@ namespace SenseNet.Search.Lucene29
                 {
                     if (!Running)
                     {
-                        Startup(consoleOut, snapshotReader);
+                        Startup(consoleOut);
                         OnStarted?.Invoke(consoleOut);
                         Running = true;
                     }
@@ -80,7 +80,7 @@ namespace SenseNet.Search.Lucene29
             }
         }
         [SuppressMessage("ReSharper", "UnusedVariable")]
-        private void Startup(TextWriter consoleOut, IndexReader snapshotReader)
+        private void Startup(TextWriter consoleOut)
         {
             WaitForWriterLockFileIsReleased(WaitForLockFileType.OnStart);
 
@@ -95,7 +95,7 @@ namespace SenseNet.Search.Lucene29
             var y = Field.Store.NO;
             var z = Field.TermVector.NO;
 
-            CreateWriterAndReader(snapshotReader);
+            CreateWriterAndReader();
         }
         public void ShutDown()
         {
@@ -141,7 +141,7 @@ namespace SenseNet.Search.Lucene29
                 writer.Commit();
                 writer.Close();
 
-                CreateWriterAndReader(null);
+                CreateWriterAndReader();
 
                 op.Successful = true;
             }
@@ -578,7 +578,7 @@ namespace SenseNet.Search.Lucene29
             return new IndexReaderFrame(_reader);
         }
 
-        private void CreateWriterAndReader(IndexReader snapshotReader)
+        private void CreateWriterAndReader()
         {
             //?? new IndexReader
 
