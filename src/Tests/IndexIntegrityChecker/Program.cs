@@ -33,9 +33,13 @@ namespace IndexIntegrityChecker
                 .AddEnvironmentVariables()
                 .Build();
 
-            var serviceIndexPath = Directory.GetDirectories(indexDir).OrderBy(x => x).Last();
+            var subDirs = Directory.GetDirectories(indexDir);
+            var serviceIndexPath = subDirs.Any()
+                ? subDirs.OrderBy(x => x).Last()
+                : indexDir;
+
             var lockFilePath = Path.Combine(serviceIndexPath, "write.lock");
-            while(File.Exists(lockFilePath))
+            while (File.Exists(lockFilePath))
             {
                 Console.WriteLine("Wait for write.lock is released.");
                 Task.Delay(1000).ConfigureAwait(false).GetAwaiter().GetResult();
@@ -58,10 +62,19 @@ namespace IndexIntegrityChecker
 
             using (Repository.Start(builder))
             {
-                Console.WriteLine();
-                Console.WriteLine("Index integrity: ");
+                Console.Write("Saving index ... ");
+                new IndexIntegrityChecker().SaveIndex();
+                Console.WriteLine("ok.");
+                Console.Write("Saving index documents ... ");
+                new IndexIntegrityChecker().SaveIndex2();
+                Console.WriteLine("ok.");
+                return;
+
+                Console.WriteLine("================================");
+                Console.WriteLine("Index integrity:");
                 // ----------------------------------------
-                var diffs = IndexIntegrityChecker.Check("/Root", true).ToArray();
+                //var diffs = IndexIntegrityChecker.Check("/Root", true).ToArray();
+                var diffs = IndexIntegrityChecker.Check().ToArray();
                 if (diffs.Length != 0)
                 {
                     Console.WriteLine($"  Check index integrity failed. Diff count: {diffs.Length}");
@@ -80,6 +93,7 @@ namespace IndexIntegrityChecker
                 {
                     Console.WriteLine("ok.");
                 }
+                Console.WriteLine("================================");
             }
         }
     }

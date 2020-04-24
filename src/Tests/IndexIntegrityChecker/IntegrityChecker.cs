@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -8,20 +10,26 @@ using System.Threading.Tasks;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
+using Lucene.Net.Util;
+using Microsoft.AspNetCore.DataProtection.Repositories;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using SenseNet.Configuration;
+using SenseNet.ContentRepository;
 using SenseNet.ContentRepository.Schema;
+using SenseNet.ContentRepository.Schema.Metadata;
 using SenseNet.ContentRepository.Search;
 using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.ContentRepository.Storage;
 using SenseNet.ContentRepository.Storage.Data;
 using SenseNet.ContentRepository.Storage.Data.MsSqlClient;
+using SenseNet.ContentRepository.Storage.Schema;
 using SenseNet.Diagnostics;
 using SenseNet.Search;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29;
 using SenseNet.Search.Querying;
+using File = System.IO.File;
 
 namespace IndexIntegrityChecker
 {
@@ -175,11 +183,11 @@ namespace IndexIntegrityChecker
             if (recurse)
             {
                 if (path != null)
-                    if (path.ToLower() == SenseNet.ContentRepository.Repository.RootPath.ToLower())
+                    if (string.Equals(path, Repository.RootPath, StringComparison.CurrentCultureIgnoreCase))
                         path = null;
                 return new IndexIntegrityChecker().CheckRecurse(path);
             }
-            return new IndexIntegrityChecker().CheckNode(path ?? SenseNet.ContentRepository.Repository.RootPath);
+            return new IndexIntegrityChecker().CheckNode(path ?? Repository.RootPath);
         }
 
         /*==================================================================================== Instance part */
@@ -443,7 +451,7 @@ namespace IndexIntegrityChecker
                 if (dbNodeTimestamp != indexNodeTimestamp)
                 {
                     var ok = false;
-                    if (isLastDraft !=  IndexValue.Yes)
+                    if (isLastDraft != IndexValue.Yes)
                     {
                         var latestDocs = ixReader.TermDocs(new Term(IndexFieldName.NodeId, Lucene.Net.Util.NumericUtils.IntToPrefixCoded(nodeId)));
                         Lucene.Net.Documents.Document latestDoc = null;
@@ -451,7 +459,7 @@ namespace IndexIntegrityChecker
                         {
                             var latestDocId = latestDocs.Doc();
                             var d = ixReader.Document(latestDocId);
-                            if (d.Get(IndexFieldName.IsLastDraft) !=  IndexValue.Yes)
+                            if (d.Get(IndexFieldName.IsLastDraft) != IndexValue.Yes)
                                 continue;
                             latestDoc = d;
                             break;
@@ -538,6 +546,174 @@ namespace IndexIntegrityChecker
             if (long.TryParse(data, out var result))
                 return result;
             return -1;
+        }
+
+
+        JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+            Formatting = Formatting.Indented
+        };
+
+        public void SaveIndex()
+        {
+            var savedIndexDir = Path.Combine(Environment.CurrentDirectory, "App_Data", "SavedIndex");
+            if (!Directory.Exists(savedIndexDir))
+                Directory.CreateDirectory(savedIndexDir);
+
+            var index = new Dictionary<string, Dictionary<string, string>>();
+            using (var readerFrame = LuceneSearchManager.GetIndexReaderFrame())
+            {
+                var ixReader = readerFrame.IndexReader;
+
+                var commitPath = Path.Combine(savedIndexDir, "commitUserData.txt");
+                using (var writer = new StreamWriter(commitPath, false))
+                    JsonSerializer.Create(_jsonSerializerSettings).Serialize(writer, ixReader.GetCommitUserData());
+
+                var terms = ixReader.Terms();
+                while (terms.Next())
+                {
+                    var term = terms.Term();
+                    var field = term.Field();
+                    var text = GetTermText(term);
+                    if (!index.TryGetValue(field, out var fieldValues))
+                        index.Add(field, (fieldValues = new Dictionary<string, string>()));
+
+                    var termDocs = ixReader.TermDocs(term);
+                    var docs = new List<int>();
+                    int doc;
+                    while (termDocs.Next())
+                        if (!ixReader.IsDeleted((doc = termDocs.Doc())))
+                            docs.Add(doc);
+                    fieldValues[text] = string.Join(",", docs.Select(x => x.ToString()));
+                }
+            }
+            var indexPath = Path.Combine(savedIndexDir, "decryptedIndex.txt");
+
+
+            using (var writer = new StreamWriter(indexPath, false))
+                JsonSerializer.Create(_jsonSerializerSettings).Serialize(writer, index);
+
+        }
+        public void SaveIndex2()
+        {
+            var savedIndexDir = Path.Combine(Environment.CurrentDirectory, "App_Data", "SavedIndex");
+            if (!Directory.Exists(savedIndexDir))
+                Directory.CreateDirectory(savedIndexDir);
+
+            //var index = new Dictionary<string, Dictionary<string, List<int>>>();
+            var documents = new Dictionary<int, Dictionary<string, string>>();
+
+            using (var readerFrame = LuceneSearchManager.GetIndexReaderFrame())
+            {
+                var ixReader = readerFrame.IndexReader;
+                var terms = ixReader.Terms();
+                while (terms.Next())
+                {
+                    var term = terms.Term();
+                    var field = term.Field();
+                    var text = GetTermText(term);
+
+                    var termDocs = ixReader.TermDocs(term);
+                    var docs = new List<int>();
+                    int doc;
+                    while (termDocs.Next())
+                        if (!ixReader.IsDeleted((doc = termDocs.Doc())))
+                            AddFieldToDocument(documents, doc, field, text);
+                }
+            }
+            var indexPath = Path.Combine(savedIndexDir, "decryptedDocuments.txt");
+
+            using (var writer = new StreamWriter(indexPath, false))
+                JsonSerializer.Create(_jsonSerializerSettings).Serialize(writer, documents);
+
+        }
+        private void AddFieldToDocument(Dictionary<int, Dictionary<string, string>> docs, int doc, string field, string text)
+        {
+            if (!docs.TryGetValue(doc, out var document))
+                docs.Add(doc, document = new Dictionary<string, string>());
+            if (!document.TryGetValue(field, out var value))
+                document.Add(field, text);
+            else
+                document[field] = $"{value}, {text}";
+        }
+
+        private string GetTermText(Term term)
+        {
+            var fieldName = term.Field();
+            var fieldText = term.Text();
+            if (fieldText == null)
+                return null;
+
+            var fieldType = default(IndexValueType);
+
+            if (!(LuceneSearchManager?.IndexFieldTypeInfo?.TryGetValue(fieldName, out fieldType) ?? false))
+            {
+                switch (fieldName)
+                {
+                    case "NodeTimestamp":
+                    case "VersionTimestamp":
+                        fieldType = IndexValueType.Long;
+                        break;
+                    default:
+                        var c = fieldText.ToCharArray();
+                        for (int i = 0; i < c.Length; i++)
+                            if (c[i] < ' ')
+                                c[i] = '.';
+                        return new string(c);
+                }
+            }
+
+            var pt = ActiveSchema.PropertyTypes[fieldName];
+            if (pt == null)
+            {
+                switch (fieldName)
+                {
+                    case "CreatedBy":
+                    case "ModifiedBy":
+                    case "Owner":
+                    case "VersionCreatedBy":
+                    case "VersionModifiedBy":
+                    case "Workspace":
+                        fieldType = IndexValueType.Int;
+                        break;
+                        //case "NodeTimestamp":
+                        //case "VersionTimestamp":
+                        //    fieldType = IndexValueType.Long;
+                        //    break;
+                }
+            }
+            else
+            {
+                if (pt.DataType == DataType.Reference)
+                    fieldType = IndexValueType.Int;
+            }
+
+            switch (fieldType)
+            {
+                case IndexValueType.Bool:
+                case IndexValueType.String:
+                case IndexValueType.StringArray:
+                    return fieldText;
+                case IndexValueType.Int:
+                    return Convert.ToString(NumericUtils.PrefixCodedToInt(fieldText), CultureInfo.InvariantCulture);
+                case IndexValueType.Long:
+                    return Convert.ToString(NumericUtils.PrefixCodedToLong(fieldText), CultureInfo.InvariantCulture);
+                case IndexValueType.Float:
+                    return Convert.ToString(NumericUtils.PrefixCodedToFloat(fieldText), CultureInfo.InvariantCulture);
+                case IndexValueType.Double:
+                    return Convert.ToString(NumericUtils.PrefixCodedToDouble(fieldText), CultureInfo.InvariantCulture);
+                case IndexValueType.DateTime:
+                    var d = new DateTime(NumericUtils.PrefixCodedToLong(fieldText));
+                    if (d.Hour == 0 && d.Minute == 0 && d.Second == 0)
+                        return d.ToString("yyyy-MM-dd");
+                    if (d.Second == 0)
+                        return d.ToString("yyyy-MM-dd HH:mm");
+                    return d.ToString("yyyy-MM-dd HH:mm:ss");
+                default:
+                    throw new NotSupportedException("Unknown IndexFieldType: " + fieldType);
+            }
         }
 
 
