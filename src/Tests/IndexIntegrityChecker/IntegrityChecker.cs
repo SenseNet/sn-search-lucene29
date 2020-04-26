@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -8,18 +10,20 @@ using System.Threading.Tasks;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
+using Lucene.Net.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using SenseNet.Configuration;
+using SenseNet.ContentRepository;
 using SenseNet.ContentRepository.Schema;
 using SenseNet.ContentRepository.Search;
 using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.ContentRepository.Storage;
 using SenseNet.ContentRepository.Storage.Data;
 using SenseNet.ContentRepository.Storage.Data.MsSqlClient;
+using SenseNet.ContentRepository.Storage.Schema;
 using SenseNet.Diagnostics;
 using SenseNet.Search;
-using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29;
 using SenseNet.Search.Querying;
 
@@ -175,11 +179,11 @@ namespace IndexIntegrityChecker
             if (recurse)
             {
                 if (path != null)
-                    if (path.ToLower() == SenseNet.ContentRepository.Repository.RootPath.ToLower())
+                    if (string.Equals(path, Repository.RootPath, StringComparison.CurrentCultureIgnoreCase))
                         path = null;
                 return new IndexIntegrityChecker().CheckRecurse(path);
             }
-            return new IndexIntegrityChecker().CheckNode(path ?? SenseNet.ContentRepository.Repository.RootPath);
+            return new IndexIntegrityChecker().CheckNode(path ?? Repository.RootPath);
         }
 
         /*==================================================================================== Instance part */
@@ -189,38 +193,25 @@ namespace IndexIntegrityChecker
             var result = new List<Difference>();
             using (var readerFrame = LuceneSearchManager.GetIndexReaderFrame())
             {
-                var ixreader = readerFrame.IndexReader;
-                //var sql = String.Format(checkNodeSql, path);
-                //var proc = SenseNet.ContentRepository.Storage.Data.DataProvider.CreateDataProcedure(sql);
-                //proc.CommandType = System.Data.CommandType.Text;
-                var docids = new List<int>();
+                var ixReader = readerFrame.IndexReader;
+                var docIds = new List<int>();
                 var timestampData = GetTimestampDataForOneNodeIntegrityCheckAsync(path, GetExcludedNodeTypeIds())
                     .ConfigureAwait(false).GetAwaiter().GetResult();
 
-
-                //using (var dbreader = proc.ExecuteReader())
-                //{
-                //    while (dbreader.Read())
-                //    {
-                //        var docid = CheckDbAndIndex(timestampData, ixReader, result);
-                //        if (docid >= 0)
-                //            docids.Add(docid);
-                //    }
-                //}
-                var dbDocId = CheckDbAndIndex(timestampData, ixreader, result);
+                var dbDocId = CheckDbAndIndex(timestampData, ixReader, result);
                 if (dbDocId >= 0)
-                    docids.Add(dbDocId);
+                    docIds.Add(dbDocId);
 
-                var scoredocs = GetDocsUnderTree(path, false);
-                foreach (var scoredoc in scoredocs)
+                var scoreDocs = GetDocsUnderTree(path, false);
+                foreach (var scoreDoc in scoreDocs)
                 {
-                    var docid = scoredoc.Doc;
-                    var doc = ixreader.Document(docid);
-                    if (!docids.Contains(docid))
+                    var docId = scoreDoc.Doc;
+                    var doc = ixReader.Document(docId);
+                    if (!docIds.Contains(docId))
                     {
                         result.Add(new Difference(IndexDifferenceKind.NotInDatabase)
                         {
-                            DocId = scoredoc.Doc,
+                            DocId = scoreDoc.Doc,
                             VersionId = ParseInt(doc.Get(IndexFieldName.VersionId)),
                             NodeId = ParseInt(doc.Get(IndexFieldName.NodeId)),
                             Path = path,
@@ -245,8 +236,8 @@ namespace IndexIntegrityChecker
             {
                 using (var readerFrame = LuceneSearchManager.GetIndexReaderFrame())
                 {
-                    var ixreader = readerFrame.IndexReader;
-                    _numDocs = ixreader.NumDocs() + ixreader.NumDeletedDocs();
+                    var ixReader = readerFrame.IndexReader;
+                    _numDocs = ixReader.NumDocs() + ixReader.NumDeletedDocs();
                     var x = _numDocs / intSize;
                     var y = _numDocs % intSize;
                     _docBits = new int[x + (y > 0 ? 1 : 0)];
@@ -255,20 +246,20 @@ namespace IndexIntegrityChecker
                         if (y > 0)
                         {
                             var q = 0;
-                            for (int i = 0; i < y; i++)
+                            for (var i = 0; i < y; i++)
                                 q += 1 << i;
                             _docBits[_docBits.Length - 1] = q ^ (-1);
                         }
                     }
                     else
                     {
-                        for (int i = 0; i < _docBits.Length; i++)
+                        for (var i = 0; i < _docBits.Length; i++)
                             _docBits[i] = -1;
-                        var scoredocs = GetDocsUnderTree(path, true);
-                        for (int i = 0; i < scoredocs.Length; i++)
+                        var scoreDocs = GetDocsUnderTree(path, true);
+                        for (var i = 0; i < scoreDocs.Length; i++)
                         {
-                            var docid = scoredocs[i].Doc;
-                            _docBits[docid / intSize] ^= 1 << docid % intSize;
+                            var docId = scoreDocs[i].Doc;
+                            _docBits[docId / intSize] ^= 1 << docId % intSize;
                         }
                     }
 
@@ -277,46 +268,34 @@ namespace IndexIntegrityChecker
                     var timestampData = GetTimestampDataForRecursiveIntegrityCheckAsync(path, GetExcludedNodeTypeIds())
                         .ConfigureAwait(false).GetAwaiter().GetResult();
 
-                    //using (var dbreader = proc.ExecuteReader())
-                    //{
-                    //    while (dbreader.Read())
-                    //    {
-                    //        if ((++progress % 10000) == 0)
-                    //            SnTrace.Index.Write("Index Integrity Checker: CheckDbAndIndex: progress={0}/{1}, diffs:{2}", progress, _numDocs, result.Count);
-
-                    //        var docid = CheckDbAndIndex(dbreader, ixReader, result);
-                    //        if (docid > -1)
-                    //            _docBits[docid / intSize] |= 1 << docid % intSize;
-                    //    }
-                    //}
                     foreach (var item in timestampData)
                     {
-                        var docid = CheckDbAndIndex(item, ixreader, result);
-                        if (docid > -1)
-                            _docBits[docid / intSize] |= 1 << docid % intSize;
+                        var docId = CheckDbAndIndex(item, ixReader, result);
+                        if (docId > -1)
+                            _docBits[docId / intSize] |= 1 << docId % intSize;
                     }
 
 
-                    for (int i = 0; i < _docBits.Length; i++)
+                    for (var i = 0; i < _docBits.Length; i++)
                     {
                         if (_docBits[i] != -1)
                         {
                             var bits = _docBits[i];
-                            for (int j = 0; j < intSize; j++)
+                            for (var j = 0; j < intSize; j++)
                             {
                                 if ((bits & (1 << j)) == 0)
                                 {
-                                    var docid = i * intSize + j;
-                                    if (docid >= _numDocs)
+                                    var docId = i * intSize + j;
+                                    if (docId >= _numDocs)
                                         break;
-                                    if (!ixreader.IsDeleted(docid))
+                                    if (!ixReader.IsDeleted(docId))
                                     {
-                                        var doc = ixreader.Document(docid);
+                                        var doc = ixReader.Document(docId);
                                         if (!IsCommitDocument(doc))
                                         {
                                             result.Add(new Difference(IndexDifferenceKind.NotInDatabase)
                                             {
-                                                DocId = docid,
+                                                DocId = docId,
                                                 VersionId = ParseInt(doc.Get(IndexFieldName.VersionId)),
                                                 NodeId = ParseInt(doc.Get(IndexFieldName.NodeId)),
                                                 Path = doc.Get(IndexFieldName.Path),
@@ -353,8 +332,7 @@ namespace IndexIntegrityChecker
             var dbVersionTimestamp = dbData.VersionTimestamp;
             var lastMajorVersionId = dbData.LastMajorVersionId;
             var lastMinorVersionId = dbData.LastMinorVersionId;
-
-            var termDocs = ixReader.TermDocs(new Term(IndexFieldName.VersionId, Lucene.Net.Util.NumericUtils.IntToPrefixCoded(versionId)));
+            var termDocs = ixReader.TermDocs(new Term(IndexFieldName.VersionId, NumericUtils.IntToPrefixCoded(versionId)));
             var docId = -1;
             if (termDocs.Next())
             {
@@ -443,15 +421,15 @@ namespace IndexIntegrityChecker
                 if (dbNodeTimestamp != indexNodeTimestamp)
                 {
                     var ok = false;
-                    if (isLastDraft !=  IndexValue.Yes)
+                    if (isLastDraft != IndexValue.Yes)
                     {
-                        var latestDocs = ixReader.TermDocs(new Term(IndexFieldName.NodeId, Lucene.Net.Util.NumericUtils.IntToPrefixCoded(nodeId)));
-                        Lucene.Net.Documents.Document latestDoc = null;
+                        var latestDocs = ixReader.TermDocs(new Term(IndexFieldName.NodeId, NumericUtils.IntToPrefixCoded(nodeId)));
+                        Document latestDoc = null;
                         while (latestDocs.Next())
                         {
                             var latestDocId = latestDocs.Doc();
                             var d = ixReader.Document(latestDocId);
-                            if (d.Get(IndexFieldName.IsLastDraft) !=  IndexValue.Yes)
+                            if (d.Get(IndexFieldName.IsLastDraft) != IndexValue.Yes)
                                 continue;
                             latestDoc = d;
                             break;
@@ -541,11 +519,200 @@ namespace IndexIntegrityChecker
         }
 
 
+        private readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+            Formatting = Formatting.Indented
+        };
+
+        public void SaveCommitUserData(string savedIndexDir)
+        {
+            using (var readerFrame = LuceneSearchManager.GetIndexReaderFrame())
+            {
+                var ixReader = readerFrame.IndexReader;
+
+                var commitPath = Path.Combine(savedIndexDir, "commitUserData.txt");
+                using (var writer = new StreamWriter(commitPath, false))
+                    JsonSerializer.Create(_jsonSerializerSettings).Serialize(writer, ixReader.GetCommitUserData());
+            }
+        }
+        public void SaveRawIndex(string savedIndexDir)
+        {
+            var index = new Dictionary<string, Dictionary<string, string>>();
+            using (var readerFrame = LuceneSearchManager.GetIndexReaderFrame())
+            {
+                var ixReader = readerFrame.IndexReader;
+                var terms = ixReader.Terms();
+                while (terms.Next())
+                {
+                    var term = terms.Term();
+                    var field = term.Field();
+                    var text = GetTermText(term);
+                    if (text == null)
+                        continue;
+
+                    if (!index.TryGetValue(field, out var fieldValues))
+                        index.Add(field, (fieldValues = new Dictionary<string, string>()));
+
+                    var termDocs = ixReader.TermDocs(term);
+                    var docs = new List<int>();
+                    int doc;
+                    while (termDocs.Next())
+                        if (!ixReader.IsDeleted((doc = termDocs.Doc())))
+                            docs.Add(doc);
+                    fieldValues[text] = string.Join(",", docs.Select(x => x.ToString()));
+                }
+            }
+            var indexPath = Path.Combine(savedIndexDir, "decryptedIndex.txt");
+
+
+            using (var writer = new StreamWriter(indexPath, false))
+                JsonSerializer.Create(_jsonSerializerSettings).Serialize(writer, index);
+
+        }
+        public void SaveIndexDocs(string savedIndexDir)
+        {
+            var documents = new Dictionary<int, Dictionary<string, string>>();
+            using (var readerFrame = LuceneSearchManager.GetIndexReaderFrame())
+            {
+                var ixReader = readerFrame.IndexReader;
+                var terms = ixReader.Terms();
+                while (terms.Next())
+                {
+                    var term = terms.Term();
+                    var field = term.Field();
+                    var text = GetTermText(term);
+                    if(text == null)
+                        continue;
+
+                    var termDocs = ixReader.TermDocs(term);
+                    int doc;
+                    while (termDocs.Next())
+                        if (!ixReader.IsDeleted((doc = termDocs.Doc())))
+                            AddFieldToDocument(documents, doc, field, text);
+                }
+            }
+            var indexPath = Path.Combine(savedIndexDir, "decryptedDocuments.txt");
+
+            using (var writer = new StreamWriter(indexPath, false))
+                JsonSerializer.Create(_jsonSerializerSettings).Serialize(writer, documents);
+
+        }
+        private void AddFieldToDocument(Dictionary<int, Dictionary<string, string>> docs, int doc, string field, string text)
+        {
+            if (!docs.TryGetValue(doc, out var document))
+                docs.Add(doc, document = new Dictionary<string, string>());
+            if (!document.TryGetValue(field, out var value))
+                document.Add(field, text);
+            else
+                document[field] = $"{value}, {text}";
+        }
+
+        private string GetTermText(Term term)
+        {
+            var fieldName = term.Field();
+            var fieldText = term.Text();
+            if (fieldText == null)
+                return null;
+
+            var fieldType = default(IndexValueType);
+
+            if (!(LuceneSearchManager?.IndexFieldTypeInfo?.TryGetValue(fieldName, out fieldType) ?? false))
+            {
+                switch (fieldName)
+                {
+                    case "NodeTimestamp":
+                    case "VersionTimestamp":
+                        fieldType = IndexValueType.Long;
+                        break;
+                    default:
+                        var c = fieldText.ToCharArray();
+                        for (var i = 0; i < c.Length; i++)
+                            if (c[i] < ' ')
+                                c[i] = '.';
+                        return new string(c);
+                }
+            }
+
+            var pt = ActiveSchema.PropertyTypes[fieldName];
+            if (pt == null)
+            {
+                switch (fieldName)
+                {
+                    case "CreatedBy":
+                    case "ModifiedBy":
+                    case "Owner":
+                    case "VersionCreatedBy":
+                    case "VersionModifiedBy":
+                    case "Workspace":
+                        fieldType = IndexValueType.Int;
+                        break;
+                        //case "NodeTimestamp":
+                        //case "VersionTimestamp":
+                        //    fieldType = IndexValueType.Long;
+                        //    break;
+                }
+            }
+            else
+            {
+                if (pt.DataType == DataType.Reference)
+                    fieldType = IndexValueType.Int;
+            }
+
+            string check;
+            switch (fieldType)
+            {
+                case IndexValueType.Bool:
+                case IndexValueType.String:
+                case IndexValueType.StringArray:
+                    return fieldText;
+                case IndexValueType.Int:
+                    var intValue = NumericUtils.PrefixCodedToInt(fieldText);
+                    check = NumericUtils.IntToPrefixCoded(intValue);
+                    if (check != fieldText)
+                        return null;
+                    return Convert.ToString(intValue, CultureInfo.InvariantCulture);
+                case IndexValueType.Long:
+                    var longValue = NumericUtils.PrefixCodedToLong(fieldText);
+                    check = NumericUtils.LongToPrefixCoded(longValue);
+                    if (check != fieldText)
+                        return null;
+                    return Convert.ToString(longValue, CultureInfo.InvariantCulture);
+                case IndexValueType.Float:
+                    var floatValue = NumericUtils.PrefixCodedToFloat(fieldText);
+                    check = NumericUtils.FloatToPrefixCoded(floatValue);
+                    if (check != fieldText)
+                        return null;
+                    return Convert.ToString(floatValue, CultureInfo.InvariantCulture);
+                case IndexValueType.Double:
+                    var doubleValue = NumericUtils.PrefixCodedToDouble(fieldText);
+                    check = NumericUtils.DoubleToPrefixCoded(doubleValue);
+                    if (check != fieldText)
+                        return null;
+                    return Convert.ToString(doubleValue, CultureInfo.InvariantCulture);
+                case IndexValueType.DateTime:
+                    var ticksValue = NumericUtils.PrefixCodedToLong(fieldText);
+                    check = NumericUtils.LongToPrefixCoded(ticksValue);
+                    if (check != fieldText)
+                        return null;
+                    var d = new DateTime(ticksValue);
+                    if (d.Hour == 0 && d.Minute == 0 && d.Second == 0)
+                        return d.ToString("yyyy-MM-dd");
+                    if (d.Second == 0)
+                        return d.ToString("yyyy-MM-dd HH:mm");
+                    return d.ToString("yyyy-MM-dd HH:mm:ss");
+                default:
+                    throw new NotSupportedException("Unknown IndexFieldType: " + fieldType);
+            }
+        }
+
+
         /* ===================================================================================== SQL DATA HANDLING */
 
         private static async Task<TimestampData> GetTimestampDataForOneNodeIntegrityCheckAsync(string path, int[] excludedNodeTypeIds)
         {
-            string checkNodeSql = "SELECT N.NodeId, V.VersionId, CONVERT(bigint, n.timestamp) NodeTimestamp, CONVERT(bigint, v.timestamp) VersionTimestamp, N.LastMajorVersionId, N.LastMinorVersionId from Versions V join Nodes N on V.NodeId = N.NodeId WHERE N.Path = '{0}' COLLATE Latin1_General_CI_AS";
+            var checkNodeSql = "SELECT N.NodeId, V.VersionId, CONVERT(bigint, n.timestamp) NodeTimestamp, CONVERT(bigint, v.timestamp) VersionTimestamp, N.LastMajorVersionId, N.LastMinorVersionId from Versions V join Nodes N on V.NodeId = N.NodeId WHERE N.Path = '{0}' COLLATE Latin1_General_CI_AS";
             if (excludedNodeTypeIds != null && excludedNodeTypeIds.Length > 0)
                 checkNodeSql += $" AND N.NodeTypeId NOT IN ({string.Join(", ", excludedNodeTypeIds)})";
 
@@ -575,7 +742,7 @@ namespace IndexIntegrityChecker
         }
         private static async Task<TimestampData[]> GetTimestampDataForRecursiveIntegrityCheckAsync(string path, int[] excludedNodeTypeIds)
         {
-            string typeFilter = excludedNodeTypeIds != null && excludedNodeTypeIds.Length > 0
+            var typeFilter = excludedNodeTypeIds != null && excludedNodeTypeIds.Length > 0
                 ? $"N.NodeTypeId NOT IN ({string.Join(", ", excludedNodeTypeIds)})"
                 : null;
 
