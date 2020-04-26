@@ -15,7 +15,7 @@ namespace IndexIntegrityChecker
 {
     class Program
     {
-        static void Main(string[] args)
+        private static void Main(/*string[] args*/)
         {
             var indexDir = Path.GetFullPath($"{Environment.CurrentDirectory}\\..\\..\\..\\..\\..\\" +
                                                       "SenseNet.Search.Lucene29.Centralized.Service\\" +
@@ -27,15 +27,19 @@ namespace IndexIntegrityChecker
                 return;
             }
 
-
             IConfiguration configuration = new ConfigurationBuilder()
+                // ReSharper disable once StringLiteralTypo
                 .AddJsonFile("appsettings.json", true, true)
                 .AddEnvironmentVariables()
                 .Build();
 
-            var serviceIndexPath = Directory.GetDirectories(indexDir).OrderBy(x => x).Last();
+            var subDirs = Directory.GetDirectories(indexDir);
+            var serviceIndexPath = subDirs.Any()
+                ? subDirs.OrderBy(x => x).Last()
+                : indexDir;
+
             var lockFilePath = Path.Combine(serviceIndexPath, "write.lock");
-            while(File.Exists(lockFilePath))
+            while (File.Exists(lockFilePath))
             {
                 Console.WriteLine("Wait for write.lock is released.");
                 Task.Delay(1000).ConfigureAwait(false).GetAwaiter().GetResult();
@@ -59,20 +63,23 @@ namespace IndexIntegrityChecker
             using (Repository.Start(builder))
             {
                 Console.WriteLine("================================");
-                Console.WriteLine("Index integrity:");
-                // ----------------------------------------
-                //var diffs = IndexIntegrityChecker.Check("/Root", true).ToArray();
+
+                Console.Write("Saving index: ");
+                SaveIndex();
+                Console.WriteLine("ok.");
+
+                Console.Write("Index integrity: ");
                 var diffs = IndexIntegrityChecker.Check().ToArray();
                 if (diffs.Length != 0)
                 {
-                    Console.WriteLine($"  Check index integrity failed. Diff count: {diffs.Length}");
+                    Console.WriteLine($"check index integrity failed. Diff count: {diffs.Length}");
                     var count = 0;
                     foreach (var diff in diffs)
                     {
                         Console.WriteLine($"  {diff}");
                         if (++count > 20)
                         {
-                            Console.WriteLine($"  ...etc");
+                            Console.WriteLine("  ...etc");
                             break;
                         }
                     }
@@ -83,6 +90,18 @@ namespace IndexIntegrityChecker
                 }
                 Console.WriteLine("================================");
             }
+        }
+
+        private static void SaveIndex()
+        {
+            var savedIndexDir = Path.Combine(Environment.CurrentDirectory, "App_Data", "SavedIndex");
+            if (!Directory.Exists(savedIndexDir))
+                Directory.CreateDirectory(savedIndexDir);
+
+            var checker = new IndexIntegrityChecker();
+            checker.SaveCommitUserData(savedIndexDir);
+            checker.SaveRawIndex(savedIndexDir);
+            checker.SaveIndexDocs(savedIndexDir);
         }
     }
 }
