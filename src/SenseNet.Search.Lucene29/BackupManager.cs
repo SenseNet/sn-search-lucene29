@@ -45,6 +45,9 @@ namespace SenseNet.Search.Lucene29
 
         public Task BackupAsync(IndexingActivityStatus state, CancellationToken cancellationToken)
         {
+            //UNDONE:!! The exclusivity of the backup must be ensured
+
+            //UNDONE:! write SnTrace lines.
             Console.WriteLine("BACKUP START");
             Console.WriteLine("  IndexingActivityStatus: " + state);
             EnsureEmptyBackupDirectory(_backupDirectoryPath);
@@ -112,6 +115,8 @@ namespace SenseNet.Search.Lucene29
             {
                 Console.WriteLine("skipped.");
             }
+//UNDONE:-- Remove Thread.Sleep
+Thread.Sleep(500);
         }
     }
 }

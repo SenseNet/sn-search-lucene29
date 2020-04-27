@@ -59,9 +59,10 @@ namespace SenseNet.Search.Lucene29.Centralized
             return ssc;
         }
 
-        public static ISearchServiceContract Instance 
-        { 
-            get => LazyInstance.Value;
+        public static ISearchServiceContract Instance
+        {
+            //UNDONE:- WCF client cannot work parallel with a singleton instance.
+            get => GetSearchServiceContract(); // LazyInstance.Value;
             internal set => LazyInstance = new Lazy<ISearchServiceContract>(() => value);
         }
 
