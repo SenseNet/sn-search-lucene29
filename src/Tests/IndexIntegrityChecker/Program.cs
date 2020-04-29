@@ -64,12 +64,31 @@ namespace IndexIntegrityChecker
             {
                 Console.WriteLine("================================");
 
+                var savedIndexDir = Path.Combine(Environment.CurrentDirectory, "App_Data", "SavedIndex");
+                if (!Directory.Exists(savedIndexDir))
+                    Directory.CreateDirectory(savedIndexDir);
+
                 Console.Write("Saving index: ");
-                SaveIndex();
+                SaveIndex(savedIndexDir);
                 Console.WriteLine("ok.");
 
                 Console.Write("Index integrity: ");
                 var diffs = IndexIntegrityChecker.Check().ToArray();
+
+                var diffPath = Path.Combine(savedIndexDir, "indexIntegrity.txt");
+                using (var writer = new StreamWriter(diffPath, false))
+                {
+                    if (diffs.Length != 0)
+                    {
+                        foreach (var diff in diffs)
+                            writer.WriteLine($"  {diff}");
+                    }
+                    else
+                    {
+                        writer.WriteLine($"There is no any differences.");
+                    }
+                }
+
                 if (diffs.Length != 0)
                 {
                     Console.WriteLine($"check index integrity failed. Diff count: {diffs.Length}");
@@ -92,12 +111,8 @@ namespace IndexIntegrityChecker
             }
         }
 
-        private static void SaveIndex()
+        private static void SaveIndex(string savedIndexDir)
         {
-            var savedIndexDir = Path.Combine(Environment.CurrentDirectory, "App_Data", "SavedIndex");
-            if (!Directory.Exists(savedIndexDir))
-                Directory.CreateDirectory(savedIndexDir);
-
             var checker = new IndexIntegrityChecker();
             checker.SaveCommitUserData(savedIndexDir);
             checker.SaveRawIndex(savedIndexDir);
