@@ -72,9 +72,11 @@ namespace CentralizedIndexBackupTester
                     Console.WriteLine(NodeHead.Get(id).Path);
                 Console.WriteLine();
 
+                //SnTrace.EnableAll();
+
                 // BACKUP TEST
                 var engine = (ILuceneIndexingEngine)Providers.Instance.SearchEngine.IndexingEngine;
-                new BackupTest(engine).Run(CancellationToken.None)
+                new ContinuousIndexTest(engine).Run(CancellationToken.None)
                     .ConfigureAwait(false).GetAwaiter().GetResult();
 
                 // Shut down the service to leave the index.
