@@ -39,23 +39,28 @@ namespace CentralizedIndexBackupTester
 
         public async Task Run(CancellationToken cancellationToken)
         {
-            // Start an editor worker agent
-            var finisher = new CancellationTokenSource();
-            var _ = new ContinuousIndexWorker().WorkAsync(finisher.Token).ConfigureAwait(false);
+            using (var op = SnTrace.Test.StartOperation("ContinuousIndexTest"))
+            {
+                // Start an editor worker agent
+                var finisher = new CancellationTokenSource();
+                var _ = new ContinuousIndexWorker().WorkAsync(finisher.Token).ConfigureAwait(false);
 
-            // Wait for backup
-            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
+                // Wait for backup
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
 
-            // Do backup
-            await BackupAsync().ConfigureAwait(false);
+                // Do backup
+                await BackupAsync().ConfigureAwait(false);
 
-            // Wait for finish
-            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
+                // Wait for finish
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
 
-            // Stop worker agent
-            finisher.Cancel();
+                // Stop worker agent
+                finisher.Cancel();
 
-            await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken).ConfigureAwait(false);
+
+                op.Successful = true;
+            }
         }
 
         private async Task BackupAsync()
