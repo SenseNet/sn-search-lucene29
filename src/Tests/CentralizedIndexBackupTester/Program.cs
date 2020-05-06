@@ -75,27 +75,6 @@ _restoreTest = true;
                 .DisableNodeObservers()
                 .UseTraceCategories(SnTrace.Categories.Select(x => x.Name).ToArray()) as RepositoryBuilder;
 
-            //UNDONE:-- Need to be a part of the startup sequence
-            if (_restoreTest)
-            {
-                IndexingActivityStatus status;
-                using (var client = new SearchServiceClient(serviceBinding, serviceEndpoint))
-                    status = client.ReadActivityStatusFromIndex();
-
-                Console.WriteLine("IndexingActivityStatus from index: " + status);
-                if(status.LastActivityId > 0)
-                {
-                    Console.Write("RESTORING ... ");
-                    var result = IndexManager.RestoreIndexingActivityStatusAsync(status, CancellationToken.None)
-                        .ConfigureAwait(false).GetAwaiter().GetResult();
-                    Console.WriteLine("{0} ok.", result);
-                }
-                else
-                {
-                    Console.WriteLine("Restore is not necessary");
-                }
-            }
-
             using (Repository.Start(builder))
             {
                 Console.WriteLine("CHECK SQL SERVER CONNECTIVITY (query top level nodes):");
