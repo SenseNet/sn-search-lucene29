@@ -37,7 +37,7 @@ namespace CentralizedIndexBackupTester
             _backupDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "IndexBackup");
         }
 
-        public async Task Run(CancellationToken cancellationToken)
+        public async Task RunAsync(CancellationToken cancellationToken)
         {
             using (var op = SnTrace.Test.StartOperation("ContinuousIndexTest"))
             {
@@ -49,7 +49,7 @@ namespace CentralizedIndexBackupTester
                 await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
 
                 // Do backup
-                await BackupAsync().ConfigureAwait(false);
+                await BackupAsync(cancellationToken).ConfigureAwait(false);
 
                 // Wait for finish
                 await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
@@ -63,9 +63,10 @@ namespace CentralizedIndexBackupTester
             }
         }
 
-        private async Task BackupAsync()
+        private async Task BackupAsync(CancellationToken cancellationToken)
         {
-            var status = IndexManager.LoadCurrentIndexingActivityStatus();
+            var status = await IndexManager.LoadCurrentIndexingActivityStatusAsync(cancellationToken)
+                .ConfigureAwait(false);
 
             Console.WriteLine("Backup start");
             Console.WriteLine("  Indexing activity status: " + status);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading;
@@ -9,15 +10,18 @@ using SenseNet.Configuration;
 using SenseNet.ContentRepository;
 using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.ContentRepository.Storage;
+using SenseNet.ContentRepository.Storage.Data;
 using SenseNet.ContentRepository.Storage.Data.MsSqlClient;
 using SenseNet.ContentRepository.Storage.Search;
 using SenseNet.Diagnostics;
 using SenseNet.Search;
+using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29;
 using SenseNet.Search.Lucene29.Centralized;
 using SenseNet.Search.Querying;
 using SenseNet.Security.EFCSecurityStore;
 using SenseNet.Security.Messaging.RabbitMQ;
+using File = System.IO.File;
 using Task = System.Threading.Tasks.Task;
 
 namespace CentralizedIndexBackupTester
@@ -25,14 +29,28 @@ namespace CentralizedIndexBackupTester
     class Program
     {
         private static string _serviceIndexDirectory;
+        private static string _backupIndexDirectory;
+        private static bool _restoreTest;
 
         static void Main(string[] args)
         {
+            _restoreTest = (args.Length > 0 && args.Any(x => x.ToUpper() == "RESTORE"));
+_restoreTest = true;
+
             _serviceIndexDirectory = Path.GetFullPath($"{Environment.CurrentDirectory}\\..\\..\\..\\..\\..\\" +
                                                       "SenseNet.Search.Lucene29.Centralized.Service\\" +
                                                       "bin\\Debug\\App_Data\\LocalIndex");
             Console.WriteLine("IndexDirectory of the service: ");
             Console.WriteLine(_serviceIndexDirectory);
+
+            _backupIndexDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "IndexBackup");
+            Console.WriteLine("Backup directory: ");
+            Console.WriteLine(_serviceIndexDirectory);
+
+            //if (_restoreTest)
+            //{
+            //    RestoreFiles();
+            //}
 
             IConfiguration configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", true, true)
@@ -55,7 +73,28 @@ namespace CentralizedIndexBackupTester
                 .UseLucene29CentralizedSearchEngine(serviceBinding, serviceEndpoint)
                 .StartWorkflowEngine(false)
                 .DisableNodeObservers()
-                .UseTraceCategories("Event", "Custom", "System") as RepositoryBuilder;
+                .UseTraceCategories(SnTrace.Categories.Select(x => x.Name).ToArray()) as RepositoryBuilder;
+
+            //UNDONE:-- Need to be a part of the startup sequence
+            if (_restoreTest)
+            {
+                IndexingActivityStatus status;
+                using (var client = new SearchServiceClient(serviceBinding, serviceEndpoint))
+                    status = client.ReadActivityStatusFromIndex();
+
+                Console.WriteLine("IndexingActivityStatus from index: " + status);
+                if(status.LastActivityId > 0)
+                {
+                    Console.Write("RESTORING ... ");
+                    var result = IndexManager.RestoreIndexingActivityStatusAsync(status, CancellationToken.None)
+                        .ConfigureAwait(false).GetAwaiter().GetResult();
+                    Console.WriteLine("{0} ok.", result);
+                }
+                else
+                {
+                    Console.WriteLine("Restore is not necessary");
+                }
+            }
 
             using (Repository.Start(builder))
             {
@@ -72,17 +111,39 @@ namespace CentralizedIndexBackupTester
                     Console.WriteLine(NodeHead.Get(id).Path);
                 Console.WriteLine();
 
-                //SnTrace.EnableAll();
+                SnTrace.EnableAll();
 
-                // BACKUP TEST
                 var engine = (ILuceneIndexingEngine)Providers.Instance.SearchEngine.IndexingEngine;
-                new ContinuousIndexTest(engine).Run(CancellationToken.None)
-                    .ConfigureAwait(false).GetAwaiter().GetResult();
+                if (!_restoreTest)
+                {
+                    // BACKUP TEST
+                    new ContinuousIndexTest(engine).RunAsync(CancellationToken.None)
+                        .ConfigureAwait(false).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    // RESTORE TEST
+                    new RestoreTest(engine).RunAsync(CancellationToken.None)
+                        .ConfigureAwait(false).GetAwaiter().GetResult();
+                }
 
                 // Shut down the service to leave the index.
                 IndexManager.IndexingEngine.ShutDownAsync(CancellationToken.None)
                     .ConfigureAwait(false).GetAwaiter().GetResult();
             }
+        }
+
+        private static void RestoreFiles()
+        {
+            var target = Directory.GetDirectories(_serviceIndexDirectory).OrderBy(x => x).Last();
+
+            // Ensure empty target
+            foreach(var file in Directory.GetFiles(target))
+                File.Delete(file);
+
+            // Restore
+            foreach (var file in Directory.GetFiles(_backupIndexDirectory))
+                File.Copy(file, Path.Combine(target, Path.GetFileName(file)));
         }
 
         private static void WaitForServiceStarted(Binding serviceBinding, EndpointAddress serviceEndpoint)
@@ -93,8 +154,8 @@ namespace CentralizedIndexBackupTester
             {
                 try
                 {
-                    var client = new SearchServiceClient(serviceBinding, serviceEndpoint);
-                    client.Alive();
+                    using (var client = new SearchServiceClient(serviceBinding, serviceEndpoint))
+                        client.Alive();
                     return;
                 }
                 catch(Exception e)
