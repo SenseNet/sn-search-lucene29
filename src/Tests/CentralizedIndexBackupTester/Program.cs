@@ -47,11 +47,6 @@ _restoreTest = true;
             Console.WriteLine("Backup directory: ");
             Console.WriteLine(_serviceIndexDirectory);
 
-            //if (_restoreTest)
-            //{
-            //    RestoreFiles();
-            //}
-
             IConfiguration configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", true, true)
                 .AddEnvironmentVariables()
