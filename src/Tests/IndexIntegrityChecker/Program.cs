@@ -58,10 +58,13 @@ namespace IndexIntegrityChecker
                 .UseDataProvider(new MsSqlDataProvider())
                 .UseSecurityDataProvider(
                     new EFCSecurityDataProvider(connectionString: ConnectionStrings.ConnectionString))
-                .UseLucene29LocalSearchEngine(indexDirectory) as RepositoryBuilder;
+                .UseLucene29LocalSearchEngine(indexDirectory)
+                .UseTraceCategories(SnTrace.Categories.Select(x => x.Name).ToArray()) as RepositoryBuilder;
 
             using (Repository.Start(builder))
             {
+                SnTrace.EnableAll();
+
                 Console.WriteLine("================================");
 
                 var savedIndexDir = Path.Combine(Environment.CurrentDirectory, "App_Data", "SavedIndex");

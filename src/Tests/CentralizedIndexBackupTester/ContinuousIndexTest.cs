@@ -37,30 +37,36 @@ namespace CentralizedIndexBackupTester
             _backupDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "IndexBackup");
         }
 
-        public async Task Run(CancellationToken cancellationToken)
+        public async Task RunAsync(CancellationToken cancellationToken)
         {
-            // Start an editor worker agent
-            var finisher = new CancellationTokenSource();
-            var _ = new ContinuousIndexWorker().WorkAsync(finisher.Token).ConfigureAwait(false);
+            using (var op = SnTrace.Test.StartOperation("ContinuousIndexTest"))
+            {
+                // Start an editor worker agent
+                var finisher = new CancellationTokenSource();
+                var _ = new ContinuousIndexWorker().WorkAsync(finisher.Token).ConfigureAwait(false);
 
-            // Wait for backup
-            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
+                // Wait for backup
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
 
-            // Do backup
-            await BackupAsync().ConfigureAwait(false);
+                // Do backup
+                await BackupAsync(cancellationToken).ConfigureAwait(false);
 
-            // Wait for finish
-            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
+                // Wait for finish
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
 
-            // Stop worker agent
-            finisher.Cancel();
+                // Stop worker agent
+                finisher.Cancel();
 
-            await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken).ConfigureAwait(false);
+
+                op.Successful = true;
+            }
         }
 
-        private async Task BackupAsync()
+        private async Task BackupAsync(CancellationToken cancellationToken)
         {
-            var status = IndexManager.LoadCurrentIndexingActivityStatus();
+            var status = await IndexManager.LoadCurrentIndexingActivityStatusAsync(cancellationToken)
+                .ConfigureAwait(false);
 
             Console.WriteLine("Backup start");
             Console.WriteLine("  Indexing activity status: " + status);

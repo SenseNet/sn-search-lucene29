@@ -58,20 +58,21 @@ namespace SenseNet.Search.Lucene29
         {
             return BackupAsync(null, cancellationToken);
         }
-        public Task BackupAsync(string target, CancellationToken cancellationToken)
+        public async Task BackupAsync(string target, CancellationToken cancellationToken)
         {
             //UNDONE:!! The exclusivity of the backup must be ensured
-            //UNDONE:? What category is the index backup? (the "Index" maybe switched off but the backup is an important operation)
             using (var op = SnTrace.System.StartOperation($"Index backup. Lucene29CentralizedIndexingEngine"))
             {
-                var state = IndexManager.LoadCurrentIndexingActivityStatus();
+                await IndexManager.DeleteRestorePointsAsync(cancellationToken).ConfigureAwait(false);
+
+                var state = await IndexManager.LoadCurrentIndexingActivityStatusAsync(cancellationToken)
+                    .ConfigureAwait(false);
                 SnTrace.System.Write($"Index backup indexing-activity status: {state}");
 
                 SearchServiceClient.Instance.Backup(state, target);
 
                 op.Successful = true;
             }
-            return Task.CompletedTask;
         }
 
         public Task ClearIndexAsync(CancellationToken cancellationToken)
