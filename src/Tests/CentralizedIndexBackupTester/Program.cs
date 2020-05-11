@@ -28,14 +28,26 @@ namespace CentralizedIndexBackupTester
 {
     class Program
     {
+        private enum TestType { Backup, Restore, Validity}
+
         private static string _serviceIndexDirectory;
         private static string _backupIndexDirectory;
-        private static bool _restoreTest;
+        private static TestType _testType;
 
         static void Main(string[] args)
         {
-            _restoreTest = (args.Length > 0 && args.Any(x => x.ToUpper() == "RESTORE"));
-_restoreTest = true;
+args = new[] {"Validity"};
+
+            if (args.Length == 0)
+            {
+                Console.WriteLine("Missing test type. Expected 'Backup', 'Restore' or 'Validity'.");
+                return;
+            }
+            if(!Enum.TryParse<TestType>(args[0], true, out _testType))
+            {
+                Console.WriteLine("Invalid test type. Expected 'Backup', 'Restore' or 'Validity'.");
+                return;
+            }
 
             _serviceIndexDirectory = Path.GetFullPath($"{Environment.CurrentDirectory}\\..\\..\\..\\..\\..\\" +
                                                       "SenseNet.Search.Lucene29.Centralized.Service\\" +
@@ -45,14 +57,14 @@ _restoreTest = true;
 
             _backupIndexDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "IndexBackup");
             Console.WriteLine("Backup directory: ");
-            Console.WriteLine(_serviceIndexDirectory);
+            Console.WriteLine(_backupIndexDirectory);
 
             IConfiguration configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", true, true)
                 .AddEnvironmentVariables()
                 .Build();
 
-            var serviceBinding = new NetTcpBinding {Security = {Mode = SecurityMode.None}};
+            var serviceBinding = new NetTcpBinding { Security = { Mode = SecurityMode.None } };
             var serviceEndpoint = new EndpointAddress(configuration["sensenet:search:service:address"]);
             WaitForServiceStarted(serviceBinding, serviceEndpoint);
 
@@ -88,17 +100,22 @@ _restoreTest = true;
                 SnTrace.EnableAll();
 
                 var engine = (ILuceneIndexingEngine)Providers.Instance.SearchEngine.IndexingEngine;
-                if (!_restoreTest)
+                switch (_testType)
                 {
-                    // BACKUP TEST
-                    new ContinuousIndexTest(engine).RunAsync(CancellationToken.None)
-                        .ConfigureAwait(false).GetAwaiter().GetResult();
-                }
-                else
-                {
-                    // RESTORE TEST
-                    new RestoreTest(engine).RunAsync(CancellationToken.None)
-                        .ConfigureAwait(false).GetAwaiter().GetResult();
+                    case TestType.Backup:
+                        new ContinuousIndexTest(engine).RunAsync(CancellationToken.None)
+                            .ConfigureAwait(false).GetAwaiter().GetResult();
+                        break;
+                    case TestType.Restore:
+                        new RestoreTest(engine).RunAsync(CancellationToken.None)
+                            .ConfigureAwait(false).GetAwaiter().GetResult();
+                        break;
+                    case TestType.Validity:
+                        new ValidityTest(engine).RunAsync(CancellationToken.None)
+                            .ConfigureAwait(false).GetAwaiter().GetResult();
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
 
                 // Shut down the service to leave the index.
