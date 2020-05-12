@@ -26,57 +26,13 @@ namespace CentralizedIndexBackupTester
     /// 5. Finally, check the index integrity with the index and the database.
     ///    The integrity checker need to display no difference.
     /// </remarks>
-    public class ContinuousIndexTest
+    public class ContinuousIndexTest : BackupTest
     {
-        private readonly ILuceneIndexingEngine _engine;
-        private readonly string _backupDirectoryPath; // ...this...\bin\Debug\netcoreapp3.1\App_Data\IndexBackup
+        public ContinuousIndexTest(ILuceneIndexingEngine engine) : base(engine) { }
 
-        public ContinuousIndexTest(ILuceneIndexingEngine engine)
+        protected override IWorker CreateWorker()
         {
-            _engine = engine;
-            _backupDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "IndexBackup");
-        }
-
-        public async Task RunAsync(CancellationToken cancellationToken)
-        {
-            using (var op = SnTrace.Test.StartOperation("ContinuousIndexTest"))
-            {
-                // Start an editor worker agent
-                var finisher = new CancellationTokenSource();
-                var _ = new ContinuousIndexWorker().WorkAsync(finisher.Token).ConfigureAwait(false);
-
-                // Wait for backup
-                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
-
-                // Do backup
-                await BackupAsync(cancellationToken).ConfigureAwait(false);
-
-                // Wait for finish
-                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
-
-                // Stop worker agent
-                finisher.Cancel();
-
-                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken).ConfigureAwait(false);
-
-                op.Successful = true;
-            }
-        }
-
-        private async Task BackupAsync(CancellationToken cancellationToken)
-        {
-            var status = await IndexManager.LoadCurrentIndexingActivityStatusAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            Console.WriteLine("Backup start");
-            Console.WriteLine("  Indexing activity status: " + status);
-            var timer = Stopwatch.StartNew();
-
-            await _engine.BackupAsync(_backupDirectoryPath, CancellationToken.None)
-                .ConfigureAwait(false);
-
-            timer.Stop();
-            Console.WriteLine("Backup finished. Elapsed time: " + timer.Elapsed);
+            return new ContinuousIndexWorker();
         }
     }
 }

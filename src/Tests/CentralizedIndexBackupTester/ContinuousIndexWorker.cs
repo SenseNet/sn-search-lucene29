@@ -13,7 +13,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace CentralizedIndexBackupTester
 {
-    public class ContinuousIndexWorker
+    public class ContinuousIndexWorker : IWorker
     {
         private static readonly string TestRootName = "IndexBackupTest";
         private static readonly string TestRootPath = "/Root/" + TestRootName;
