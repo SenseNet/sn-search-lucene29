@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SenseNet.Search;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized.Index;
 using SenseNet.Tests;
@@ -15,57 +12,36 @@ namespace SenseNet.Search.Lucene29.Tests
     [TestClass]
     public class Lucene29CentralizedServiceTests : TestBase
     {
-        private class TestBackupManagerFactory : IBackupManagerFactory
+        private class TestBackupManager : IBackupManager, IBackupManagerFactory
         {
-            public bool FinishRequested { get; set; }
             public IBackupManager CreateBackupManager()
             {
-                return new TestBackupManager(this);
+                return new TestBackupManager();
             }
-
-        }
-        private class TestBackupManager : IBackupManager
-        {
-            private readonly TestBackupManagerFactory _factory;
-            public TestBackupManager(TestBackupManagerFactory factory)
-            {
-                // Memorize the finish-requester
-                _factory = factory;
-            }
-
             public async Task BackupAsync(IndexingActivityStatus state, string backupDirectoryPath,
                 LuceneSearchManager indexManager, CancellationToken cancellationToken)
             {
-                // Block the task until the stop request.
-                while (!_factory.FinishRequested)
-                    await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             }
         }
 
         [TestMethod]
         public void L29_Service_OnlyOneBackup()
         {
-            var factory = new TestBackupManagerFactory();
-            var service = new SearchService {BackupManagerFactory = factory};
+            var service = new SearchService { BackupManagerFactory = new TestBackupManager() };
 
-            // First call runs async way.
-            Task.Run(() => { service.Backup(null, null); });
-            Thread.Sleep(200);
+            var tasks = Enumerable.Range(0, 5)
+                .Select(x => Task.Run(() => service.Backup(null, null)))
+                .ToArray();
+            // ReSharper disable once CoVariantArrayConversion
+            Task.WaitAll(tasks);
 
-            try
-            {
-                // The second (sync) call needs to be refused.
-                service.Backup(null, null);
-                Assert.Fail("Expected exception was not thrown: BackupAlreadyExecutingException");
-            }
-            catch (BackupAlreadyExecutingException)
-            {
-            }
+            var completed = new string(tasks.Select(t => t.Result == IndexBackupResult.Finished ? 'Y' : 'n').ToArray());
+            var faulted = new string(tasks.Select(t => t.IsFaulted ? 'Y' : 'n').ToArray());
 
-            // Stop the blocking call.
-            factory.FinishRequested = true;
-
-            Task.Delay(200).GetAwaiter().GetResult();
+            Assert.AreEqual("Ynnnn", completed);
+            Assert.AreEqual("nnnnn", faulted);
         }
+
     }
 }
