@@ -103,11 +103,26 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             SearchManager.Instance.WriteActivityStatusToIndex(state);
         }
 
+        internal IBackupManagerFactory BackupManagerFactory { get; set; } = new BackupManager();
+        private object _backupLock = new object();
+        private IBackupManager _backupManager;
+        private static readonly string _backupExecutingErrorMessage =
+            "The backup is already in progress, initiated by another thread or process.";
         public void Backup(IndexingActivityStatus state, string backupDirectoryPath)
         {
-            var manager = new BackupManager(SearchManager.Instance, backupDirectoryPath);
-            manager.BackupAsync(state, CancellationToken.None)
+            if (_backupManager != null)
+                throw new BackupAlreadyExecutingException(_backupExecutingErrorMessage);
+
+            lock (_backupLock)
+            {
+                if (_backupManager != null)
+                    throw new BackupAlreadyExecutingException(_backupExecutingErrorMessage);
+                _backupManager = BackupManagerFactory.CreateBackupManager();
+            }
+
+            _backupManager.BackupAsync(state, backupDirectoryPath, SearchManager.Instance, CancellationToken.None)
                 .ConfigureAwait(false).GetAwaiter().GetResult();
+            _backupManager = null;
         }
 
         public void SetIndexingInfo(IDictionary<string, IndexFieldAnalyzer> analyzerTypes, 
