@@ -36,7 +36,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
         public bool Alive()
         {
-            //UNDONE:---- GrpcServiceClient.Alive is not implemented.
+            //UNDONE:---- GrpcServiceClient.Alive is not implemented and extend the related *.proto.
             throw new System.NotImplementedException();
         }
 
@@ -69,7 +69,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
         public void Backup(IndexingActivityStatus state, string backupDirectoryPath)
         {
-            //UNDONE:- GrpcServiceClient.Backup is not implemented
+            //UNDONE:- GrpcServiceClient.Backup is not implemented and extend the related *.proto.
             throw new System.NotImplementedException();
         }
 

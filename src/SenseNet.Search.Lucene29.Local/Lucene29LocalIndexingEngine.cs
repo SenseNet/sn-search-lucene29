@@ -113,8 +113,7 @@ namespace SenseNet.Search.Lucene29
 
         public Task BackupAsync(string target, CancellationToken cancellationToken)
         {
-            //UNDONE:- Backup is not implemented in Lucene29LocalIndexingEngine
-            throw new NotImplementedException();
+            throw new SnNotSupportedException();
         }
 
         /// <inheritdoc />

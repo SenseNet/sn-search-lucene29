@@ -60,7 +60,6 @@ namespace SenseNet.Search.Lucene29
         }
         public async Task BackupAsync(string target, CancellationToken cancellationToken)
         {
-            //UNDONE:!! The exclusivity of the backup must be ensured
             using (var op = SnTrace.System.StartOperation($"Index backup. Lucene29CentralizedIndexingEngine"))
             {
                 await IndexManager.DeleteRestorePointsAsync(cancellationToken).ConfigureAwait(false);
