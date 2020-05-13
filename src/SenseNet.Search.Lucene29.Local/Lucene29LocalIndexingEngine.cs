@@ -106,12 +106,12 @@ namespace SenseNet.Search.Lucene29
             return Task.CompletedTask;
         }
 
-        public Task BackupAsync(CancellationToken cancellationToken)
+        public Task<IndexBackupResult> BackupAsync(CancellationToken cancellationToken)
         {
             return BackupAsync(null, cancellationToken);
         }
 
-        public Task BackupAsync(string target, CancellationToken cancellationToken)
+        public Task<IndexBackupResult> BackupAsync(string target, CancellationToken cancellationToken)
         {
             throw new SnNotSupportedException();
         }

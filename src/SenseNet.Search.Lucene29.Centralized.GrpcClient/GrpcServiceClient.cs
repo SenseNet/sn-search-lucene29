@@ -67,7 +67,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             _searchClient.WriteActivityStatusToIndex(request);
         }
 
-        public void Backup(IndexingActivityStatus state, string backupDirectoryPath)
+        public IndexBackupResult Backup(IndexingActivityStatus state, string backupDirectoryPath)
         {
             //UNDONE:- GrpcServiceClient.Backup is not implemented and extend the related *.proto.
             throw new System.NotImplementedException();
