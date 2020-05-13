@@ -32,33 +32,27 @@ namespace SenseNet.Search.Lucene29
         }
     }
 
-    public class BackupManager
+    public class BackupManager : IBackupManager, IBackupManagerFactory
     {
-        private readonly LuceneSearchManager _indexManager;
-        private readonly string _backupDirectoryPath;
-
-        public BackupManager(LuceneSearchManager indexManager, string backupDirectoryPath)
+        public IBackupManager CreateBackupManager()
         {
-            _indexManager = indexManager;
-            _backupDirectoryPath = backupDirectoryPath;
+            return new BackupManager();
         }
 
-        public Task BackupAsync(IndexingActivityStatus state, CancellationToken cancellationToken)
+        public Task BackupAsync(IndexingActivityStatus state, string backupDirectoryPath,
+            LuceneSearchManager indexManager, CancellationToken cancellationToken)
         {
-            //UNDONE:!! The exclusivity of the backup must be ensured
-
             //UNDONE:! write SnTrace lines.
             Console.WriteLine("BACKUP START");
             Console.WriteLine("  IndexingActivityStatus: " + state);
-            EnsureEmptyBackupDirectory(_backupDirectoryPath);
+            EnsureEmptyBackupDirectory(backupDirectoryPath);
 
-            using (var snapshot = _indexManager.CreateSnapshot(state))
-                CopyIndexFiles(snapshot);
+            using (var snapshot = indexManager.CreateSnapshot(state))
+                CopyIndexFiles(snapshot, indexManager, backupDirectoryPath);
 
             return Task.CompletedTask;
         }
 
-        /* ======================================================================= ENSURE BACKUP DIRECTORY */
         private void EnsureEmptyBackupDirectory(string backupDirectoryPath)
         {
             Console.Write("Prepare backup directory: ");
@@ -79,23 +73,22 @@ namespace SenseNet.Search.Lucene29
             Console.WriteLine($"{deleted} files deleted.");
         }
 
-        /* ======================================================================= COPY */
-        private void CopyIndexFiles(IndexSnapshot snapshot)
+        private void CopyIndexFiles(IndexSnapshot snapshot, LuceneSearchManager indexManager, string backupDirectoryPath)
         {
             var timer = Stopwatch.StartNew();
 
-            var source = _indexManager.IndexDirectory.CurrentDirectory;
+            var source = indexManager.IndexDirectory.CurrentDirectory;
 
             Console.WriteLine("CopyIndexFiles starts.");
             Console.WriteLine("  Source: " + source);
-            Console.WriteLine("  Target: " + _backupDirectoryPath);
+            Console.WriteLine("  Target: " + backupDirectoryPath);
 
             Console.WriteLine("  SegmentFile: ");
-            CopyFile(source, _backupDirectoryPath, snapshot.SegmentFileName);
+            CopyFile(source, backupDirectoryPath, snapshot.SegmentFileName);
 
             Console.WriteLine("  Files: ");
             foreach (var fileName in snapshot.FileNames)
-                CopyFile(source, _backupDirectoryPath, fileName);
+                CopyFile(source, backupDirectoryPath, fileName);
 
             timer.Stop();
             Console.WriteLine("CopyIndexFiles finished. Elapsed time: " + timer.Elapsed);
@@ -115,8 +108,6 @@ namespace SenseNet.Search.Lucene29
             {
                 Console.WriteLine("skipped.");
             }
-//UNDONE:-- Remove Thread.Sleep
-Thread.Sleep(500);
         }
     }
 }
