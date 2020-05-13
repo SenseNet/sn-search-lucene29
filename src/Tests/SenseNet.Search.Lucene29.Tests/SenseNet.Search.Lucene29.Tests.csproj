@@ -94,8 +94,8 @@
     <Reference Include="SenseNet.Common, Version=7.4.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\SenseNet.Common.7.4.0\lib\netstandard2.0\SenseNet.Common.dll</HintPath>
     </Reference>
-    <Reference Include="SenseNet.ContentRepository, Version=7.7.9.5, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\SenseNet.ContentRepository.7.7.9.5\lib\netstandard2.0\SenseNet.ContentRepository.dll</HintPath>
+    <Reference Include="SenseNet.ContentRepository, Version=7.7.10.3, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\SenseNet.ContentRepository.7.7.10.3\lib\netstandard2.0\SenseNet.ContentRepository.dll</HintPath>
     </Reference>
     <Reference Include="SenseNet.Preview, Version=7.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\SenseNet.Preview.7.1.0\lib\netstandard2.0\SenseNet.Preview.dll</HintPath>
@@ -112,8 +112,8 @@
     <Reference Include="SenseNet.Services, Version=7.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\SenseNet.Services.7.7.0\lib\net461\SenseNet.Services.dll</HintPath>
     </Reference>
-    <Reference Include="SenseNet.Storage, Version=7.7.7.1, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\SenseNet.Storage.7.7.7.1\lib\netstandard2.0\SenseNet.Storage.dll</HintPath>
+    <Reference Include="SenseNet.Storage, Version=7.7.8.3, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\SenseNet.Storage.7.7.8.3\lib\netstandard2.0\SenseNet.Storage.dll</HintPath>
     </Reference>
     <Reference Include="SenseNet.TaskManagement.Core, Version=2.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\SenseNet.TaskManagement.Core.2.0.1\lib\netstandard2.0\SenseNet.TaskManagement.Core.dll</HintPath>
@@ -193,11 +193,16 @@
     <Compile Include="Implementations\TestNode.cs" />
     <Compile Include="Implementations\TestQueryContext.cs" />
     <Compile Include="Implementations\TestQueryEngine.cs" />
+    <Compile Include="Lucene29CentralizedServiceTests.cs" />
     <Compile Include="Lucene29Tests.cs" />
     <Compile Include="Lucene29CompilerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\SenseNet.Search.Lucene29.Centralized.Index\SenseNet.Search.Lucene29.Centralized.Index.csproj">
+      <Project>{B408FF84-8D7E-4869-955B-A070623AB611}</Project>
+      <Name>SenseNet.Search.Lucene29.Centralized.Index</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\SenseNet.Search.Lucene29.Common\SenseNet.Search.Lucene29.Common.csproj">
       <Project>{ff0b1af9-753b-4660-8bd0-b84492321808}</Project>
       <Name>SenseNet.Search.Lucene29.Common</Name>
