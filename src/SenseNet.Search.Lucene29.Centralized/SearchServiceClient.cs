@@ -9,15 +9,28 @@ using SenseNet.Search.Querying;
 
 namespace SenseNet.Search.Lucene29.Centralized
 {
-    public class SearchServiceClient : System.ServiceModel.ClientBase<ISearchServiceContract>, ISearchServiceContract
+    public class SearchServiceClient : System.ServiceModel.ClientBase<ISearchServiceContract>, ISearchServiceClient
     {
+        private static Lazy<ISearchServiceClient> ClientPrototype { get; set; } = new Lazy<ISearchServiceClient>(GetSearchServiceContract);
+
+        public static ISearchServiceClient Instance
+        {
+            get => ClientPrototype.Value.CreateInstance();
+            internal set => ClientPrototype = new Lazy<ISearchServiceClient>(() => value);
+        }
+
+        /* =================================================== ISearchServiceClient */
+
+        public ISearchServiceClient CreateInstance() => GetSearchServiceContract();
+
+        /* =================================================== -------------------- */
+
         internal static readonly int RetryCount = 5;
         internal static readonly int RetryWaitMilliseconds = 2000;
 
         #region Search service contract instance
 
         private static DateTime _lastErrorLog;
-        private static Lazy<ISearchServiceContract> LazyInstance { get; set; } = new Lazy<ISearchServiceContract>(GetSearchServiceContract);
 
         private static Binding Binding { get; set; }
         private static EndpointAddress EndPointAddress { get; set; }
@@ -28,7 +41,7 @@ namespace SenseNet.Search.Lucene29.Centralized
             EndPointAddress = address;
 
             // re-set the instance to force reload on first access
-            LazyInstance = new Lazy<ISearchServiceContract>(GetSearchServiceContract);
+            ClientPrototype = new Lazy<ISearchServiceClient>(GetSearchServiceContract);
         }
 
         private static void SearchServiceChannelOnFaulted(object sender, EventArgs eventArgs)
@@ -43,9 +56,9 @@ namespace SenseNet.Search.Lucene29.Centralized
             }
 
             // re-create the channel
-            LazyInstance = new Lazy<ISearchServiceContract>(GetSearchServiceContract);
+            ClientPrototype = new Lazy<ISearchServiceClient>(Instance.CreateInstance);
         }
-        private static ISearchServiceContract GetSearchServiceContract()
+        private static ISearchServiceClient GetSearchServiceContract()
         {
             // If the caller provided  a binding and address, use that.
             // Otherwise rely on configuration.
@@ -59,12 +72,6 @@ namespace SenseNet.Search.Lucene29.Centralized
             return ssc;
         }
 
-        public static ISearchServiceContract Instance
-        {
-            //UNDONE:- WCF client cannot work parallel with a singleton instance.
-            get => GetSearchServiceContract(); // LazyInstance.Value;
-            internal set => LazyInstance = new Lazy<ISearchServiceContract>(() => value);
-        }
 
         #endregion
 

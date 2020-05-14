@@ -13,8 +13,14 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
     /// translator between the generic sensenet types and the grpc-specific
     /// communication classes.
     /// </summary>
-    public class GrpcServiceClient : ISearchServiceContract
+    public class GrpcServiceClient : ISearchServiceClient
     {
+        /* =================================================== ISearchServiceClient */
+
+        public ISearchServiceClient CreateInstance() => this;
+
+        /* =================================================== ISearchServiceContract */
+
         private readonly GrpcSearchClient _searchClient;
         private readonly GrpcChannel _channel;
         public GrpcServiceClient(GrpcSearchClient searchClient, GrpcChannel channel)
