@@ -21,7 +21,6 @@ namespace SenseNet.Search.Lucene29
         public Task BackupAsync(IndexingActivityStatus state, string backupDirectoryPath,
             LuceneSearchManager indexManager, CancellationToken cancellationToken)
         {
-            //UNDONE:! write SnTrace lines.
             Console.WriteLine("BACKUP START");
             Console.WriteLine("  IndexingActivityStatus: " + state);
             EnsureEmptyBackupDirectory(backupDirectoryPath);

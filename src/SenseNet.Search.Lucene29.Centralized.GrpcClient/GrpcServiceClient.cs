@@ -42,7 +42,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
         public bool Alive()
         {
-            //UNDONE:---- GrpcServiceClient.Alive is not implemented and extend the related *.proto.
+            //UNDONE:- GrpcServiceClient.Alive is not implemented and extend the related *.proto.
             throw new System.NotImplementedException();
         }
 
