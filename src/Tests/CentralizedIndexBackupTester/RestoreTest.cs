@@ -32,7 +32,7 @@ namespace CentralizedIndexBackupTester
         {
             using (var op = SnTrace.Test.StartOperation("RestoreTest"))
             {
-                var dbStatus = await DataStore.GetCurrentIndexingActivityStatusAsync(cancellationToken)
+                var dbStatus = await DataStore.LoadCurrentIndexingActivityStatusAsync(cancellationToken)
                     .ConfigureAwait(false);
 
                 var indexStatus = await _engine.ReadActivityStatusFromIndexAsync(cancellationToken)
