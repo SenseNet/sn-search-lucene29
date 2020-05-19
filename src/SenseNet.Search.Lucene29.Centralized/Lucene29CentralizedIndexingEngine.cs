@@ -54,13 +54,13 @@ namespace SenseNet.Search.Lucene29
             return Task.CompletedTask;
         }
 
-        public Task<IndexBackupResult> BackupAsync(CancellationToken cancellationToken)
+        public Task<BackupResponse> BackupAsync(CancellationToken cancellationToken)
         {
             return BackupAsync(null, cancellationToken);
         }
-        public async Task<IndexBackupResult> BackupAsync(string target, CancellationToken cancellationToken)
+        public async Task<BackupResponse> BackupAsync(string target, CancellationToken cancellationToken)
         {
-            IndexBackupResult result;
+            BackupResponse result;
             using (var op = SnTrace.System.StartOperation($"Index backup. Lucene29CentralizedIndexingEngine"))
             {
                 await IndexManager.DeleteRestorePointsAsync(cancellationToken).ConfigureAwait(false);
@@ -75,6 +75,18 @@ namespace SenseNet.Search.Lucene29
             }
 
             return result;
+        }
+
+        public Task<BackupResponse> QueryBackupAsync(CancellationToken cancellationToken)
+        {
+            //UNDONE:--- QueryBackupAsync is nor implemented
+            throw new NotImplementedException();
+        }
+
+        public Task<BackupResponse> CancelBackupAsync(CancellationToken cancellationToken)
+        {
+            //UNDONE:--- CancelBackupAsync is nor implemented
+            throw new NotImplementedException();
         }
 
         public Task ClearIndexAsync(CancellationToken cancellationToken)

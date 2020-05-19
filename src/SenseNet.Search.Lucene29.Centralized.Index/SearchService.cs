@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Search;
@@ -106,23 +108,104 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         internal IBackupManagerFactory BackupManagerFactory { get; set; } = new BackupManager();
         private readonly object _backupLock = new object();
         private IBackupManager _backupManager;
-        public IndexBackupResult Backup(IndexingActivityStatus state, string backupDirectoryPath)
+        private readonly List<BackupInfo> _backupHistory = new List<BackupInfo>();
+        public BackupResponse Backup(IndexingActivityStatus state, string backupDirectoryPath)
         {
             if (_backupManager != null)
-                return IndexBackupResult.AlreadyExecuting;
+                return CreateBackupResponse(BackupState.AlreadyStarted, false);
 
             lock (_backupLock)
             {
                 if (_backupManager != null)
-                    return IndexBackupResult.AlreadyExecuting;
+                    return CreateBackupResponse(BackupState.AlreadyStarted, false);
                 _backupManager = BackupManagerFactory.CreateBackupManager();
             }
 
-            _backupManager.BackupAsync(state, backupDirectoryPath, SearchManager.Instance, CancellationToken.None)
-                .ConfigureAwait(false).GetAwaiter().GetResult();
-            _backupManager = null;
+            Task.Run(() => BackupWorker(state, backupDirectoryPath));
 
-            return IndexBackupResult.Finished;
+            return CreateBackupResponse(BackupState.Started, false);
+        }
+
+        private void BackupWorker(IndexingActivityStatus state, string backupDirectoryPath)
+        {
+            try
+            {
+                _backupManager.BackupAsync(state, backupDirectoryPath, SearchManager.Instance, CancellationToken.None)
+                    .ConfigureAwait(false).GetAwaiter().GetResult();
+            }
+            catch (Exception e)
+            {
+                CollectErrorMessages(e, _backupManager.BackupInfo);
+            }
+
+            _backupHistory.Add(_backupManager.BackupInfo);
+            _backupManager = null;
+        }
+        private void CollectErrorMessages(Exception exception, BackupInfo targetInfo)
+        {
+            var sb = new StringBuilder();
+            CollectErrorMessages(exception, sb, "");
+            targetInfo.Message = sb.ToString();
+        }
+        private void CollectErrorMessages(Exception exception, StringBuilder sb, string indent)
+        {
+            sb.Append(indent);
+            sb.Append(exception.GetType().FullName).Append(": ");
+            sb.AppendLine(exception.Message);
+            if (exception is AggregateException ae)
+            {
+                var indent2 = indent + "  ";
+                foreach (var ex in ae.InnerExceptions)
+                    CollectErrorMessages(ex, sb, indent2);
+            }
+            if (exception.InnerException != null)
+                CollectErrorMessages(exception.InnerException, sb, indent + "  ");
+        }
+
+        public BackupResponse QueryBackup()
+        {
+            BackupState state;
+            if (_backupManager != null)
+            {
+                state = BackupState.AlreadyStarted;
+            }
+            else
+            {
+                BackupInfo info = _backupHistory.FirstOrDefault();
+                if (info == null)
+                {
+                    state = BackupState.Stopped;
+                }
+                else
+                {
+                    if (info.Message != null)
+                    {
+                        state = info.Message.StartsWith("Cancel", StringComparison.OrdinalIgnoreCase)
+                            ? BackupState.Canceled
+                            : BackupState.Faulted;
+                    }
+                    else
+                    {
+                        state = BackupState.Finished;
+                    }
+                }
+            }
+
+            return CreateBackupResponse(state, true);
+        }
+        public BackupResponse CancelBackup()
+        {
+            //UNDONE:---- CancelBackup is not implemented
+            throw new NotImplementedException();
+        }
+        private BackupResponse CreateBackupResponse(BackupState state, bool withHistory)
+        {
+            return new BackupResponse
+            {
+                State = state,
+                Current = _backupManager?.BackupInfo.Clone(),
+                History = withHistory ? _backupHistory.ToArray() : null,
+            };
         }
 
         public void SetIndexingInfo(IDictionary<string, IndexFieldAnalyzer> analyzerTypes, 

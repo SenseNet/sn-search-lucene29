@@ -13,6 +13,8 @@ namespace SenseNet.Search.Lucene29
 {
     public class BackupManager : IBackupManager, IBackupManagerFactory
     {
+        public BackupInfo BackupInfo { get; } = new BackupInfo();
+
         public IBackupManager CreateBackupManager()
         {
             return new BackupManager();
@@ -23,10 +25,15 @@ namespace SenseNet.Search.Lucene29
         {
             Console.WriteLine("BACKUP START");
             Console.WriteLine("  IndexingActivityStatus: " + state);
+
+            BackupInfo.StartedAt = DateTime.UtcNow;
+
             EnsureEmptyBackupDirectory(backupDirectoryPath);
 
             using (var snapshot = indexManager.CreateSnapshot(state))
                 CopyIndexFiles(snapshot, indexManager, backupDirectoryPath);
+
+            BackupInfo.FinishedAt = DateTime.UtcNow;
 
             return Task.CompletedTask;
         }
@@ -55,6 +62,8 @@ namespace SenseNet.Search.Lucene29
         {
             var timer = Stopwatch.StartNew();
 
+            CalculateInitialProgress(snapshot, backupDirectoryPath);
+
             var source = indexManager.IndexDirectory.CurrentDirectory;
 
             Console.WriteLine("CopyIndexFiles starts.");
@@ -71,21 +80,43 @@ namespace SenseNet.Search.Lucene29
             timer.Stop();
             Console.WriteLine("CopyIndexFiles finished. Elapsed time: " + timer.Elapsed);
         }
+
         private void CopyFile(string source, string target, string fileName)
         {
             Console.Write("    " + fileName + ": ");
 
             var targetPath = Path.Combine(target, fileName);
+            var sourceFile = new FileInfo(Path.Combine(source, fileName));
             if (!File.Exists(targetPath))
             {
-                var sourcePath = Path.Combine(source, fileName);
-                File.Copy(sourcePath, targetPath);
+                OnCopyStart(fileName);
+                File.Copy(sourceFile.FullName, targetPath);
+//UNDONE:- Remove this line
+Thread.Sleep(2000);
                 Console.WriteLine("ok.");
+                OnCopyFinish(sourceFile);
             }
             else
             {
                 Console.WriteLine("skipped.");
             }
+        }
+
+        private void CalculateInitialProgress(IndexSnapshot snapshot, string backupDirectoryPath)
+        {
+            BackupInfo.CountOfFiles = snapshot.FileNames.Length;
+            BackupInfo.TotalBytes = snapshot.FileNames
+                .Sum(x => new FileInfo(Path.Combine(backupDirectoryPath, x)).Length);
+        }
+        private void OnCopyStart(string startingFile)
+        {
+            BackupInfo.CurrentlyCopiedFile = startingFile;
+        }
+        private void OnCopyFinish(FileInfo finishedFile)
+        {
+            BackupInfo.CopiedFiles++;
+            BackupInfo.CopiedBytes += finishedFile.Length;
+            BackupInfo.CurrentlyCopiedFile = null;
         }
     }
 }
