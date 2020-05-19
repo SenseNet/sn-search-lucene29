@@ -24,24 +24,27 @@ namespace CentralizedIndexBackupTester
         public async Task WorkAsync(CancellationToken cancellationToken)
         {
             var lastId = "";
+            var count = 0;
             while (true)
             {
                 // Exit if needed.
                 if (cancellationToken.IsCancellationRequested)
                 {
+                    Console.WriteLine();
                     Console.WriteLine("Work finished");
                     return;
                 }
-                Console.WriteLine("Work");
+
+                Console.Write("Work: {0}\r", ++count);
 
                 SnTrace.Write("#### wait");
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromSeconds(0.2), cancellationToken).ConfigureAwait(false);
 
-                // Create one content (e.g. SystemFolder)...
+                // Create one document...
                 var id = await CreateDocAsync(cancellationToken);
                 SnTrace.Write("#### document created: " + id);
 
-                // Delete the last created content.
+                // Delete the last created document.
                 if (lastId != "")
                 {
                     await DeleteDocAsync(lastId, cancellationToken);

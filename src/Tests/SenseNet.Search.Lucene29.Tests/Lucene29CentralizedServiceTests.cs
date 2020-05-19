@@ -46,10 +46,10 @@ namespace SenseNet.Search.Lucene29.Tests
                 return new BackupManager_for_OnlyOneTest();
             }
             public BackupInfo BackupInfo { get; } = new BackupInfo();
-            public async Task BackupAsync(IndexingActivityStatus state, string backupDirectoryPath,
+            public void Backup(IndexingActivityStatus state, string backupDirectoryPath,
                 LuceneSearchManager indexManager, CancellationToken cancellationToken)
             {
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).GetAwaiter().GetResult();
             }
         }
         #endregion
@@ -98,7 +98,7 @@ namespace SenseNet.Search.Lucene29.Tests
             /// <summary>
             /// RUNS NOT EXCLUSIVE. DO NOT CALL TWICE.
             /// </summary>
-            public async Task BackupAsync(IndexingActivityStatus state, string backupDirectoryPath,
+            public void Backup(IndexingActivityStatus state, string backupDirectoryPath,
                 LuceneSearchManager indexManager, CancellationToken cancellationToken)
             {
                 BackupInfo.StartedAt = DateTime.UtcNow;
@@ -106,12 +106,12 @@ namespace SenseNet.Search.Lucene29.Tests
                 BackupInfo.TotalBytes = 3 * 42L;
                 BackupInfo.CountOfFiles = 3;
 
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
                 BackupInfo.CurrentlyCopiedFile = "File1";
 
                 for (int i = 0; i < 3; i++)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                    Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
 
                     BackupInfo.CopiedBytes += 42;
                     BackupInfo.CopiedFiles++;
@@ -145,9 +145,9 @@ namespace SenseNet.Search.Lucene29.Tests
                     break;
             }
             Thread.Sleep(400);
-            responses.Add(response = service.CancelBackup());
+            responses.Add(service.CancelBackup());
             Thread.Sleep(400);
-            responses.Add(response = service.QueryBackup());
+            responses.Add(service.QueryBackup());
 
             var states = responses.Select(r => r.State).Distinct().ToArray();
             var bytes = responses.Select(r => (r.Current ?? r.History[0]).CopiedBytes).Distinct().ToArray();
@@ -183,7 +183,7 @@ namespace SenseNet.Search.Lucene29.Tests
             /// <summary>
             /// RUNS NOT EXCLUSIVE. DO NOT CALL TWICE.
             /// </summary>
-            public async Task BackupAsync(IndexingActivityStatus state, string backupDirectoryPath,
+            public void Backup(IndexingActivityStatus state, string backupDirectoryPath,
                 LuceneSearchManager indexManager, CancellationToken cancellationToken)
             {
                 BackupInfo.StartedAt = DateTime.UtcNow;
@@ -191,18 +191,19 @@ namespace SenseNet.Search.Lucene29.Tests
                 BackupInfo.TotalBytes = 333333333L;
                 BackupInfo.CountOfFiles = 33333;
 
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
                 BackupInfo.CurrentlyCopiedFile = "File1";
 
                 var i = 0;
                 while (true)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                    Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
 
                     BackupInfo.CopiedBytes += 42;
                     BackupInfo.CopiedFiles++;
                     BackupInfo.CurrentlyCopiedFile = $"File{++i + 1}";
                 }
+                // ReSharper disable once FunctionNeverReturns
             }
         }
         #endregion

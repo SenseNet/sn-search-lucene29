@@ -79,14 +79,12 @@ namespace SenseNet.Search.Lucene29
 
         public Task<BackupResponse> QueryBackupAsync(CancellationToken cancellationToken)
         {
-            //UNDONE:--- QueryBackupAsync is nor implemented
-            throw new NotImplementedException();
+            return Task.FromResult(SearchServiceClient.Instance.QueryBackup());
         }
 
         public Task<BackupResponse> CancelBackupAsync(CancellationToken cancellationToken)
         {
-            //UNDONE:--- CancelBackupAsync is nor implemented
-            throw new NotImplementedException();
+            return Task.FromResult(SearchServiceClient.Instance.CancelBackup());
         }
 
         public Task ClearIndexAsync(CancellationToken cancellationToken)

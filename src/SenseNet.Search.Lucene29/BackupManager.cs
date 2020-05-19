@@ -20,7 +20,7 @@ namespace SenseNet.Search.Lucene29
             return new BackupManager();
         }
 
-        public Task BackupAsync(IndexingActivityStatus state, string backupDirectoryPath,
+        public void Backup(IndexingActivityStatus state, string backupDirectoryPath,
             LuceneSearchManager indexManager, CancellationToken cancellationToken)
         {
             Console.WriteLine("BACKUP START");
@@ -28,17 +28,15 @@ namespace SenseNet.Search.Lucene29
 
             BackupInfo.StartedAt = DateTime.UtcNow;
 
-            EnsureEmptyBackupDirectory(backupDirectoryPath);
+            EnsureEmptyBackupDirectory(backupDirectoryPath, cancellationToken);
 
             using (var snapshot = indexManager.CreateSnapshot(state))
-                CopyIndexFiles(snapshot, indexManager, backupDirectoryPath);
+                CopyIndexFiles(snapshot, indexManager, backupDirectoryPath, cancellationToken);
 
             BackupInfo.FinishedAt = DateTime.UtcNow;
-
-            return Task.CompletedTask;
         }
 
-        private void EnsureEmptyBackupDirectory(string backupDirectoryPath)
+        private void EnsureEmptyBackupDirectory(string backupDirectoryPath, CancellationToken cancellationToken)
         {
             Console.Write("Prepare backup directory: ");
 
@@ -52,49 +50,58 @@ namespace SenseNet.Search.Lucene29
             var deleted = 0;
             foreach (var path in Directory.GetFiles(backupDirectoryPath))
             {
-                File.Delete(path);
+                Task.Run(() => { File.Delete(path); }, cancellationToken)
+                    .ConfigureAwait(false).GetAwaiter().GetResult();
                 deleted++;
             }
+
             Console.WriteLine($"{deleted} files deleted.");
         }
 
-        private void CopyIndexFiles(IndexSnapshot snapshot, LuceneSearchManager indexManager, string backupDirectoryPath)
+        private void CopyIndexFiles(IndexSnapshot snapshot, LuceneSearchManager indexManager,
+            string backupDirectoryPath, CancellationToken cancellationToken)
         {
             var timer = Stopwatch.StartNew();
 
-            CalculateInitialProgress(snapshot, backupDirectoryPath);
+            var sourceDirectoryPath = indexManager.IndexDirectory.CurrentDirectory;
 
-            var source = indexManager.IndexDirectory.CurrentDirectory;
+            // Calculate initial progress
+            BackupInfo.CountOfFiles = snapshot.FileNames.Length;
+            BackupInfo.TotalBytes = snapshot.FileNames
+                .Sum(x => new FileInfo(Path.Combine(sourceDirectoryPath, x)).Length);
 
             Console.WriteLine("CopyIndexFiles starts.");
-            Console.WriteLine("  Source: " + source);
+            Console.WriteLine("  Source: " + sourceDirectoryPath);
             Console.WriteLine("  Target: " + backupDirectoryPath);
 
             Console.WriteLine("  SegmentFile: ");
-            CopyFile(source, backupDirectoryPath, snapshot.SegmentFileName);
+            CopyFile(sourceDirectoryPath, backupDirectoryPath, snapshot.SegmentFileName, cancellationToken);
 
             Console.WriteLine("  Files: ");
             foreach (var fileName in snapshot.FileNames)
-                CopyFile(source, backupDirectoryPath, fileName);
+                CopyFile(sourceDirectoryPath, backupDirectoryPath, fileName, cancellationToken);
 
             timer.Stop();
             Console.WriteLine("CopyIndexFiles finished. Elapsed time: " + timer.Elapsed);
         }
 
-        private void CopyFile(string source, string target, string fileName)
+        private void CopyFile(string sourceDirectory, string targetDirectory, string fileName, CancellationToken cancellationToken)
         {
             Console.Write("    " + fileName + ": ");
 
-            var targetPath = Path.Combine(target, fileName);
-            var sourceFile = new FileInfo(Path.Combine(source, fileName));
+            var targetPath = Path.Combine(targetDirectory, fileName);
+            var sourceFile = new FileInfo(Path.Combine(sourceDirectory, fileName));
             if (!File.Exists(targetPath))
             {
-                OnCopyStart(fileName);
-                File.Copy(sourceFile.FullName, targetPath);
-//UNDONE:- Remove this line
-Thread.Sleep(2000);
+                BackupInfo.CurrentlyCopiedFile = fileName;
+
+                CopyFile(sourceFile.FullName, targetPath, cancellationToken);
+
                 Console.WriteLine("ok.");
-                OnCopyFinish(sourceFile);
+
+                BackupInfo.CopiedFiles++;
+                BackupInfo.CopiedBytes += sourceFile.Length;
+                BackupInfo.CurrentlyCopiedFile = null;
             }
             else
             {
@@ -102,21 +109,19 @@ Thread.Sleep(2000);
             }
         }
 
-        private void CalculateInitialProgress(IndexSnapshot snapshot, string backupDirectoryPath)
+        private void CopyFile(string sourceFullPath, string targetFullPath, CancellationToken cancellationToken)
         {
-            BackupInfo.CountOfFiles = snapshot.FileNames.Length;
-            BackupInfo.TotalBytes = snapshot.FileNames
-                .Sum(x => new FileInfo(Path.Combine(backupDirectoryPath, x)).Length);
-        }
-        private void OnCopyStart(string startingFile)
-        {
-            BackupInfo.CurrentlyCopiedFile = startingFile;
-        }
-        private void OnCopyFinish(FileInfo finishedFile)
-        {
-            BackupInfo.CopiedFiles++;
-            BackupInfo.CopiedBytes += finishedFile.Length;
-            BackupInfo.CurrentlyCopiedFile = null;
+            //using (var src = File.Open(sourceFullPath, FileMode.Open, FileAccess.Read))
+            //using (var destination = File.Create(targetFullPath))
+            //    src.CopyToAsync(destination, 81920, cancellationToken)
+            //        .ConfigureAwait(false).GetAwaiter().GetResult();
+            Task.Run(() =>
+                {
+                    File.Copy(sourceFullPath, targetFullPath);
+//UNDONE:- Remove this line
+Thread.Sleep(500);
+                }, cancellationToken)
+                .ConfigureAwait(false).GetAwaiter().GetResult();
         }
     }
 }

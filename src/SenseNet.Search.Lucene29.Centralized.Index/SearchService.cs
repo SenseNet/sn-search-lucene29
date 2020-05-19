@@ -15,6 +15,7 @@ using SenseNet.Search.Querying;
 
 namespace SenseNet.Search.Lucene29.Centralized.Index
 {
+    // Re-created per request.
     public class SearchService : ISearchServiceContract
     {
         public static void Start()
@@ -105,11 +106,11 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             SearchManager.Instance.WriteActivityStatusToIndex(state);
         }
 
-        internal IBackupManagerFactory BackupManagerFactory { get; set; } = new BackupManager();
-        private readonly object _backupLock = new object();
-        private IBackupManager _backupManager;
-        private CancellationTokenSource _backupCancellationSource;
-        private readonly List<BackupInfo> _backupHistory = new List<BackupInfo>();
+        internal static IBackupManagerFactory BackupManagerFactory { get; set; } = new BackupManager();
+        private static readonly object _backupLock = new object();
+        private static IBackupManager _backupManager;
+        private static CancellationTokenSource _backupCancellationSource;
+        private static readonly List<BackupInfo> _backupHistory = new List<BackupInfo>();
         public BackupResponse Backup(IndexingActivityStatus state, string backupDirectoryPath)
         {
             if (_backupManager != null)
@@ -132,19 +133,23 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             try
             {
                 _backupCancellationSource = new CancellationTokenSource();
-                _backupManager.BackupAsync(state, backupDirectoryPath, SearchManager.Instance,
-                    _backupCancellationSource.Token).ConfigureAwait(false).GetAwaiter().GetResult();
+                _backupManager.Backup(state, backupDirectoryPath, SearchManager.Instance,
+                    _backupCancellationSource.Token);
             }
             catch (Exception e)
             {
                 CollectErrorMessages(e, _backupManager.BackupInfo);
+                Console.WriteLine("ERROR");
+                Console.WriteLine(_backupManager.BackupInfo.Message);
             }
 
-            _backupHistory.Add(_backupManager.BackupInfo);
+            _backupHistory.Add(_backupManager.BackupInfo.Clone());
+            Console.WriteLine("_backupManager.BackupInfo is added to history.");
             _backupManager = null;
             _backupCancellationSource.Dispose();
             _backupCancellationSource = null;
         }
+
         private void CollectErrorMessages(Exception exception, BackupInfo targetInfo)
         {
             var sb = new StringBuilder(exception is TaskCanceledException ? "CANCELED: " : "ERROR: ");
