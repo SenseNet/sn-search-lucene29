@@ -108,6 +108,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         internal IBackupManagerFactory BackupManagerFactory { get; set; } = new BackupManager();
         private readonly object _backupLock = new object();
         private IBackupManager _backupManager;
+        private CancellationTokenSource _backupCancellationSource;
         private readonly List<BackupInfo> _backupHistory = new List<BackupInfo>();
         public BackupResponse Backup(IndexingActivityStatus state, string backupDirectoryPath)
         {
@@ -130,8 +131,9 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         {
             try
             {
-                _backupManager.BackupAsync(state, backupDirectoryPath, SearchManager.Instance, CancellationToken.None)
-                    .ConfigureAwait(false).GetAwaiter().GetResult();
+                _backupCancellationSource = new CancellationTokenSource();
+                _backupManager.BackupAsync(state, backupDirectoryPath, SearchManager.Instance,
+                    _backupCancellationSource.Token).ConfigureAwait(false).GetAwaiter().GetResult();
             }
             catch (Exception e)
             {
@@ -140,10 +142,12 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
             _backupHistory.Add(_backupManager.BackupInfo);
             _backupManager = null;
+            _backupCancellationSource.Dispose();
+            _backupCancellationSource = null;
         }
         private void CollectErrorMessages(Exception exception, BackupInfo targetInfo)
         {
-            var sb = new StringBuilder();
+            var sb = new StringBuilder(exception is TaskCanceledException ? "CANCELED: " : "ERROR: ");
             CollectErrorMessages(exception, sb, "");
             targetInfo.Message = sb.ToString();
         }
@@ -195,8 +199,8 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         }
         public BackupResponse CancelBackup()
         {
-            //UNDONE:---- CancelBackup is not implemented
-            throw new NotImplementedException();
+            _backupCancellationSource?.Cancel();
+            return CreateBackupResponse(BackupState.CancelRequested, true);
         }
         private BackupResponse CreateBackupResponse(BackupState state, bool withHistory)
         {

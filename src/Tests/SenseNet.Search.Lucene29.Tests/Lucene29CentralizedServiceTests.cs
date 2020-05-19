@@ -15,9 +15,9 @@ namespace SenseNet.Search.Lucene29.Tests
     public class Lucene29CentralizedServiceTests : TestBase
     {
         [TestMethod]
-        public void L29_Service_OnlyOneBackup()
+        public void L29_Service_Backup_OnlyOne()
         {
-            var service = new SearchService { BackupManagerFactory = new BackupManager_for_OnlyOneBackupTest() };
+            var service = new SearchService { BackupManagerFactory = new BackupManager_for_OnlyOneTest() };
 
             var tasks = Enumerable.Range(0, 5)
                 .Select(x => Task.Run(() => service.Backup(null, null)))
@@ -25,20 +25,25 @@ namespace SenseNet.Search.Lucene29.Tests
             // ReSharper disable once CoVariantArrayConversion
             Task.WaitAll(tasks);
 
-            var completed = new string(tasks.Select(t => (char)((int)'0' + (int)t.Result.State)).ToArray());
-            var faulted = new string(tasks.Select(t => t.IsFaulted ? 'Y' : 'n').ToArray());
+            var completed = new string(tasks
+                .Select(t => (char) ((int) '0' + (int) t.Result.State))
+                .OrderBy(x => x)
+                .ToArray());
+            var faulted = new string(tasks
+                .Select(t => t.IsFaulted ? 'Y' : 'n')
+                .ToArray());
 
             // 1 = Started, 2 = AlreadyStarted,
             Assert.AreEqual("12222", completed);
             Assert.AreEqual("nnnnn", faulted);
         }
-        #region private class BackupManager_for_OnlyOneBackupTest
+        #region private class BackupManager_for_OnlyOneTest
         // ReSharper disable once InconsistentNaming
-        private class BackupManager_for_OnlyOneBackupTest : IBackupManager, IBackupManagerFactory
+        private class BackupManager_for_OnlyOneTest : IBackupManager, IBackupManagerFactory
         {
             public IBackupManager CreateBackupManager()
             {
-                return new BackupManager_for_OnlyOneBackupTest();
+                return new BackupManager_for_OnlyOneTest();
             }
             public BackupInfo BackupInfo { get; } = new BackupInfo();
             public async Task BackupAsync(IndexingActivityStatus state, string backupDirectoryPath,
@@ -50,7 +55,7 @@ namespace SenseNet.Search.Lucene29.Tests
         #endregion
 
         [TestMethod]
-        public void L29_Service_Progress()
+        public void L29_Service_Backup_Progress()
         {
             BackupResponse response;
             var responses = new List<BackupResponse>();
@@ -114,6 +119,90 @@ namespace SenseNet.Search.Lucene29.Tests
                 }
 
                 BackupInfo.FinishedAt = DateTime.UtcNow;
+            }
+        }
+        #endregion
+
+        [TestMethod]
+        public void L29_Service_Backup_Cancellation()
+        {
+            BackupResponse response;
+            var responses = new List<BackupResponse>();
+            var service = new SearchService { BackupManagerFactory = new BackupManager_for_CancellationTest() };
+
+            responses.Add(response = service.Backup(null, null));
+            var backupInfo = response.Current;
+            Assert.IsNotNull(backupInfo);
+            Assert.AreEqual(BackupState.Started, response.State);
+
+            var timeout = TimeSpan.FromSeconds(5.0d);
+            var timer = Stopwatch.StartNew();
+            while (timer.Elapsed < timeout)
+            {
+                Thread.Sleep(400);
+                responses.Add(response = service.QueryBackup());
+                if (response.State != BackupState.AlreadyStarted)
+                    break;
+            }
+            Thread.Sleep(400);
+            responses.Add(response = service.CancelBackup());
+            Thread.Sleep(400);
+            responses.Add(response = service.QueryBackup());
+
+            var states = responses.Select(r => r.State).Distinct().ToArray();
+            var bytes = responses.Select(r => (r.Current ?? r.History[0]).CopiedBytes).Distinct().ToArray();
+            var files = responses.Select(r => (r.Current ?? r.History[0]).CopiedFiles).Distinct().ToArray();
+            var names = responses.Select(r => (r.Current ?? r.History[0]).CurrentlyCopiedFile ?? "").Distinct().ToArray();
+            var messages = responses.Select(r => (r.Current ?? r.History[0]).Message ?? "").Distinct().ToArray();
+
+            var count = files.Length;
+            var expectedStates = new[]
+            {
+                BackupState.Started, BackupState.AlreadyStarted,
+                BackupState.CancelRequested, BackupState.Canceled
+            };
+            var expectedFiles = Enumerable.Range(0, count).ToArray();
+            var expectedBytes = expectedFiles.Select(x => x * 42L).ToArray();
+            var expectedNames = (new[] {""}).Union(expectedFiles.Select(x => $"File{x + 1}")).ToArray();
+
+            AssertSequenceEqual(expectedStates, states);
+            AssertSequenceEqual(expectedBytes, bytes);
+            AssertSequenceEqual(expectedFiles, files);
+            AssertSequenceEqual(expectedNames, names);
+        }
+        #region private class BackupManager_for_CancellationTest
+        // ReSharper disable once InconsistentNaming
+        private class BackupManager_for_CancellationTest : IBackupManager, IBackupManagerFactory
+        {
+            public IBackupManager CreateBackupManager()
+            {
+                return new BackupManager_for_CancellationTest();
+            }
+            public BackupInfo BackupInfo { get; } = new BackupInfo();
+
+            /// <summary>
+            /// RUNS NOT EXCLUSIVE. DO NOT CALL TWICE.
+            /// </summary>
+            public async Task BackupAsync(IndexingActivityStatus state, string backupDirectoryPath,
+                LuceneSearchManager indexManager, CancellationToken cancellationToken)
+            {
+                BackupInfo.StartedAt = DateTime.UtcNow;
+
+                BackupInfo.TotalBytes = 333333333L;
+                BackupInfo.CountOfFiles = 33333;
+
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                BackupInfo.CurrentlyCopiedFile = "File1";
+
+                var i = 0;
+                while (true)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+
+                    BackupInfo.CopiedBytes += 42;
+                    BackupInfo.CopiedFiles++;
+                    BackupInfo.CurrentlyCopiedFile = $"File{++i + 1}";
+                }
             }
         }
         #endregion
