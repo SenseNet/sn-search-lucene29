@@ -110,15 +110,6 @@ namespace SenseNet.Search.Lucene29
         /// <summary>
         /// This method is not supported.
         /// </summary>
-        public Task<BackupResponse> BackupAsync(CancellationToken cancellationToken)
-        {
-            return BackupAsync(null, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        /// <summary>
-        /// This method is not supported.
-        /// </summary>
         public Task<BackupResponse> BackupAsync(string target, CancellationToken cancellationToken)
         {
             throw new SnNotSupportedException();

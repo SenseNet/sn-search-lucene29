@@ -113,6 +113,9 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         private static readonly List<BackupInfo> _backupHistory = new List<BackupInfo>();
         public BackupResponse Backup(IndexingActivityStatus state, string backupDirectoryPath)
         {
+            if (backupDirectoryPath == null)
+                throw new ArgumentNullException(nameof(backupDirectoryPath));
+
             if (_backupManager != null)
                 return CreateBackupResponse(BackupState.Executing, false);
 
