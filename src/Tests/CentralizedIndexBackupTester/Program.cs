@@ -36,7 +36,7 @@ namespace CentralizedIndexBackupTester
 
         static void Main(string[] args)
         {
-args = new[] {"Validity"};
+//args = new[] {TestType.Restore.ToString()};
 
             if (args.Length == 0)
             {

@@ -17,7 +17,8 @@ namespace SenseNet.Search.Lucene29.Tests
         [TestMethod]
         public void L29_Service_Backup_OnlyOne()
         {
-            var service = new SearchService { BackupManagerFactory = new BackupManager_for_OnlyOneTest() };
+            SearchService.BackupManagerFactory = new BackupManager_for_OnlyOneTest();
+            var service = new SearchService();
 
             var tasks = Enumerable.Range(0, 5)
                 .Select(x => Task.Run(() => service.Backup(null, null)))
@@ -57,9 +58,11 @@ namespace SenseNet.Search.Lucene29.Tests
         [TestMethod]
         public void L29_Service_Backup_Progress()
         {
+            SearchService.BackupManagerFactory = new BackupManager_for_ProgressTest();
+            var service = new SearchService();
+
             BackupResponse response;
             var responses = new List<BackupResponse>();
-            var service = new SearchService {BackupManagerFactory = new BackupManager_for_ProgressTest()};
 
             responses.Add(response = service.Backup(null, null));
             var backupInfo = response.Current;
@@ -126,9 +129,11 @@ namespace SenseNet.Search.Lucene29.Tests
         [TestMethod]
         public void L29_Service_Backup_Cancellation()
         {
+            SearchService.BackupManagerFactory = new BackupManager_for_CancellationTest();
+            var service = new SearchService();
+
             BackupResponse response;
             var responses = new List<BackupResponse>();
-            var service = new SearchService { BackupManagerFactory = new BackupManager_for_CancellationTest() };
 
             responses.Add(response = service.Backup(null, null));
             var backupInfo = response.Current;

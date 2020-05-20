@@ -26,35 +26,22 @@ namespace CentralizedIndexBackupTester
         /// </summary>
         public async Task WorkAsync(CancellationToken cancellationToken)
         {
-            //while (true)
-            //{
-            //    // Exit if needed.
-            //    if (cancellationToken.IsCancellationRequested)
-            //    {
-            //        Console.WriteLine("Work finished");
-            //        return;
-            //    }
-
-            //    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
-
-            //    var queryContext = new SnQueryContext(QuerySettings.AdminSettings, User.Current.Id);
-            //    var result = SnQuery.Query("InFolder:/Root", queryContext);
-            //    Console.WriteLine("Work: " + string.Join(" ",result.Hits.Select(x=>x.ToString())));
-            //}
-
             var lastId = 0;
+            var count = 0;
             while (true)
             {
                 // Exit if needed.
                 if (cancellationToken.IsCancellationRequested)
                 {
+                    Console.WriteLine();
                     Console.WriteLine("Work finished");
                     return;
                 }
-                Console.WriteLine("Work");
+
+                Console.Write("Work: {0}\r", ++count);
 
                 SnTrace.Write("#### wait");
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromSeconds(0.2), cancellationToken).ConfigureAwait(false);
 
                 // Create one content (e.g. SystemFolder)...
                 var node = await CreateNode(cancellationToken);
