@@ -106,7 +106,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             SearchManager.Instance.WriteActivityStatusToIndex(state);
         }
 
-        internal static IBackupManagerFactory BackupManagerFactory { get; set; } = new BackupManager();
+        private static IBackupManagerFactory _backupManagerFactory { get; set; } = new BackupManager();
         private static readonly object _backupLock = new object();
         private static IBackupManager _backupManager;
         private static CancellationTokenSource _backupCancellationSource;
@@ -114,13 +114,13 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         public BackupResponse Backup(IndexingActivityStatus state, string backupDirectoryPath)
         {
             if (_backupManager != null)
-                return CreateBackupResponse(BackupState.AlreadyStarted, false);
+                return CreateBackupResponse(BackupState.Executing, false);
 
             lock (_backupLock)
             {
                 if (_backupManager != null)
-                    return CreateBackupResponse(BackupState.AlreadyStarted, false);
-                _backupManager = BackupManagerFactory.CreateBackupManager();
+                    return CreateBackupResponse(BackupState.Executing, false);
+                _backupManager = _backupManagerFactory.CreateBackupManager();
             }
 
             Task.Run(() => BackupWorker(state, backupDirectoryPath));
@@ -176,14 +176,14 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             BackupState state;
             if (_backupManager != null)
             {
-                state = BackupState.AlreadyStarted;
+                state = BackupState.Executing;
             }
             else
             {
                 BackupInfo info = _backupHistory.FirstOrDefault();
                 if (info == null)
                 {
-                    state = BackupState.Stopped;
+                    state = BackupState.Initial;
                 }
                 else
                 {
@@ -315,6 +315,15 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
             SnLog.WriteInformation("Trace settings were updated in Search service.", EventId.NotDefined,
                 properties: SnTrace.Categories.ToDictionary(c => c.Name, c => (object)c.Enabled.ToString()));
+        }
+
+        public static void InitializeForTest(IBackupManagerFactory factoryForTest)
+        {
+            _backupCancellationSource?.Cancel();
+            while(_backupManager!=null)
+                Thread.Sleep(100);
+            _backupHistory.Clear();
+            _backupManagerFactory = factoryForTest;
         }
     }
 }

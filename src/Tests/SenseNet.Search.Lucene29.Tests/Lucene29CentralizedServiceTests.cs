@@ -17,7 +17,7 @@ namespace SenseNet.Search.Lucene29.Tests
         [TestMethod]
         public void L29_Service_Backup_OnlyOne()
         {
-            SearchService.BackupManagerFactory = new BackupManager_for_OnlyOneTest();
+            SearchService.InitializeForTest(new BackupManager_for_OnlyOneTest());
             var service = new SearchService();
 
             var tasks = Enumerable.Range(0, 5)
@@ -38,6 +38,7 @@ namespace SenseNet.Search.Lucene29.Tests
             Assert.AreEqual("12222", completed);
             Assert.AreEqual("nnnnn", faulted);
         }
+
         #region private class BackupManager_for_OnlyOneTest
         // ReSharper disable once InconsistentNaming
         private class BackupManager_for_OnlyOneTest : IBackupManager, IBackupManagerFactory
@@ -58,7 +59,7 @@ namespace SenseNet.Search.Lucene29.Tests
         [TestMethod]
         public void L29_Service_Backup_Progress()
         {
-            SearchService.BackupManagerFactory = new BackupManager_for_ProgressTest();
+            SearchService.InitializeForTest(new BackupManager_for_ProgressTest());
             var service = new SearchService();
 
             BackupResponse response;
@@ -75,7 +76,7 @@ namespace SenseNet.Search.Lucene29.Tests
             {
                 Thread.Sleep(400);
                 responses.Add(response = service.QueryBackup());
-                if (response.State != BackupState.AlreadyStarted)
+                if (response.State != BackupState.Executing)
                     break;
             }
 
@@ -84,7 +85,7 @@ namespace SenseNet.Search.Lucene29.Tests
             var files = responses.Select(r => (r.Current ?? r.History[0]).CopiedFiles).Distinct().ToArray();
             var names = responses.Select(r => (r.Current ?? r.History[0]).CurrentlyCopiedFile ?? "").Distinct().ToArray();
 
-            AssertSequenceEqual(new[] { BackupState.Started, BackupState.AlreadyStarted, BackupState.Finished }, states);
+            AssertSequenceEqual(new[] { BackupState.Started, BackupState.Executing, BackupState.Finished }, states);
             AssertSequenceEqual(new long[] { 0, 42, 2 * 42, 3 * 42 }, bytes);
             AssertSequenceEqual(new [] { 0, 1, 2, 3 }, files);
             AssertSequenceEqual(new [] { "", "File1", "File2", "File3" }, names);
@@ -129,7 +130,7 @@ namespace SenseNet.Search.Lucene29.Tests
         [TestMethod]
         public void L29_Service_Backup_Cancellation()
         {
-            SearchService.BackupManagerFactory = new BackupManager_for_CancellationTest();
+            SearchService.InitializeForTest(new BackupManager_for_CancellationTest());
             var service = new SearchService();
 
             BackupResponse response;
@@ -146,7 +147,7 @@ namespace SenseNet.Search.Lucene29.Tests
             {
                 Thread.Sleep(400);
                 responses.Add(response = service.QueryBackup());
-                if (response.State != BackupState.AlreadyStarted)
+                if (response.State != BackupState.Executing)
                     break;
             }
             Thread.Sleep(400);
@@ -163,7 +164,7 @@ namespace SenseNet.Search.Lucene29.Tests
             var count = files.Length;
             var expectedStates = new[]
             {
-                BackupState.Started, BackupState.AlreadyStarted,
+                BackupState.Started, BackupState.Executing,
                 BackupState.CancelRequested, BackupState.Canceled
             };
             var expectedFiles = Enumerable.Range(0, count).ToArray();

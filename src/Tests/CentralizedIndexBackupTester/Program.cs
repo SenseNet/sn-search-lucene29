@@ -28,7 +28,7 @@ namespace CentralizedIndexBackupTester
 {
     class Program
     {
-        private enum TestType { Backup, Restore, Validity, Cancellation}
+        private enum TestType { Backup, Restore, Validity, Cancellation }
 
         private static string _serviceIndexDirectory;
         private static string _backupIndexDirectory;
@@ -36,7 +36,7 @@ namespace CentralizedIndexBackupTester
 
         static void Main(string[] args)
         {
-args = new[] {TestType.Cancellation.ToString()};
+args = new[] {TestType.Validity.ToString()};
 
             if (args.Length == 0)
             {

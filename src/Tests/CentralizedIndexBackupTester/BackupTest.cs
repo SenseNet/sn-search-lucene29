@@ -79,7 +79,7 @@ namespace CentralizedIndexBackupTester
                         response = await _engine.QueryBackupAsync(cancellationToken).ConfigureAwait(false);
                         WriteProgress(response);
 
-                        if (response.State != BackupState.AlreadyStarted)
+                        if (response.State != BackupState.Executing)
                             break;
                     }
                     //Console.WriteLine("BACKUP finished");

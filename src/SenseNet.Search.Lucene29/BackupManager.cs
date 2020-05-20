@@ -111,16 +111,7 @@ namespace SenseNet.Search.Lucene29
 
         private void CopyFile(string sourceFullPath, string targetFullPath, CancellationToken cancellationToken)
         {
-            //using (var src = File.Open(sourceFullPath, FileMode.Open, FileAccess.Read))
-            //using (var destination = File.Create(targetFullPath))
-            //    src.CopyToAsync(destination, 81920, cancellationToken)
-            //        .ConfigureAwait(false).GetAwaiter().GetResult();
-            Task.Run(() =>
-                {
-                    File.Copy(sourceFullPath, targetFullPath);
-//UNDONE:- Remove this line
-Thread.Sleep(500);
-                }, cancellationToken)
+            Task.Run(() => { File.Copy(sourceFullPath, targetFullPath); }, cancellationToken)
                 .ConfigureAwait(false).GetAwaiter().GetResult();
         }
     }
