@@ -29,9 +29,9 @@ namespace CentralizedIndexBackupTester
             _backupDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "IndexBackup");
         }
 
-        public async Task RunAsync(CancellationToken cancellationToken)
+        public virtual async Task RunAsync(CancellationToken cancellationToken)
         {
-            using (var op = SnTrace.Test.StartOperation("ContinuousIndexTest"))
+            using (var op = SnTrace.Test.StartOperation(this.GetType().Name))
             {
                 // Start an editor worker agent
                 var finisher = new CancellationTokenSource();
@@ -57,7 +57,7 @@ namespace CentralizedIndexBackupTester
 
         protected abstract IWorker CreateWorker();
 
-        private async Task BackupAsync(CancellationToken cancellationToken)
+        protected async Task BackupAsync(CancellationToken cancellationToken)
         {
             var status = await IndexManager.LoadCurrentIndexingActivityStatusAsync(cancellationToken)
                 .ConfigureAwait(false);

@@ -28,7 +28,7 @@ namespace CentralizedIndexBackupTester
 {
     class Program
     {
-        private enum TestType { Backup, Restore, Validity}
+        private enum TestType { Backup, Restore, Validity, Cancellation}
 
         private static string _serviceIndexDirectory;
         private static string _backupIndexDirectory;
@@ -36,11 +36,11 @@ namespace CentralizedIndexBackupTester
 
         static void Main(string[] args)
         {
-//args = new[] {TestType.Restore.ToString()};
+args = new[] {TestType.Cancellation.ToString()};
 
             if (args.Length == 0)
             {
-                Console.WriteLine("Missing test type. Expected 'Backup', 'Restore' or 'Validity'.");
+                Console.WriteLine("Missing test type. Expected 'Backup', 'Restore', 'Validity' or 'Cancellation'.");
                 return;
             }
             if(!Enum.TryParse<TestType>(args[0], true, out _testType))
@@ -112,6 +112,10 @@ namespace CentralizedIndexBackupTester
                         break;
                     case TestType.Validity:
                         new ValidityTest(engine).RunAsync(CancellationToken.None)
+                            .ConfigureAwait(false).GetAwaiter().GetResult();
+                        break;
+                    case TestType.Cancellation:
+                        new CancellationTest(engine).RunAsync(CancellationToken.None)
                             .ConfigureAwait(false).GetAwaiter().GetResult();
                         break;
                     default:
