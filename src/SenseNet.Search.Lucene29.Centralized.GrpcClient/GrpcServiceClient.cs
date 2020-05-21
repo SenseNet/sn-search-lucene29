@@ -4,7 +4,13 @@ using SenseNet.Search.Querying;
 using System.Collections.Generic;
 using System.Linq;
 using Grpc.Net.Client;
+using Newtonsoft.Json;
+using SenseNet.Search.Lucene29.Centralized.GrpcService;
 using static SenseNet.Search.Lucene29.Centralized.GrpcService.GrpcSearch;
+using BackupResponse = SenseNet.Search.Indexing.BackupResponse;
+using IndexFieldAnalyzer = SenseNet.Search.Indexing.IndexFieldAnalyzer;
+using IndexingActivityStatus = SenseNet.Search.Indexing.IndexingActivityStatus;
+using ServiceQueryContext = SenseNet.Search.Lucene29.Centralized.Common.ServiceQueryContext;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 {
@@ -42,13 +48,14 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
         public bool Alive()
         {
-            //UNDONE:- GrpcServiceClient.Alive is not implemented and extend the related *.proto.
-            throw new System.NotImplementedException();
+            var result = _searchClient.Alive(new AliveRequest());
+
+            return result.Alive;
         }
 
         public void ClearIndex()
         {
-            _searchClient.ClearIndex(new GrpcService.ClearIndexRequest());            
+            _searchClient.ClearIndex(new ClearIndexRequest());
         }
 
         public IndexingActivityStatus ReadActivityStatusFromIndex()
@@ -64,31 +71,32 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
         public void WriteActivityStatusToIndex(IndexingActivityStatus state)
         {
-            var request = new GrpcService.IndexingActivityStatus()
-            { 
-                LastActivityId = state.LastActivityId
-            };
-            request.Gaps.AddRange(state.Gaps);
-
-            _searchClient.WriteActivityStatusToIndex(request);
+            _searchClient.WriteActivityStatusToIndex(state.ToGrpcActivityStatus());
         }
 
         public BackupResponse Backup(IndexingActivityStatus state, string backupDirectoryPath)
         {
-            //UNDONE:- GrpcServiceClient.Backup is not implemented and extend the related *.proto.
-            throw new System.NotImplementedException();
+            var response = _searchClient.Backup(new BackupRequest
+            {
+                Status = state.ToGrpcActivityStatus(),
+                Target = backupDirectoryPath
+            });
+
+            return JsonConvert.DeserializeObject<BackupResponse>(response.Response);
         }
 
         public BackupResponse QueryBackup()
         {
-            //UNDONE:- GrpcServiceClient.QueryBackup is not implemented and extend the related *.proto.
-            throw new System.NotImplementedException();
+            var response = _searchClient.QueryBackup(new QueryBackupRequest());
+
+            return JsonConvert.DeserializeObject<BackupResponse>(response.Response);
         }
 
         public BackupResponse CancelBackup()
         {
-            //UNDONE:- GrpcServiceClient.CancelBackup is not implemented and extend the related *.proto.
-            throw new System.NotImplementedException();
+            var response = _searchClient.CancelBackup(new CancelBackupRequest());
+
+            return JsonConvert.DeserializeObject<BackupResponse>(response.Response);
         }
 
         public void SetIndexingInfo(IDictionary<string, IndexFieldAnalyzer> analyzerTypes, IDictionary<string, IndexValueType> indexFieldTypes, IDictionary<string, string> sortFieldNames)
