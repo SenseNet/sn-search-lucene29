@@ -114,10 +114,16 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         public BackupResponse Backup(IndexingActivityStatus state, string backupDirectoryPath)
         {
             if (backupDirectoryPath == null)
+            {
+                SnTrace.Index.WriteError("SearchService: Missing 'backupDirectoryPath'");
                 throw new ArgumentNullException(nameof(backupDirectoryPath));
+            }
 
             if (_backupManager != null)
+            {
+                SnTrace.Index.Write("SearchService: Backup already executing by another thread.");
                 return CreateBackupResponse(BackupState.Executing, false);
+            }
 
             lock (_backupLock)
             {
@@ -126,6 +132,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
                 _backupManager = _backupManagerFactory.CreateBackupManager();
             }
 
+            SnTrace.Index.Write("SearchService: BackupManager created.");
             Task.Run(() => BackupWorker(state, backupDirectoryPath));
 
             return CreateBackupResponse(BackupState.Started, false);
@@ -142,12 +149,11 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             catch (Exception e)
             {
                 CollectErrorMessages(e, _backupManager.BackupInfo);
-                Console.WriteLine("ERROR");
-                Console.WriteLine(_backupManager.BackupInfo.Message);
+                SnTrace.Index.WriteError("SearchService: " + _backupManager.BackupInfo.Message);
             }
 
             _backupHistory.Add(_backupManager.BackupInfo.Clone());
-            Console.WriteLine("_backupManager.BackupInfo is added to history.");
+            SnTrace.Index.Write("SearchService: BackupInfo is added to history.");
             _backupManager = null;
             _backupCancellationSource.Dispose();
             _backupCancellationSource = null;
@@ -313,7 +319,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
         private static void UpdateTraceCategories()
         {
-            foreach (var category in SnTrace.Categories)
+            foreach (var category in SnTrace.Categories.Where(c => !c.Enabled))
                 category.Enabled = Tracing.TraceCategories.Contains(category.Name);
 
             SnLog.WriteInformation("Trace settings were updated in Search service.", EventId.NotDefined,
