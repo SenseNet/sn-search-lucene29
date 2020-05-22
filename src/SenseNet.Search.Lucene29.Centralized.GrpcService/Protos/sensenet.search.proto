@@ -6,12 +6,19 @@ package SenseNet.Search.Lucene29.Centralized.GrpcService;
 import "Protos/sensenet.search.types.proto";
 
 service GrpcSearch {
-    rpc ClearIndex (ClearIndexRequest) returns (ClearIndexResponse);
-    rpc ReadActivityStatusFromIndex (ReadActivityStatusRequest) returns (IndexingActivityStatus);
-    rpc WriteActivityStatusToIndex (IndexingActivityStatus) returns (WriteActivityStatusResponse);
-    rpc WriteIndex (WriteIndexRequest) returns (WriteIndexResponse);
-    rpc SetIndexingInfo (SetIndexingInfoRequest) returns (SetIndexingInfoResponse);
+	rpc Alive (AliveRequest) returns (AliveResponse);
 
-    rpc ExecuteQuery (QueryRequest) returns (QueryResultIds);
-    rpc ExecuteQueryAndProject (QueryRequest) returns (QueryResultProjections);
+	rpc ClearIndex (ClearIndexRequest) returns (ClearIndexResponse);
+	rpc ReadActivityStatusFromIndex (ReadActivityStatusRequest) returns (IndexingActivityStatus);
+	rpc WriteActivityStatusToIndex (IndexingActivityStatus) returns (WriteActivityStatusResponse);
+    
+	rpc Backup (BackupRequest) returns (BackupResponse);
+	rpc QueryBackup (QueryBackupRequest) returns (BackupResponse);
+	rpc CancelBackup (CancelBackupRequest) returns (BackupResponse);
+
+	rpc WriteIndex (WriteIndexRequest) returns (WriteIndexResponse);
+	rpc SetIndexingInfo (SetIndexingInfoRequest) returns (SetIndexingInfoResponse);
+
+	rpc ExecuteQuery (QueryRequest) returns (QueryResultIds);
+	rpc ExecuteQueryAndProject (QueryRequest) returns (QueryResultProjections);
 }
