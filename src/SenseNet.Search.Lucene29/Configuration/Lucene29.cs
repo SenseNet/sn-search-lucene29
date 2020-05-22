@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.IO;
 
 // ReSharper disable RedundantTypeArgumentsOfMethod
 namespace SenseNet.Configuration
@@ -12,7 +13,7 @@ namespace SenseNet.Configuration
         //internal static LucQuery.ContentQueryExecutionAlgorithm ContentQueryExecutionAlgorithm { get; set; } =
         //    GetValue<LucQuery.ContentQueryExecutionAlgorithm>(SectionName, "ContentQueryExecutionAlgorithm");
 
-        public static readonly string DefaultLocalIndexDirectory = "App_Data\\LocalIndex";
+        public static readonly string DefaultLocalIndexDirectory = Path.Combine("App_Data", "LocalIndex");
 
         public static int[] DefaultTopAndGrowth { get; internal set; } =
             ParseDefaultTopAndGrowth(GetValue<string>(SectionName, "DefaultTopAndGrowth", "100,1000,10000,0"));
