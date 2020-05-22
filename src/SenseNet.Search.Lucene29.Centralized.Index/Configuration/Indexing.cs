@@ -1,4 +1,6 @@
-﻿namespace SenseNet.Configuration
+﻿using System.IO;
+
+namespace SenseNet.Configuration
 {
     public class Indexing : SnConfig
     {
@@ -19,10 +21,10 @@
                     var assemblyPath = System.Reflection.Assembly.GetExecutingAssembly().CodeBase
                         .Replace("file:///", "")
                         .Replace("file://", "//")
-                        .Replace("/", "\\");
-                    var directoryPath = System.IO.Path.GetDirectoryName(assemblyPath) ?? string.Empty;
+                        .Replace('/', Path.DirectorySeparatorChar);
+                    var directoryPath = Path.GetDirectoryName(assemblyPath) ?? string.Empty;
 
-                    _indexDirectoryPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(directoryPath, configValue));
+                    _indexDirectoryPath = Path.GetFullPath(Path.Combine(directoryPath, configValue));
                 }
                 return _indexDirectoryPath;
             }
