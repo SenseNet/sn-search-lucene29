@@ -6,8 +6,6 @@ using SenseNet.Search.Lucene29.Centralized.Index;
 
 namespace SenseNet.Search.Lucene29.Centralized.Service
 {
-    //UNDONE:- Remove from app.config: /configuration/connectionStrings/add[name='SecurityStorage']
-    //UNDONE:- Remove from app.config: /configuration/sensenet/rabbitmq/add['ServiceUrl']
     public class SearchWindowsService : ServiceBase
     {
         public ServiceHost ServiceHost;
