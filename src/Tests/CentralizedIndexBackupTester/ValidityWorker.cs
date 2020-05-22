@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Lucene.Net.Index;
 using SenseNet.ContentRepository.Storage;
 using SenseNet.Diagnostics;
+using SenseNet.Search;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29;
 using SenseNet.Search.Querying;
@@ -24,29 +25,34 @@ namespace CentralizedIndexBackupTester
         public async Task WorkAsync(CancellationToken cancellationToken)
         {
             var lastId = "";
+            var count = 0;
             while (true)
             {
                 // Exit if needed.
                 if (cancellationToken.IsCancellationRequested)
                 {
+                    Console.WriteLine();
                     Console.WriteLine("Work finished");
                     return;
                 }
-                Console.WriteLine("Work");
+
+                Console.Write("Work: {0}\r", ++count);
 
                 SnTrace.Write("#### wait");
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromSeconds(0.2), cancellationToken).ConfigureAwait(false);
 
-                // Create one content (e.g. SystemFolder)...
+                // Create one document...
                 var id = await CreateDocAsync(cancellationToken);
                 SnTrace.Write("#### document created: " + id);
 
-                // Delete the last created content.
+                // Delete the last created document.
                 if (lastId != "")
                 {
                     await DeleteDocAsync(lastId, cancellationToken);
                     SnTrace.Write("#### document deleted: " + lastId);
                 }
+
+                var result = ContentQuery.Query("Id:1").Identifiers;
 
                 // ... and memorize its Id as "lastId".
                 lastId = id;

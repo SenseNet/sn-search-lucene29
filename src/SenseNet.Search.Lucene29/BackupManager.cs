@@ -7,85 +7,117 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Lucene.Net.Index;
+using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 
 namespace SenseNet.Search.Lucene29
 {
     public class BackupManager : IBackupManager, IBackupManagerFactory
     {
+        public BackupInfo BackupInfo { get; } = new BackupInfo();
+
         public IBackupManager CreateBackupManager()
         {
             return new BackupManager();
         }
 
-        public Task BackupAsync(IndexingActivityStatus state, string backupDirectoryPath,
+        public void Backup(IndexingActivityStatus state, string backupDirectoryPath,
             LuceneSearchManager indexManager, CancellationToken cancellationToken)
         {
-            Console.WriteLine("BACKUP START");
-            Console.WriteLine("  IndexingActivityStatus: " + state);
-            EnsureEmptyBackupDirectory(backupDirectoryPath);
+            using (var op = SnTrace.Index.StartOperation("BackupManager: INDEX BACKUP. Target: " + backupDirectoryPath))
+            {
+                SnTrace.Index.Write("BackupManager: IndexingActivityStatus: " + state);
 
-            using (var snapshot = indexManager.CreateSnapshot(state))
-                CopyIndexFiles(snapshot, indexManager, backupDirectoryPath);
+                BackupInfo.StartedAt = DateTime.UtcNow;
 
-            return Task.CompletedTask;
+                EnsureEmptyBackupDirectory(backupDirectoryPath, cancellationToken);
+
+                using (var snapshot = indexManager.CreateSnapshot(state))
+                    CopyIndexFiles(snapshot, indexManager, backupDirectoryPath, cancellationToken);
+
+                BackupInfo.FinishedAt = DateTime.UtcNow;
+
+                op.Successful = true;
+            }
         }
 
-        private void EnsureEmptyBackupDirectory(string backupDirectoryPath)
+        private void EnsureEmptyBackupDirectory(string backupDirectoryPath, CancellationToken cancellationToken)
         {
-            Console.Write("Prepare backup directory: ");
-
-            if (!Directory.Exists(backupDirectoryPath))
+            using (var op = SnTrace.Index.StartOperation("BackupManager: Prepare backup directory"))
             {
-                Directory.CreateDirectory(backupDirectoryPath);
-                Console.WriteLine("created");
-                return;
+                if (!Directory.Exists(backupDirectoryPath))
+                {
+                    Directory.CreateDirectory(backupDirectoryPath);
+                    SnTrace.Index.Write("BackupManager: backup directory created.");
+                    op.Successful = true;
+                    return;
+                }
+
+                foreach (var path in Directory.GetFiles(backupDirectoryPath))
+                {
+                    Task.Run(() => { File.Delete(path); }, cancellationToken)
+                        .ConfigureAwait(false).GetAwaiter().GetResult();
+                    SnTrace.Index.Write("BackupManager: file deleted: " + Path.GetFileName(path));
+                }
+
+                op.Successful = true;
             }
 
-            var deleted = 0;
-            foreach (var path in Directory.GetFiles(backupDirectoryPath))
-            {
-                File.Delete(path);
-                deleted++;
-            }
-            Console.WriteLine($"{deleted} files deleted.");
         }
 
-        private void CopyIndexFiles(IndexSnapshot snapshot, LuceneSearchManager indexManager, string backupDirectoryPath)
+        private void CopyIndexFiles(IndexSnapshot snapshot, LuceneSearchManager indexManager,
+            string backupDirectoryPath, CancellationToken cancellationToken)
         {
-            var timer = Stopwatch.StartNew();
+            using (var op = SnTrace.Index.StartOperation("BackupManager: Copy index files."))
+            {
+                var sourceDirectoryPath = indexManager.IndexDirectory.CurrentDirectory;
 
-            var source = indexManager.IndexDirectory.CurrentDirectory;
+                // Calculate initial progress
+                BackupInfo.CountOfFiles = snapshot.FileNames.Length;
+                BackupInfo.TotalBytes = snapshot.FileNames
+                    .Sum(x => new FileInfo(Path.Combine(sourceDirectoryPath, x)).Length);
 
-            Console.WriteLine("CopyIndexFiles starts.");
-            Console.WriteLine("  Source: " + source);
-            Console.WriteLine("  Target: " + backupDirectoryPath);
+                SnTrace.Index.Write("BackupManager: count of files: {0}, total bytes: {1}",
+                    BackupInfo.CountOfFiles, BackupInfo.TotalBytes);
 
-            Console.WriteLine("  SegmentFile: ");
-            CopyFile(source, backupDirectoryPath, snapshot.SegmentFileName);
+                CopyFile(sourceDirectoryPath, backupDirectoryPath, snapshot.SegmentFileName, cancellationToken);
 
-            Console.WriteLine("  Files: ");
-            foreach (var fileName in snapshot.FileNames)
-                CopyFile(source, backupDirectoryPath, fileName);
+                foreach (var fileName in snapshot.FileNames)
+                    CopyFile(sourceDirectoryPath, backupDirectoryPath, fileName, cancellationToken);
 
-            timer.Stop();
-            Console.WriteLine("CopyIndexFiles finished. Elapsed time: " + timer.Elapsed);
+                op.Successful = true;
+            }
         }
-        private void CopyFile(string source, string target, string fileName)
-        {
-            Console.Write("    " + fileName + ": ");
 
-            var targetPath = Path.Combine(target, fileName);
-            if (!File.Exists(targetPath))
+        private void CopyFile(string sourceDirectory, string targetDirectory, string fileName, CancellationToken cancellationToken)
+        {
+            using (var op = SnTrace.Index.StartOperation("BackupManager: Copy index file: " + fileName))
             {
-                var sourcePath = Path.Combine(source, fileName);
-                File.Copy(sourcePath, targetPath);
-                Console.WriteLine("ok.");
+                var targetPath = Path.Combine(targetDirectory, fileName);
+                var sourceFile = new FileInfo(Path.Combine(sourceDirectory, fileName));
+                if (!File.Exists(targetPath))
+                {
+                    BackupInfo.CurrentlyCopiedFile = fileName;
+
+                    CopyFile(sourceFile.FullName, targetPath, cancellationToken);
+
+                    BackupInfo.CopiedFiles++;
+                    BackupInfo.CopiedBytes += sourceFile.Length;
+                    BackupInfo.CurrentlyCopiedFile = null;
+                }
+                else
+                {
+                    SnTrace.Index.Write("BackupManager: copy {0} skipped", fileName);
+                }
+
+                op.Successful = true;
             }
-            else
-            {
-                Console.WriteLine("skipped.");
-            }
+        }
+
+        private void CopyFile(string sourceFullPath, string targetFullPath, CancellationToken cancellationToken)
+        {
+            Task.Run(() => { File.Copy(sourceFullPath, targetFullPath); }, cancellationToken)
+                .ConfigureAwait(false).GetAwaiter().GetResult();
         }
     }
 }

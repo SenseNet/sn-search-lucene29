@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ServiceModel;
 using System.ServiceProcess;
+using SenseNet.Diagnostics;
 using SenseNet.Search.Lucene29.Centralized.Index;
 
 namespace SenseNet.Search.Lucene29.Centralized.Service
@@ -22,6 +23,10 @@ namespace SenseNet.Search.Lucene29.Centralized.Service
 
             if (Environment.UserInteractive)
             {
+                SnTrace.SnTracers.Clear();
+                SnTrace.SnTracers.Add(new SnFileSystemTracer());
+                SnTrace.EnableAll();
+
                 Console.WriteLine("Starting service.");
                 service.OnStart(args);
                 Console.WriteLine("Service started.");

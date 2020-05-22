@@ -54,15 +54,17 @@ namespace SenseNet.Search.Lucene29
             return Task.CompletedTask;
         }
 
-        public Task<IndexBackupResult> BackupAsync(CancellationToken cancellationToken)
+        public async Task<BackupResponse> BackupAsync(string target, CancellationToken cancellationToken)
         {
-            return BackupAsync(null, cancellationToken);
-        }
-        public async Task<IndexBackupResult> BackupAsync(string target, CancellationToken cancellationToken)
-        {
-            IndexBackupResult result;
+            BackupResponse result;
             using (var op = SnTrace.System.StartOperation($"Index backup. Lucene29CentralizedIndexingEngine"))
             {
+                if (target == null)
+                {
+                    SnTrace.System.WriteError($"Index backup error: target is not specified.");
+                    throw new ArgumentNullException(nameof(target));
+                }
+
                 await IndexManager.DeleteRestorePointsAsync(cancellationToken).ConfigureAwait(false);
 
                 var state = await IndexManager.LoadCurrentIndexingActivityStatusAsync(cancellationToken)
@@ -75,6 +77,16 @@ namespace SenseNet.Search.Lucene29
             }
 
             return result;
+        }
+
+        public Task<BackupResponse> QueryBackupAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(SearchServiceClient.Instance.QueryBackup());
+        }
+
+        public Task<BackupResponse> CancelBackupAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(SearchServiceClient.Instance.CancelBackup());
         }
 
         public Task ClearIndexAsync(CancellationToken cancellationToken)

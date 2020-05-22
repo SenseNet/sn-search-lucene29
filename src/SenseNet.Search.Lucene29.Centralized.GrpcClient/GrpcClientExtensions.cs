@@ -1,6 +1,7 @@
 ﻿using System;
 using Grpc.Net.Client;
 using SenseNet.Diagnostics;
+using SenseNet.Search.Indexing;
 using SenseNet.Tools;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
@@ -31,6 +32,17 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             SnLog.WriteInformation("GrpcServiceClient set as Lucene29 Centralized Service Client.");
 
             return repositoryBuilder;
+        }
+
+        internal static GrpcService.IndexingActivityStatus ToGrpcActivityStatus(this IndexingActivityStatus state)
+        {
+            var request = new GrpcService.IndexingActivityStatus
+            {
+                LastActivityId = state.LastActivityId
+            };
+            request.Gaps.AddRange(state.Gaps);
+
+            return request;
         }
     }
 }

@@ -11,7 +11,8 @@ namespace SenseNet.Search.Lucene29
 
     public interface IBackupManager
     {
-        Task BackupAsync(IndexingActivityStatus state, string backupDirectoryPath,
+        BackupInfo BackupInfo { get; }
+        void Backup(IndexingActivityStatus state, string backupDirectoryPath,
             LuceneSearchManager indexManager, CancellationToken cancellationToken);
     }
 }

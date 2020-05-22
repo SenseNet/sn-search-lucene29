@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Querying;
 
@@ -16,6 +17,12 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
         {
             _logger = logger;
             _indexService = indexService;
+        }
+
+        public override Task<AliveResponse> Alive(AliveRequest request, ServerCallContext context)
+        {
+            var result = _indexService.Alive();
+            return Task.FromResult(new AliveResponse {Alive = result});
         }
 
         public override Task<ClearIndexResponse> ClearIndex(ClearIndexRequest request, ServerCallContext context)
@@ -57,6 +64,39 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
 
             return Task.FromResult(result);
         }
+
+        public override Task<BackupResponse> Backup(BackupRequest request, ServerCallContext context)
+        {
+            var result = _indexService.Backup(new Indexing.IndexingActivityStatus
+            {
+                LastActivityId = request.Status.LastActivityId,
+                Gaps = request.Status.Gaps.ToArray()
+            }, request.Target);
+
+            return Task.FromResult(new BackupResponse
+            {
+                Response = JsonConvert.SerializeObject(result)
+            });
+        }
+        public override Task<BackupResponse> QueryBackup(QueryBackupRequest request, ServerCallContext context)
+        {
+            var result = _indexService.QueryBackup();
+
+            return Task.FromResult(new BackupResponse
+            {
+                Response = JsonConvert.SerializeObject(result)
+            });
+        }
+        public override Task<BackupResponse> CancelBackup(CancelBackupRequest request, ServerCallContext context)
+        {
+            var result = _indexService.CancelBackup();
+
+            return Task.FromResult(new BackupResponse
+            {
+                Response = JsonConvert.SerializeObject(result)
+            });
+        }
+
         public override Task<WriteIndexResponse> WriteIndex(WriteIndexRequest request, ServerCallContext context)
         {
             var deletions = request.Deletions.Select(del => Tools.Deserialize<SnTerm>(del)).ToArray();

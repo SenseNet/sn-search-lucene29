@@ -23,7 +23,13 @@ namespace SenseNet.Search.Lucene29.Centralized.Common
         void WriteActivityStatusToIndex(IndexingActivityStatus state);
 
         [OperationContract]
-        IndexBackupResult Backup(IndexingActivityStatus state, string backupDirectoryPath);
+        BackupResponse Backup(IndexingActivityStatus state, string backupDirectoryPath);
+
+        [OperationContract]
+        BackupResponse QueryBackup();
+
+        [OperationContract]
+        BackupResponse CancelBackup();
 
         [OperationContract]
         void WriteIndex(SnTerm[] deletions, DocumentUpdate[] updates, IndexDocument[] additions);
