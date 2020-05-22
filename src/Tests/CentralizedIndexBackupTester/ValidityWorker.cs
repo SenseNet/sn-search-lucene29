@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Lucene.Net.Index;
 using SenseNet.ContentRepository.Storage;
 using SenseNet.Diagnostics;
+using SenseNet.Search;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29;
 using SenseNet.Search.Querying;
@@ -50,6 +51,8 @@ namespace CentralizedIndexBackupTester
                     await DeleteDocAsync(lastId, cancellationToken);
                     SnTrace.Write("#### document deleted: " + lastId);
                 }
+
+                var result = ContentQuery.Query("Id:1").Identifiers;
 
                 // ... and memorize its Id as "lastId".
                 lastId = id;
