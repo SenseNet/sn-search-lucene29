@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
@@ -18,6 +19,7 @@ using SenseNet.Search;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29;
 using SenseNet.Search.Lucene29.Centralized;
+using SenseNet.Search.Lucene29.Centralized.GrpcClient;
 using SenseNet.Search.Querying;
 using SenseNet.Security.EFCSecurityStore;
 using SenseNet.Security.Messaging.RabbitMQ;
@@ -36,7 +38,7 @@ namespace CentralizedIndexBackupTester
 
         static void Main(string[] args)
         {
-args = new[] {TestType.Validity.ToString()};
+args = new[] {TestType.Backup.ToString()};
 
             if (args.Length == 0)
             {
@@ -50,8 +52,9 @@ args = new[] {TestType.Validity.ToString()};
             }
 
             _serviceIndexDirectory = Path.GetFullPath($"{Environment.CurrentDirectory}\\..\\..\\..\\..\\..\\" +
-                                                      "SenseNet.Search.Lucene29.Centralized.Service\\" +
-                                                      "bin\\Debug\\App_Data\\LocalIndex");
+                                                      //"SenseNet.Search.Lucene29.Centralized.Service\\" +
+                                                      "SenseNet.Search.Lucene29.Centralized.GrpcService\\" +
+                                                      "bin\\Debug\\netcoreapp3.1\\App_Data\\LocalIndex");
             Console.WriteLine("IndexDirectory of the service: ");
             Console.WriteLine(_serviceIndexDirectory);
 
@@ -64,9 +67,9 @@ args = new[] {TestType.Validity.ToString()};
                 .AddEnvironmentVariables()
                 .Build();
 
-            var serviceBinding = new NetTcpBinding { Security = { Mode = SecurityMode.None } };
-            var serviceEndpoint = new EndpointAddress(configuration["sensenet:search:service:address"]);
-            WaitForServiceStarted(serviceBinding, serviceEndpoint);
+            //var serviceBinding = new NetTcpBinding { Security = { Mode = SecurityMode.None } };
+            //var serviceEndpoint = new EndpointAddress(configuration["sensenet:search:service:address"]);
+            //WaitForServiceStarted(serviceBinding, serviceEndpoint);
 
             var builder = new RepositoryBuilder()
                 .SetConsole(Console.Out)
@@ -77,7 +80,17 @@ args = new[] {TestType.Validity.ToString()};
                 .UseSecurityDataProvider(
                     new EFCSecurityDataProvider(connectionString: ConnectionStrings.ConnectionString))
                 .UseSecurityMessageProvider(new RabbitMQMessageProvider())
-                .UseLucene29CentralizedSearchEngine(serviceBinding, serviceEndpoint)
+                //.UseLucene29CentralizedSearchEngine(serviceBinding, serviceEndpoint)
+                .UseLucene29CentralizedSearchEngine()
+                .UseLucene29CentralizedGrpcServiceClient(configuration["sensenet:search:service:address"], options =>
+                {
+                    // trust the server in a development environment
+                    options.HttpClient = new HttpClient(new HttpClientHandler
+                    {
+                        ServerCertificateCustomValidationCallback = (message, certificate2, arg3, arg4) => true
+                    });
+                    options.DisposeHttpClient = true;
+                })
                 .StartWorkflowEngine(false)
                 .DisableNodeObservers()
                 .UseTraceCategories(SnTrace.Categories.Select(x => x.Name).ToArray()) as RepositoryBuilder;
