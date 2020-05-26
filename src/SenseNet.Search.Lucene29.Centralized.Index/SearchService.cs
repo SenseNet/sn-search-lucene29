@@ -39,6 +39,8 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
         public bool Alive()
         {
+            // This method always returns true, because it is used only to determine
+            // whether the service is accessible or not.
             return true;
         }
 
