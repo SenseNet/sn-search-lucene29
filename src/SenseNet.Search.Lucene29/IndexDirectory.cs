@@ -28,8 +28,14 @@ namespace SenseNet.Search.Lucene29
                         .Replace("file://", "//")
                         .Replace("/", "\\");
                     var directoryPath = Path.GetDirectoryName(assemblyPath) ?? string.Empty;
-
-                    _indexDirectoryPath = Path.GetFullPath(Path.Combine(directoryPath, configValue));
+                    SnTrace.Index.Write("IndexDirectory directory path: {0}", directoryPath);
+                    SnTrace.Index.Write("IndexDirectory config value: {0}", configValue);
+                    var cptPlanet = Path.Combine(directoryPath, configValue);
+                    SnTrace.Index.Write("IndexDirectory Captain Planet: {0}", cptPlanet);
+                    var location = Path.GetFullPath(cptPlanet);
+                    SnTrace.Index.Write("IndexDirectory location: {0}", location);
+                    //_indexDirectoryPath = location;
+                    _indexDirectoryPath = Path.GetFullPath(configValue);
                 }
 
                 return _indexDirectoryPath;
