@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>7.4.1</Version>
+    <Version>7.4.2</Version>
     <Company>Sense/Net Inc.</Company>
     <Description>Common service elements for the Central Lucene29 Search Engine for the sensenet platform.</Description>
     <Copyright>Copyright © Sense/Net Inc.</Copyright>
@@ -21,9 +21,9 @@
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="SenseNet.Tools" Version="3.2.0" />
+    <PackageReference Include="SenseNet.Tools" Version="3.2.2" />
     <PackageReference Include="SenseNet.Security" Version="4.1.0" />
-    <PackageReference Include="SenseNet.Search" Version="2.3.0" />
+    <PackageReference Include="SenseNet.Search" Version="2.4.0" />
   </ItemGroup>
 
 </Project>

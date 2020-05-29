@@ -107,6 +107,33 @@ namespace SenseNet.Search.Lucene29
         }
 
         /// <inheritdoc />
+        /// <summary>
+        /// This method is not supported.
+        /// </summary>
+        public Task<BackupResponse> BackupAsync(string target, CancellationToken cancellationToken)
+        {
+            throw new SnNotSupportedException();
+        }
+
+        /// <inheritdoc />
+        /// <summary>
+        /// This method is not supported.
+        /// </summary>
+        public Task<BackupResponse> QueryBackupAsync(CancellationToken cancellationToken)
+        {
+            throw new SnNotSupportedException();
+        }
+
+        /// <inheritdoc />
+        /// <summary>
+        /// This method is not supported.
+        /// </summary>
+        public Task<BackupResponse> CancelBackupAsync(CancellationToken cancellationToken)
+        {
+            throw new SnNotSupportedException();
+        }
+
+        /// <inheritdoc />
         public Task ClearIndexAsync(CancellationToken cancellationToken)
         {
             LuceneSearchManager.ClearIndex();
