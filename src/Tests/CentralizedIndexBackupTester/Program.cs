@@ -81,8 +81,7 @@ args = new[] {TestType.Backup.ToString()};
                     new EFCSecurityDataProvider(connectionString: ConnectionStrings.ConnectionString))
                 .UseSecurityMessageProvider(new RabbitMQMessageProvider())
                 //.UseLucene29CentralizedSearchEngine(serviceBinding, serviceEndpoint)
-                .UseLucene29CentralizedSearchEngine()
-                .UseLucene29CentralizedGrpcServiceClient(configuration["sensenet:search:service:address"], options =>
+                .UseLucene29CentralizedSearchEngineWithGrpc(configuration["sensenet:search:service:address"], options =>
                 {
                     // trust the server in a development environment
                     options.HttpClient = new HttpClient(new HttpClientHandler
@@ -162,7 +161,7 @@ args = new[] {TestType.Backup.ToString()};
             {
                 try
                 {
-                    using (var client = new SearchServiceClient(serviceBinding, serviceEndpoint))
+                    using (var client = new WcfServiceClient(serviceBinding, serviceEndpoint))
                         client.Alive();
                     return;
                 }
