@@ -52,8 +52,6 @@ namespace SenseNet.Search.Lucene29.Centralized
 
             ssc.InnerChannel.Faulted += SearchServiceChannelOnFaulted;
 
-            SnTrace.Index.Write("GetSearchServiceContract called.");
-
             return ssc;
         }
 
