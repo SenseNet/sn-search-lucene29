@@ -9,7 +9,8 @@ using SenseNet.Search.Querying;
 
 namespace SenseNet.Search.Lucene29.Centralized
 {
-    public class WcfServiceClient : ClientBase<ISearchServiceContract>, ISearchServiceClient
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "<Pending>")]
+    public class WcfServiceClient : ClientBase<ISearchServiceContract>, ISearchServiceClient, IDisposable
     {
         #region Search service client creation
 
@@ -23,8 +24,9 @@ namespace SenseNet.Search.Lucene29.Centralized
             Binding = binding;
             EndPointAddress = address;
 
-            // re-set the instance
-            SearchServiceClient.Instance = GetSearchServiceContract();
+            // Set a singleton wrapper instance that will create and dispose
+            // client objects when service methods are called.
+            SearchServiceClient.Instance = new WcfServiceClientWrapper();
         }
 
         private static void SearchServiceChannelOnFaulted(object sender, EventArgs eventArgs)
@@ -37,11 +39,8 @@ namespace SenseNet.Search.Lucene29.Centralized
                 SnLog.WriteError("Centralized search service channel error.");
                 _lastErrorLog = DateTime.UtcNow;
             }
-
-            // re-create the channel
-            SearchServiceClient.Instance = GetSearchServiceContract();
         }
-        private static ISearchServiceClient GetSearchServiceContract()
+        internal static WcfServiceClient GetSearchServiceContract()
         {
             // If the caller provided  a binding and address, use that.
             // Otherwise rely on configuration.
@@ -57,7 +56,7 @@ namespace SenseNet.Search.Lucene29.Centralized
 
         #endregion
 
-        #region Constructors
+        #region Constructors and Dispose
 
         public WcfServiceClient() { }
         public WcfServiceClient(string endpointConfigurationName) : base(endpointConfigurationName) { }
@@ -70,6 +69,35 @@ namespace SenseNet.Search.Lucene29.Centralized
         public WcfServiceClient(Binding binding, EndpointAddress remoteAddress) :
             base(binding, remoteAddress)
         { }
+
+        void IDisposable.Dispose()
+        {
+            Dispose(true);
+        }
+        /// <summary>
+        /// Dispose worker method. Handles graceful shutdown of the
+        /// client even if it is in a faulted state.
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposing) 
+                return;
+
+            try
+            {
+                if (State != CommunicationState.Faulted)
+                {
+                    Close();
+                }
+            }
+            finally
+            {
+                if (State != CommunicationState.Closed)
+                {
+                    Abort();
+                }
+            }
+        }
 
         #endregion
 
