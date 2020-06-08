@@ -193,11 +193,16 @@
     <Compile Include="Implementations\TestNode.cs" />
     <Compile Include="Implementations\TestQueryContext.cs" />
     <Compile Include="Implementations\TestQueryEngine.cs" />
+    <Compile Include="Lucene29CentralizedServiceTests.cs" />
     <Compile Include="Lucene29Tests.cs" />
     <Compile Include="Lucene29CompilerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\SenseNet.Search.Lucene29.Centralized.Index\SenseNet.Search.Lucene29.Centralized.Index.csproj">
+      <Project>{B408FF84-8D7E-4869-955B-A070623AB611}</Project>
+      <Name>SenseNet.Search.Lucene29.Centralized.Index</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\SenseNet.Search.Lucene29.Common\SenseNet.Search.Lucene29.Common.csproj">
       <Project>{ff0b1af9-753b-4660-8bd0-b84492321808}</Project>
       <Name>SenseNet.Search.Lucene29.Common</Name>

@@ -1,5 +1,7 @@
-﻿using System.ServiceModel;
+﻿using System;
+using System.ServiceModel;
 using System.ServiceProcess;
+using SenseNet.Diagnostics;
 using SenseNet.Search.Lucene29.Centralized.Index;
 
 namespace SenseNet.Search.Lucene29.Centralized.Service
@@ -13,9 +15,28 @@ namespace SenseNet.Search.Lucene29.Centralized.Service
             ServiceName = "SenseNet.Search.Lucene29.Centralized";
         }
 
-        public static void Main()
+        static void Main(string[] args)
         {
-            Run(new SearchWindowsService());
+            var service = new SearchWindowsService();
+
+            if (Environment.UserInteractive)
+            {
+                SnTrace.SnTracers.Clear();
+                SnTrace.SnTracers.Add(new SnFileSystemTracer());
+                SnTrace.EnableAll();
+
+                Console.WriteLine("Starting service.");
+                service.OnStart(args);
+                Console.WriteLine("Service started.");
+                Console.WriteLine("Press any key to stop.");
+                Console.ReadKey();
+                service.OnStop();
+                Console.WriteLine("Service stopped.");
+            }
+            else
+            {
+                Run(service);
+            }
         }
 
         protected override void OnStart(string[] args)

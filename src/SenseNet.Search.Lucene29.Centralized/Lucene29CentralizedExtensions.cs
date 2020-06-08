@@ -10,6 +10,9 @@ namespace SenseNet.Search.Lucene29
 {
     public static class Lucene29CentralizedExtensions
     {
+        /// <summary>
+        /// Sets the Centralized Lucene search engine as the current search engine.
+        /// </summary>
         public static IRepositoryBuilder UseLucene29CentralizedSearchEngine(this IRepositoryBuilder repositoryBuilder)
         {
             var searchEngine = new Lucene29SearchEngine()
@@ -26,15 +29,25 @@ namespace SenseNet.Search.Lucene29
         /// Set the centralized Lucene engine as the search engine and initialize it
         /// using the provided WCF endpoint binding.
         /// </summary>
+        [Obsolete("Use the UseLucene29CentralizedSearchEngineWithWcf method instead.")]
         public static IRepositoryBuilder UseLucene29CentralizedSearchEngine(this IRepositoryBuilder repositoryBuilder,
+            Binding binding, EndpointAddress address)
+        {
+            return repositoryBuilder.UseLucene29CentralizedSearchEngineWithWcf(binding, address);
+        }
+        /// <summary>
+        /// Set the centralized Lucene engine as the search engine and initialize it
+        /// using the provided WCF endpoint binding.
+        /// </summary>
+        public static IRepositoryBuilder UseLucene29CentralizedSearchEngineWithWcf(this IRepositoryBuilder repositoryBuilder,
             Binding binding, EndpointAddress address)
         {
             if (binding == null)
                 throw new ArgumentNullException(nameof(binding));
             if (address == null)
                 throw new ArgumentNullException(nameof(address));
-
-            SearchServiceClient.InitializeServiceEndpoint(binding, address);
+            
+            WcfServiceClient.InitializeServiceEndpoint(binding, address);
 
             return repositoryBuilder.UseLucene29CentralizedSearchEngine();
         }
@@ -45,7 +58,7 @@ namespace SenseNet.Search.Lucene29
         /// <param name="repositoryBuilder">The <see cref="IRepositoryBuilder"/> instance.</param>
         /// <param name="serviceClient">The client instance.</param>
         public static IRepositoryBuilder UseLucene29CentralizedServiceClient(this IRepositoryBuilder repositoryBuilder,
-            ISearchServiceContract serviceClient)
+            ISearchServiceClient serviceClient)
         {
             SearchServiceClient.Instance = serviceClient;
 

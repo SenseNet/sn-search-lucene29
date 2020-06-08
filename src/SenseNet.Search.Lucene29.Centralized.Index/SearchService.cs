@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Search;
@@ -12,6 +15,7 @@ using SenseNet.Search.Querying;
 
 namespace SenseNet.Search.Lucene29.Centralized.Index
 {
+    // Re-created per request.
     public class SearchService : ISearchServiceContract
     {
         public static void Start()
@@ -32,6 +36,13 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         }
 
         #region ISearchServiceContract implementation
+
+        public bool Alive()
+        {
+            // This method always returns true, because it is used only to determine
+            // whether the service is accessible or not.
+            return true;
+        }
 
         public void ClearIndex()
         {
@@ -78,13 +89,14 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
             if (!Enum.TryParse(queryContext.FieldLevel, true, out QueryFieldLevel queryFieldLevel))
                 queryFieldLevel = QueryFieldLevel.HeadOnly;
-            
+
             return new ServicePermissionFilter(security, queryFieldLevel, query.AllVersions);
         }
 
         public void WriteIndex(SnTerm[] deletions, DocumentUpdate[] updates, IndexDocument[] additions)
         {
-            using (var op = SnTrace.Index.StartOperation($"WriteIndex: deletions:{deletions?.Length} updates:{updates?.Length} additions:{additions?.Length}"))
+            using (var op = SnTrace.Index.StartOperation(
+                $"WriteIndex: deletions:{deletions?.Length} updates:{updates?.Length} additions:{additions?.Length}"))
             {
                 SearchManager.Instance.WriteIndex(deletions, updates, additions);
                 op.Successful = true;
@@ -94,6 +106,126 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         public void WriteActivityStatusToIndex(IndexingActivityStatus state)
         {
             SearchManager.Instance.WriteActivityStatusToIndex(state);
+        }
+
+        private static IBackupManagerFactory _backupManagerFactory { get; set; } = new BackupManager();
+        private static readonly object _backupLock = new object();
+        private static IBackupManager _backupManager;
+        private static CancellationTokenSource _backupCancellationSource;
+        private static readonly List<BackupInfo> _backupHistory = new List<BackupInfo>();
+        public BackupResponse Backup(IndexingActivityStatus state, string backupDirectoryPath)
+        {
+            if (backupDirectoryPath == null)
+            {
+                SnTrace.Index.WriteError("SearchService: Missing 'backupDirectoryPath'");
+                throw new ArgumentNullException(nameof(backupDirectoryPath));
+            }
+
+            if (_backupManager != null)
+            {
+                SnTrace.Index.Write("SearchService: Backup already executing by another thread.");
+                return CreateBackupResponse(BackupState.Executing, false);
+            }
+
+            lock (_backupLock)
+            {
+                if (_backupManager != null)
+                    return CreateBackupResponse(BackupState.Executing, false);
+                _backupManager = _backupManagerFactory.CreateBackupManager();
+            }
+
+            SnTrace.Index.Write("SearchService: BackupManager created.");
+            Task.Run(() => BackupWorker(state, backupDirectoryPath));
+
+            return CreateBackupResponse(BackupState.Started, false);
+        }
+
+        private void BackupWorker(IndexingActivityStatus state, string backupDirectoryPath)
+        {
+            try
+            {
+                _backupCancellationSource = new CancellationTokenSource();
+                _backupManager.Backup(state, backupDirectoryPath, SearchManager.Instance,
+                    _backupCancellationSource.Token);
+            }
+            catch (Exception e)
+            {
+                CollectErrorMessages(e, _backupManager.BackupInfo);
+                SnTrace.Index.WriteError("SearchService: " + _backupManager.BackupInfo.Message);
+            }
+
+            _backupHistory.Add(_backupManager.BackupInfo.Clone());
+            SnTrace.Index.Write("SearchService: BackupInfo is added to history.");
+            _backupManager = null;
+            _backupCancellationSource.Dispose();
+            _backupCancellationSource = null;
+        }
+
+        private void CollectErrorMessages(Exception exception, BackupInfo targetInfo)
+        {
+            var sb = new StringBuilder(exception is TaskCanceledException ? "CANCELED: " : "ERROR: ");
+            CollectErrorMessages(exception, sb, "");
+            targetInfo.Message = sb.ToString();
+        }
+        private void CollectErrorMessages(Exception exception, StringBuilder sb, string indent)
+        {
+            sb.Append(indent);
+            sb.Append(exception.GetType().FullName).Append(": ");
+            sb.AppendLine(exception.Message);
+            if (exception is AggregateException ae)
+            {
+                var indent2 = indent + "  ";
+                foreach (var ex in ae.InnerExceptions)
+                    CollectErrorMessages(ex, sb, indent2);
+            }
+            if (exception.InnerException != null)
+                CollectErrorMessages(exception.InnerException, sb, indent + "  ");
+        }
+
+        public BackupResponse QueryBackup()
+        {
+            BackupState state;
+            if (_backupManager != null)
+            {
+                state = BackupState.Executing;
+            }
+            else
+            {
+                BackupInfo info = _backupHistory.FirstOrDefault();
+                if (info == null)
+                {
+                    state = BackupState.Initial;
+                }
+                else
+                {
+                    if (info.Message != null)
+                    {
+                        state = info.Message.StartsWith("Cancel", StringComparison.OrdinalIgnoreCase)
+                            ? BackupState.Canceled
+                            : BackupState.Faulted;
+                    }
+                    else
+                    {
+                        state = BackupState.Finished;
+                    }
+                }
+            }
+
+            return CreateBackupResponse(state, true);
+        }
+        public BackupResponse CancelBackup()
+        {
+            _backupCancellationSource?.Cancel();
+            return CreateBackupResponse(BackupState.CancelRequested, true);
+        }
+        private BackupResponse CreateBackupResponse(BackupState state, bool withHistory)
+        {
+            return new BackupResponse
+            {
+                State = state,
+                Current = _backupManager?.BackupInfo.Clone(),
+                History = withHistory ? _backupHistory.ToArray() : null,
+            };
         }
 
         public void SetIndexingInfo(IDictionary<string, IndexFieldAnalyzer> analyzerTypes, 
@@ -189,11 +321,20 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
         private static void UpdateTraceCategories()
         {
-            foreach (var category in SnTrace.Categories)
+            foreach (var category in SnTrace.Categories.Where(c => !c.Enabled))
                 category.Enabled = Tracing.TraceCategories.Contains(category.Name);
 
             SnLog.WriteInformation("Trace settings were updated in Search service.", EventId.NotDefined,
                 properties: SnTrace.Categories.ToDictionary(c => c.Name, c => (object)c.Enabled.ToString()));
+        }
+
+        public static void InitializeForTest(IBackupManagerFactory factoryForTest)
+        {
+            _backupCancellationSource?.Cancel();
+            while(_backupManager!=null)
+                Thread.Sleep(100);
+            _backupHistory.Clear();
+            _backupManagerFactory = factoryForTest;
         }
     }
 }

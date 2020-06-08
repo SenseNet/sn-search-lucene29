@@ -6,6 +6,12 @@ package SenseNet.Search.Lucene29.Centralized.GrpcService;
 
 /* --------------------------------- INDEXING types --------------------------------- */
 
+message AliveRequest {
+}
+message AliveResponse {
+    bool Alive = 1;
+}
+
 message ClearIndexRequest {
 }
 message ClearIndexResponse {
@@ -51,6 +57,18 @@ enum IndexValueType {
     Float = 5;
     Double = 6;
     DateTime = 7;
+}
+
+message BackupRequest {
+	IndexingActivityStatus Status = 1;
+    string Target = 2;
+}
+message BackupResponse {
+	string Response = 1;
+}
+message QueryBackupRequest {
+}
+message CancelBackupRequest {
 }
 
 /* --------------------------------- QUERYING types --------------------------------- */

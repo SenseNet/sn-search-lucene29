@@ -8,6 +8,9 @@ namespace SenseNet.Search.Lucene29.Centralized.Common
     [ServiceContract(Namespace = "http://SenseNet.ServiceModel.Search.Lucene29")]
     public interface ISearchServiceContract
     {
+        [OperationContract]
+        bool Alive();
+
         //=================================================================================================== Indexing
 
         [OperationContract]
@@ -18,6 +21,15 @@ namespace SenseNet.Search.Lucene29.Centralized.Common
 
         [OperationContract]
         void WriteActivityStatusToIndex(IndexingActivityStatus state);
+
+        [OperationContract]
+        BackupResponse Backup(IndexingActivityStatus state, string backupDirectoryPath);
+
+        [OperationContract]
+        BackupResponse QueryBackup();
+
+        [OperationContract]
+        BackupResponse CancelBackup();
 
         [OperationContract]
         void WriteIndex(SnTerm[] deletions, DocumentUpdate[] updates, IndexDocument[] additions);

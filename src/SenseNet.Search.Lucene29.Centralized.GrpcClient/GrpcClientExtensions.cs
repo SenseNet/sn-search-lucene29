@@ -1,12 +1,31 @@
 ﻿using System;
 using Grpc.Net.Client;
 using SenseNet.Diagnostics;
+using SenseNet.Search.Indexing;
 using SenseNet.Tools;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 {
     public static class GrpcClientExtensions
     {
+        /// <summary>
+        /// Set the centralized Lucene engine as the search engine and
+        /// sets the <see cref="GrpcServiceClient"/> as the client for
+        /// search service communication.
+        /// </summary>
+        /// <param name="repositoryBuilder">The <see cref="IRepositoryBuilder"/> instance.</param>
+        /// <param name="serviceAddress">Url of the gRPC search service.</param>
+        /// <param name="configure">Optional configure method.</param>
+        public static IRepositoryBuilder UseLucene29CentralizedSearchEngineWithGrpc(
+            this IRepositoryBuilder repositoryBuilder,
+            string serviceAddress,
+            Action<GrpcChannelOptions> configure = null)
+        {
+            return repositoryBuilder
+                .UseLucene29CentralizedSearchEngine()
+                .UseLucene29CentralizedGrpcServiceClient(serviceAddress, configure);
+        }
+
         /// <summary>
         /// Sets the <see cref="GrpcServiceClient"/> as the client for
         /// search service communication.
@@ -31,6 +50,17 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             SnLog.WriteInformation("GrpcServiceClient set as Lucene29 Centralized Service Client.");
 
             return repositoryBuilder;
+        }
+
+        internal static GrpcService.IndexingActivityStatus ToGrpcActivityStatus(this IndexingActivityStatus state)
+        {
+            var request = new GrpcService.IndexingActivityStatus
+            {
+                LastActivityId = state.LastActivityId
+            };
+            request.Gaps.AddRange(state.Gaps);
+
+            return request;
         }
     }
 }

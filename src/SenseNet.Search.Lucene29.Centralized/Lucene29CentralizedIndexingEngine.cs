@@ -6,6 +6,7 @@ using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Lucene.Net.Analysis;
+using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized;
@@ -53,31 +54,39 @@ namespace SenseNet.Search.Lucene29
             return Task.CompletedTask;
         }
 
-        /// <inheritdoc />
-        /// <summary>
-        /// This method is not supported.
-        /// </summary>
-        public Task<BackupResponse> BackupAsync(string target, CancellationToken cancellationToken)
+        public async Task<BackupResponse> BackupAsync(string target, CancellationToken cancellationToken)
         {
-            throw new SnNotSupportedException();
+            BackupResponse result;
+            using (var op = SnTrace.System.StartOperation($"Index backup. Lucene29CentralizedIndexingEngine"))
+            {
+                if (target == null)
+                {
+                    SnTrace.System.WriteError($"Index backup error: target is not specified.");
+                    throw new ArgumentNullException(nameof(target));
+                }
+
+                await IndexManager.DeleteRestorePointsAsync(cancellationToken).ConfigureAwait(false);
+
+                var state = await IndexManager.LoadCurrentIndexingActivityStatusAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                SnTrace.System.Write($"Index backup indexing-activity status: {state}");
+
+                result = SearchServiceClient.Instance.Backup(state, target);
+
+                op.Successful = true;
+            }
+
+            return result;
         }
 
-        /// <inheritdoc />
-        /// <summary>
-        /// This method is not supported.
-        /// </summary>
         public Task<BackupResponse> QueryBackupAsync(CancellationToken cancellationToken)
         {
-            throw new SnNotSupportedException();
+            return Task.FromResult(SearchServiceClient.Instance.QueryBackup());
         }
 
-        /// <inheritdoc />
-        /// <summary>
-        /// This method is not supported.
-        /// </summary>
         public Task<BackupResponse> CancelBackupAsync(CancellationToken cancellationToken)
         {
-            throw new SnNotSupportedException();
+            return Task.FromResult(SearchServiceClient.Instance.CancelBackup());
         }
 
         public Task ClearIndexAsync(CancellationToken cancellationToken)
