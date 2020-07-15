@@ -11,6 +11,9 @@ namespace SenseNet.Configuration
         {
             get
             {
+                // This is a legacy behavior that determines the path automatically. New applications
+                // should set the value based on the current environment.
+
                 if (_indexDirectoryPath == null)
                 {
                     // Note that this is different from the original default index directory as it defines the folder right
@@ -28,6 +31,7 @@ namespace SenseNet.Configuration
                 }
                 return _indexDirectoryPath;
             }
+            set => _indexDirectoryPath = value;
         }
     }
 }
