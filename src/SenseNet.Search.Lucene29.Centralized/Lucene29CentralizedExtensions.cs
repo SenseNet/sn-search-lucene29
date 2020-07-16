@@ -2,6 +2,7 @@
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using SenseNet.ContentRepository;
+using SenseNet.Search.Lucene29;
 using SenseNet.Search.Lucene29.Centralized;
 using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Tools;

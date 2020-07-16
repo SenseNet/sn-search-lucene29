@@ -1,4 +1,5 @@
 ﻿using SenseNet.ContentRepository;
+using SenseNet.Search.Lucene29;
 using SenseNet.Tools;
 
 // ReSharper disable once CheckNamespace

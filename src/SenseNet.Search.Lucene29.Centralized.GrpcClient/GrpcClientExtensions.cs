@@ -1,7 +1,9 @@
 ﻿using System;
 using Grpc.Net.Client;
 using SenseNet.Diagnostics;
+using SenseNet.Extensions.DependencyInjection;
 using SenseNet.Search.Indexing;
+using SenseNet.Search.Lucene29.Centralized.GrpcClient;
 using SenseNet.Tools;
 
 // ReSharper disable once CheckNamespace
@@ -43,7 +45,7 @@ namespace SenseNet.Extensions.DependencyInjection
 
             // this channel will be disposed later, by the GrpcClientSnService class
             var channel = GrpcChannel.ForAddress(serviceAddress, options);
-            var searchClient = new GrpcService.GrpcSearch.GrpcSearchClient(channel);
+            var searchClient = new SenseNet.Search.Lucene29.Centralized.GrpcService.GrpcSearch.GrpcSearchClient(channel);
             var serviceClient = new GrpcServiceClient(searchClient, channel);
 
             repositoryBuilder.UseLucene29CentralizedServiceClient(serviceClient);
@@ -53,9 +55,9 @@ namespace SenseNet.Extensions.DependencyInjection
             return repositoryBuilder;
         }
 
-        internal static GrpcService.IndexingActivityStatus ToGrpcActivityStatus(this IndexingActivityStatus state)
+        internal static SenseNet.Search.Lucene29.Centralized.GrpcService.IndexingActivityStatus ToGrpcActivityStatus(this IndexingActivityStatus state)
         {
-            var request = new GrpcService.IndexingActivityStatus
+            var request = new SenseNet.Search.Lucene29.Centralized.GrpcService.IndexingActivityStatus
             {
                 LastActivityId = state.LastActivityId
             };

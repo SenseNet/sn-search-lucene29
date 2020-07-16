@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Grpc.Net.Client;
 using Newtonsoft.Json;
+using SenseNet.Extensions.DependencyInjection;
 using SenseNet.Search.Lucene29.Centralized.GrpcService;
 using static SenseNet.Search.Lucene29.Centralized.GrpcService.GrpcSearch;
 using BackupResponse = SenseNet.Search.Indexing.BackupResponse;
