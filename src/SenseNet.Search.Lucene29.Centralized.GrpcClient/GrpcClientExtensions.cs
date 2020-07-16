@@ -4,7 +4,8 @@ using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Tools;
 
-namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
+// ReSharper disable once CheckNamespace
+namespace SenseNet.Extensions.DependencyInjection
 {
     public static class GrpcClientExtensions
     {

@@ -1,7 +1,8 @@
 ﻿using SenseNet.ContentRepository;
 using SenseNet.Tools;
 
-namespace SenseNet.Search.Lucene29
+// ReSharper disable once CheckNamespace
+namespace SenseNet.Extensions.DependencyInjection
 {
     public static class Lucene29LocalExtensions
     {
