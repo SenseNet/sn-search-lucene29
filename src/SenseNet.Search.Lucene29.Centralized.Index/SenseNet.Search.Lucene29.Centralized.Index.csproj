@@ -24,7 +24,7 @@
     <PackageReference Include="SenseNet.Common" Version="7.4.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="SenseNet.Tools" Version="3.2.2" />
+    <PackageReference Include="SenseNet.Tools" Version="3.2.4" />
     <PackageReference Include="SenseNet.Security" Version="4.1.0" />
     <PackageReference Include="SenseNet.Search" Version="2.4.0" />
     <PackageReference Include="SenseNet.Search.Lucene29.Lucene.Net" Version="2.9.4.301" />
