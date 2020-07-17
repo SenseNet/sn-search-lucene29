@@ -6,7 +6,7 @@ using SenseNet.Configuration;
 using SenseNet.ContentRepository;
 using SenseNet.ContentRepository.Storage.Data.MsSqlClient;
 using SenseNet.Diagnostics;
-using SenseNet.Search.Lucene29;
+using SenseNet.Extensions.DependencyInjection;
 using SenseNet.Security.EFCSecurityStore;
 using File = System.IO.File;
 using Task = System.Threading.Tasks.Task;
