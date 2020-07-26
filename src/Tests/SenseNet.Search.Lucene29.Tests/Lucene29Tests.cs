@@ -15,6 +15,7 @@ using SenseNet.ContentRepository.Storage.Data;
 using SenseNet.ContentRepository.Storage.Security;
 using SenseNet.Search.Indexing;
 using SenseNet.ContentRepository.Search.Indexing;
+using SenseNet.Extensions.DependencyInjection;
 using SenseNet.Tests;
 using SenseNet.Tests.Implementations;
 using File = System.IO.File;
