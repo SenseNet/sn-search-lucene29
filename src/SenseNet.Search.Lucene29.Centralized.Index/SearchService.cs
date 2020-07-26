@@ -18,9 +18,14 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
     // Re-created per request.
     public class SearchService : ISearchServiceContract
     {
-        public static void Start()
+        public static void Start(string indexDirectoryPath = null)
         {
             UpdateTraceCategories();
+
+            // Set index directory before touching the SearchManager class, so that the value
+            // comes from the application above instead of an automatism in this library.
+            if (!string.IsNullOrEmpty(indexDirectoryPath))
+                SenseNet.Configuration.Indexing.IndexDirectoryFullPath = indexDirectoryPath;
 
             SecurityHandler.StartSecurity();
 
