@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http;
 using Grpc.Net.Client;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
@@ -38,6 +39,16 @@ namespace SenseNet.Extensions.DependencyInjection
         public static IRepositoryBuilder UseLucene29CentralizedSearchEngineWithGrpc(this IRepositoryBuilder repositoryBuilder, GrpcClientOptions options)
         {
             //TODO: refactor the Grpc client to be able to work as a hosted service and use dependency injection correctly
+
+            // shortcut for bypassing certificate validation using a single configurable flag
+            if (!options.ValidateServerCertificate)
+            {
+                options.ChannelOptions.HttpClient = new HttpClient(new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = (message, certificate2, arg3, arg4) => true
+                });
+                options.ChannelOptions.DisposeHttpClient = true;
+            }
 
             repositoryBuilder
                 .UseLucene29CentralizedSearchEngine()
