@@ -24,3 +24,9 @@ The test environment currently needs the base content type definitions to build 
 `\src\nuget\snadmin\install-services\import\System\Schema\ContentTypes` 
 
 After this you should be able to run all the tests in this repository. Please **do not commit this folder** to this repo so that we avoid data duplication.
+
+# sensenet as a service (SNaaS) - use sensenet from the cloud
+
+For a monthly subscription fee, we store all your content and data, relieving you of all maintenance-related tasks and installation, ensuring easy onboarding, easy updates, and patches.
+
+https://www.sensenet.com/pricing
