@@ -197,6 +197,7 @@
     <Compile Include="Lucene29Tests.cs" />
     <Compile Include="Lucene29CompilerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WriteLockTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\SenseNet.Search.Lucene29.Centralized.Index\SenseNet.Search.Lucene29.Centralized.Index.csproj">

@@ -35,6 +35,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CentralizedIndexBackupTeste
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IndexIntegrityChecker", "Tests\IndexIntegrityChecker\IndexIntegrityChecker.csproj", "{2CF7CDB5-5013-4BD7-82CE-F29EE3735DBC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkerForWriteLockDeletionTests", "Tests\WorkerForWriteLockDeletionTests\WorkerForWriteLockDeletionTests.csproj", "{12C0C859-DD39-4EC7-BE6D-69C4E41529DC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -89,6 +91,10 @@ Global
 		{2CF7CDB5-5013-4BD7-82CE-F29EE3735DBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2CF7CDB5-5013-4BD7-82CE-F29EE3735DBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2CF7CDB5-5013-4BD7-82CE-F29EE3735DBC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12C0C859-DD39-4EC7-BE6D-69C4E41529DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12C0C859-DD39-4EC7-BE6D-69C4E41529DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12C0C859-DD39-4EC7-BE6D-69C4E41529DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12C0C859-DD39-4EC7-BE6D-69C4E41529DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -97,6 +103,7 @@ Global
 		{948CE434-4B01-4B5E-8E01-E7661891D159} = {55BC2BFC-A38E-4C1E-80DD-7951CDB4CE6B}
 		{043F915E-80F7-4239-8BA5-53D78582E3A2} = {55BC2BFC-A38E-4C1E-80DD-7951CDB4CE6B}
 		{2CF7CDB5-5013-4BD7-82CE-F29EE3735DBC} = {55BC2BFC-A38E-4C1E-80DD-7951CDB4CE6B}
+		{12C0C859-DD39-4EC7-BE6D-69C4E41529DC} = {55BC2BFC-A38E-4C1E-80DD-7951CDB4CE6B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D3B8C994-B98E-4357-AB4E-9D96D41BA6CD}

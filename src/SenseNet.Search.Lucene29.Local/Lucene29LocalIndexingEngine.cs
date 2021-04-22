@@ -77,10 +77,18 @@ namespace SenseNet.Search.Lucene29
         /// </summary>
         public Task StartAsync(TextWriter consoleOut, CancellationToken cancellationToken)
         {
+            return StartAsync(consoleOut, true, cancellationToken);
+        }
+
+        /// <summary>
+        /// Entrance for tests only.
+        /// </summary>
+        internal Task StartAsync(TextWriter consoleOut, bool warmup, CancellationToken cancellationToken)
+        {
             LuceneSearchManager.Start(consoleOut);
 
-            // execute a warmup query
-            SnQuery.Query("+Id:1", SnQueryContext.CreateDefault());
+            if(warmup)
+                SnQuery.Query("+Id:1", SnQueryContext.CreateDefault());
 
             return Task.CompletedTask;
         }

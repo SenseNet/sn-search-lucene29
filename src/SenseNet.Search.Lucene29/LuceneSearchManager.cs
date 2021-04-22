@@ -260,8 +260,16 @@ namespace SenseNet.Search.Lucene29
 
             while (File.Exists(lockFilePath))
             {
-                Trace.WriteLine(WAITINGFORLOCKSTR);
-                SnTrace.Repository.Write(WAITINGFORLOCKSTR);
+                try
+                {
+                    File.Delete(lockFilePath);
+                    SnTrace.Repository.Write("Lock file deleted: " + lockFilePath);
+                    break;
+                }
+                catch (Exception e)
+                {
+                    SnTrace.Repository.Write(WAITINGFORLOCKSTR);
+                }
 
                 Thread.Sleep(100);
                 if (DateTime.UtcNow > deadline)
