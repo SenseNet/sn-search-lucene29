@@ -12,7 +12,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="SenseNet.Security.EFCSecurityStore" Version="3.0.0" />
     <PackageReference Include="SenseNet.Security.Messaging.RabbitMQ" Version="1.2.0" />
-    <PackageReference Include="SenseNet.Services.Core" Version="0.0.11" />
+    <PackageReference Include="SenseNet.Services.Core" Version="0.0.22" />
     <PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
     <PackageReference Include="System.ServiceModel.NetTcp" Version="4.7.0" />
   </ItemGroup>

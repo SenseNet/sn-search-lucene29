@@ -718,27 +718,27 @@ namespace IndexIntegrityChecker
 
             var sql = string.Format(checkNodeSql, path);
 
-            using (var ctx = new MsSqlDataContext(CancellationToken.None))
+            using var ctx = new MsSqlDataContext(ConnectionStrings.ConnectionString, 
+                DataOptions.GetLegacyConfiguration(), CancellationToken.None);
+
+            return await ctx.ExecuteReaderAsync(sql, async (reader, cancel) =>
             {
-                return await ctx.ExecuteReaderAsync(sql, async (reader, cancel) =>
+                cancel.ThrowIfCancellationRequested();
+                TimestampData dbNode = null;
+                if (await reader.ReadAsync(cancel).ConfigureAwait(false))
                 {
-                    cancel.ThrowIfCancellationRequested();
-                    TimestampData dbNode = null;
-                    if (await reader.ReadAsync(cancel).ConfigureAwait(false))
+                    dbNode = new TimestampData
                     {
-                        dbNode = new TimestampData
-                        {
-                            NodeId = reader.GetSafeInt32(reader.GetOrdinal("NodeId")),
-                            VersionId = reader.GetSafeInt32(reader.GetOrdinal("VersionId")),
-                            NodeTimestamp = reader.GetSafeInt64(reader.GetOrdinal("NodeTimestamp")),
-                            VersionTimestamp = reader.GetSafeInt64(reader.GetOrdinal("VersionTimestamp")),
-                            LastMajorVersionId = reader.GetSafeInt32(reader.GetOrdinal("LastMajorVersionId")),
-                            LastMinorVersionId = reader.GetSafeInt32(reader.GetOrdinal("LastMinorVersionId")),
-                        };
-                    }
-                    return dbNode;
-                }).ConfigureAwait(false);
-            }
+                        NodeId = reader.GetSafeInt32(reader.GetOrdinal("NodeId")),
+                        VersionId = reader.GetSafeInt32(reader.GetOrdinal("VersionId")),
+                        NodeTimestamp = reader.GetSafeInt64(reader.GetOrdinal("NodeTimestamp")),
+                        VersionTimestamp = reader.GetSafeInt64(reader.GetOrdinal("VersionTimestamp")),
+                        LastMajorVersionId = reader.GetSafeInt32(reader.GetOrdinal("LastMajorVersionId")),
+                        LastMinorVersionId = reader.GetSafeInt32(reader.GetOrdinal("LastMinorVersionId")),
+                    };
+                }
+                return dbNode;
+            }).ConfigureAwait(false);
         }
         private static async Task<TimestampData[]> GetTimestampDataForRecursiveIntegrityCheckAsync(string path, int[] excludedNodeTypeIds)
         {
@@ -760,27 +760,27 @@ namespace IndexIntegrityChecker
                     sql += " AND " + typeFilter;
             }
 
-            using (var ctx = new MsSqlDataContext(CancellationToken.None))
+            using var ctx = new MsSqlDataContext(ConnectionStrings.ConnectionString,
+                DataOptions.GetLegacyConfiguration(), CancellationToken.None);
+
+            return await ctx.ExecuteReaderAsync(sql, async (reader, cancel) =>
             {
-                return await ctx.ExecuteReaderAsync(sql, async (reader, cancel) =>
+                cancel.ThrowIfCancellationRequested();
+                var result = new List<TimestampData>();
+                while (await reader.ReadAsync(cancel).ConfigureAwait(false))
                 {
-                    cancel.ThrowIfCancellationRequested();
-                    var result = new List<TimestampData>();
-                    while (await reader.ReadAsync(cancel).ConfigureAwait(false))
+                    result.Add(new TimestampData
                     {
-                        result.Add(new TimestampData
-                        {
-                            NodeId = reader.GetSafeInt32(reader.GetOrdinal("NodeId")),
-                            VersionId = reader.GetSafeInt32(reader.GetOrdinal("VersionId")),
-                            NodeTimestamp = reader.GetSafeInt64(reader.GetOrdinal("NodeTimestamp")),
-                            VersionTimestamp = reader.GetSafeInt64(reader.GetOrdinal("VersionTimestamp")),
-                            LastMajorVersionId = reader.GetSafeInt32(reader.GetOrdinal("LastMajorVersionId")),
-                            LastMinorVersionId = reader.GetSafeInt32(reader.GetOrdinal("LastMinorVersionId")),
-                        });
-                    }
-                    return result.ToArray();
-                }).ConfigureAwait(false);
-            }
+                        NodeId = reader.GetSafeInt32(reader.GetOrdinal("NodeId")),
+                        VersionId = reader.GetSafeInt32(reader.GetOrdinal("VersionId")),
+                        NodeTimestamp = reader.GetSafeInt64(reader.GetOrdinal("NodeTimestamp")),
+                        VersionTimestamp = reader.GetSafeInt64(reader.GetOrdinal("VersionTimestamp")),
+                        LastMajorVersionId = reader.GetSafeInt32(reader.GetOrdinal("LastMajorVersionId")),
+                        LastMinorVersionId = reader.GetSafeInt32(reader.GetOrdinal("LastMinorVersionId")),
+                    });
+                }
+                return result.ToArray();
+            }).ConfigureAwait(false);
         }
 
         /* ================================================================== COPIED FROM Lucene29LocalQueryEngine */
