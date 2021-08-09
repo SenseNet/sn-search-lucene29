@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using SenseNet.Configuration;
 using SenseNet.ContentRepository;
 using SenseNet.ContentRepository.Storage.Data.MsSqlClient;
@@ -55,9 +56,8 @@ namespace IndexIntegrityChecker
                 .UseLogger(new SnFileSystemEventLogger())
                 .UseTracer(new SnFileSystemTracer())
                 .UseConfiguration(config)
-                .UseDataProvider(new MsSqlDataProvider())
-                .UseSecurityDataProvider(
-                    new EFCSecurityDataProvider(connectionString: ConnectionStrings.ConnectionString))
+                .UseDataProvider(new MsSqlDataProvider(Options.Create(ConnectionStringOptions.GetLegacyConnectionStrings())))
+                .UseSecurityDataProvider(new EFCSecurityDataProvider(120, ConnectionStrings.ConnectionString))
                 .UseLucene29LocalSearchEngine(indexDirectory)
                 .UseTraceCategories(SnTrace.Categories.Select(x => x.Name).ToArray()) as RepositoryBuilder;
 

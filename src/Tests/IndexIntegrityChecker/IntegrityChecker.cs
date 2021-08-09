@@ -502,7 +502,7 @@ namespace IndexIntegrityChecker
             // where indexing is completely switched OFF, because otherwise
             // these kinds of content would appear as missing items.
             return ContentType.GetContentTypes().Where(ct => !ct.IndexingEnabled)
-                    .Select(ct => ActiveSchema.NodeTypes[ct.Name].Id).ToArray();
+                    .Select(ct => Providers.Instance.StorageSchema.NodeTypes[ct.Name].Id).ToArray();
         }
 
         private static int ParseInt(string data)
@@ -635,7 +635,7 @@ namespace IndexIntegrityChecker
                 }
             }
 
-            var pt = ActiveSchema.PropertyTypes[fieldName];
+            var pt = Providers.Instance.StorageSchema.PropertyTypes[fieldName];
             if (pt == null)
             {
                 switch (fieldName)

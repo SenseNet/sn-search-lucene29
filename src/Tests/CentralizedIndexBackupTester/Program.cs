@@ -6,6 +6,7 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using SenseNet.Configuration;
 using SenseNet.ContentRepository;
 using SenseNet.ContentRepository.Search.Indexing;
@@ -73,9 +74,8 @@ args = new[] {TestType.Backup.ToString()};
                 .UseLogger(new SnFileSystemEventLogger())
                 .UseTracer(new SnFileSystemTracer())
                 .UseConfiguration(configuration)
-                .UseDataProvider(new MsSqlDataProvider())
-                .UseSecurityDataProvider(
-                    new EFCSecurityDataProvider(connectionString: ConnectionStrings.ConnectionString))
+                .UseDataProvider(new MsSqlDataProvider(Options.Create(ConnectionStringOptions.GetLegacyConnectionStrings())))
+                .UseSecurityDataProvider(new EFCSecurityDataProvider(120, ConnectionStrings.ConnectionString))
                 .UseSecurityMessageProvider(new RabbitMQMessageProvider())
                 //.UseLucene29CentralizedSearchEngine(serviceBinding, serviceEndpoint)
                 .UseLucene29CentralizedSearchEngineWithGrpc(configuration["sensenet:search:service:address"], options =>

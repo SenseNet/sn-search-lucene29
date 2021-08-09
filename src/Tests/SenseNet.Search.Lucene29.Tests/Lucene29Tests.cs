@@ -74,15 +74,15 @@ namespace SenseNet.Search.Lucene29.Tests
                         await populator.ClearAndPopulateAllAsync(CancellationToken.None, console);
 
                     // load last indexing activity
-                    var db = DataStore.DataProvider;
+                    var db = Providers.Instance.DataProvider;
                     var activityId = await db.GetLastIndexingActivityIdAsync(CancellationToken.None);
                     activities = await db.LoadIndexingActivitiesAsync(1, activityId, 10000, false,
                         IndexingActivityFactory.Instance, CancellationToken.None);
 
                     GetAllIdValuesFromIndex(out var nodeIds, out var versionIds);
 
-                    var nodeCount = await DataStore.GetNodeCountAsync(CancellationToken.None);
-                    var versionCount = await DataStore.GetVersionCountAsync(CancellationToken.None);
+                    var nodeCount = await Providers.Instance.DataStore.GetNodeCountAsync(CancellationToken.None);
+                    var versionCount = await Providers.Instance.DataStore.GetVersionCountAsync(CancellationToken.None);
 
                     Assert.AreEqual(0, activities.Length);
                     Assert.AreEqual(nodeCount, nodeIds.Length);
