@@ -4,7 +4,9 @@ using System.Linq;
 using Lucene.Net.Search;
 using Lucene.Net.Support;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SenseNet.ContentRepository;
 using SenseNet.ContentRepository.Search;
+using SenseNet.Extensions.DependencyInjection;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Querying;
 using SenseNet.Search.Querying.Parser;
@@ -17,6 +19,13 @@ namespace SenseNet.Search.Lucene29.Tests
     [TestClass]
     public class Lucene29CompilerTests : TestBase
     {
+        [TestInitialize]
+        public void Initialize()
+        {
+            var builder = new RepositoryBuilder()
+                .UseLucene29LocalSearchEngine();
+        }
+
         [TestMethod, TestCategory("IR")] // 38 tests
         public void Search_Compiler_Luc29_OriginalTests()
         {

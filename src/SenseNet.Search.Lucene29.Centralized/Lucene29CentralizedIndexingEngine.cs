@@ -10,6 +10,7 @@ using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized;
+using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Search.Querying;
 using SenseNet.Tools;
 
@@ -36,6 +37,16 @@ namespace SenseNet.Search.Lucene29
         } 
         public bool IndexIsCentralized => true;
         public LuceneSearchManager LuceneSearchManager => throw new NotImplementedException(); // this is not necessary in a centralized environment
+
+        public Lucene29CentralizedIndexingEngine(ISearchServiceClient client)
+        {
+            //TODO: legacy behavior: remove the pinned instance and create a factory service
+            // or a transient service that can do the same thing: provide a new instance every time.
+
+            // initialize the legacy instance in a DI environment
+            if (client != null)
+                SearchServiceClient.Instance = client;
+        }
 
         public Task StartAsync(TextWriter consoleOut, CancellationToken cancellationToken)
         {

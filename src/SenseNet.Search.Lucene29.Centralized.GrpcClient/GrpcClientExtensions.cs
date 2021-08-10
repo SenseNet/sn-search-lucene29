@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Net.Http;
 using Grpc.Net.Client;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized.GrpcClient;
@@ -79,7 +82,39 @@ namespace SenseNet.Extensions.DependencyInjection
 
             return repositoryBuilder;
         }
-        
+
+        /// <summary>
+        /// Registers the centralized search engine and the Grpc client in the service collection.
+        /// </summary>
+        public static IServiceCollection AddLucene29CentralizedSearchEngineWithGrpc(this IServiceCollection services,
+            Action<GrpcClientOptions> configure = null)
+        {
+            services.Configure<GrpcClientOptions>(options =>
+            {
+                if (options.ValidateServerCertificate) 
+                    return;
+                options.ChannelOptions.HttpClient = new HttpClient(new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = (message, certificate2, arg3, arg4) => true
+                });
+                options.ChannelOptions.DisposeHttpClient = true;
+            });
+
+            if (configure != null)
+                services.Configure(configure);
+
+            services
+                .AddLucene29CentralizedSearchEngine()
+                .AddLucene29CentralizedServiceClient(providers =>
+                {
+                    var grpcOptions = providers.GetService<IOptions<GrpcClientOptions>>().Value;
+                    grpcOptions.ChannelOptions.LoggerFactory = providers.GetService<ILoggerFactory>();
+
+                    return CreateGrpcServiceClient(grpcOptions.ServiceAddress, grpcOptions.ChannelOptions);
+                });
+            return services;
+        }
+
         internal static Search.Lucene29.Centralized.GrpcService.IndexingActivityStatus ToGrpcActivityStatus(this IndexingActivityStatus state)
         {
             var request = new SenseNet.Search.Lucene29.Centralized.GrpcService.IndexingActivityStatus
@@ -96,7 +131,7 @@ namespace SenseNet.Extensions.DependencyInjection
             // this channel will be disposed later, by the GrpcClientSnService class
             var channel = GrpcChannel.ForAddress(serviceAddress, options);
             var searchClient = new Search.Lucene29.Centralized.GrpcService.GrpcSearch.GrpcSearchClient(channel);
-            var serviceClient = new GrpcServiceClient(searchClient, channel);
+            var serviceClient = new GrpcServiceClient(searchClient, channel, options);
 
             return serviceClient;
         }

@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using SenseNet.ContentRepository.Search.Indexing;
-using SenseNet.ContentRepository.Storage.Data;
+using SenseNet.Configuration;
 using SenseNet.Diagnostics;
-using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29;
 
 namespace CentralizedIndexBackupTester
@@ -32,7 +27,7 @@ namespace CentralizedIndexBackupTester
         {
             using (var op = SnTrace.Test.StartOperation("RestoreTest"))
             {
-                var dbStatus = await DataStore.LoadCurrentIndexingActivityStatusAsync(cancellationToken)
+                var dbStatus = await Providers.Instance.DataStore.LoadCurrentIndexingActivityStatusAsync(cancellationToken)
                     .ConfigureAwait(false);
 
                 var indexStatus = await _engine.ReadActivityStatusFromIndexAsync(cancellationToken)

@@ -11,28 +11,28 @@ namespace SenseNet.Search.Lucene29
     /// </summary>
     public class Lucene29SearchEngine : ISearchEngine
     {
-        private Lazy<IIndexingEngine> _indexingEngine = new Lazy<IIndexingEngine>(() =>
-            TypeResolver.CreateInstance(Configuration.Lucene29.Lucene29IndexingEngineClassName) as IIndexingEngine);
-        
         /// <summary>
-        /// Gets or sets the current indexing engine. Default value is determined by configuration.
+        /// Gets or sets the current indexing engine.
         /// </summary>
-        public IIndexingEngine IndexingEngine
-        {
-            get { return _indexingEngine.Value; }
-            set { _indexingEngine = new Lazy<IIndexingEngine>(() => value); }
-        }
-
-        private Lazy<IQueryEngine> _queryEngine = new Lazy<IQueryEngine>(() =>
-            TypeResolver.CreateInstance(Configuration.Lucene29.Lucene29QueryEngineClassName) as IQueryEngine);
+        public IIndexingEngine IndexingEngine { get; set; }
 
         /// <summary>
-        /// Gets or sets the current query engine. Default value is determined by configuration.
+        /// Gets or sets the current query engine.
         /// </summary>
-        public IQueryEngine QueryEngine
+        public IQueryEngine QueryEngine { get; set; }
+
+        public Lucene29SearchEngine(IIndexingEngine indexingEngine, IQueryEngine queryEngine)
         {
-            get { return _queryEngine.Value; }
-            set { _queryEngine = new Lazy<IQueryEngine>(() => value); }
+            // The constructor parameter has to be the general interface, but we need to
+            // check that the provided type is compatible with this engine.
+            if (indexingEngine != null && !(indexingEngine is ILuceneIndexingEngine))
+                throw new InvalidOperationException(
+                    $"The type {indexingEngine.GetType().FullName} is not compatible with the Lucene search engine.");
+
+            if (indexingEngine != null)
+                IndexingEngine = indexingEngine;
+            if (queryEngine != null)
+                QueryEngine = queryEngine;
         }
 
         static Lucene29SearchEngine()
