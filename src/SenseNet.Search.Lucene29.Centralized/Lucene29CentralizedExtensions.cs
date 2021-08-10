@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
-using SenseNet.ContentRepository;
+using Microsoft.Extensions.DependencyInjection;
 using SenseNet.Search.Lucene29;
 using SenseNet.Search.Lucene29.Centralized;
 using SenseNet.Search.Lucene29.Centralized.Common;
@@ -17,11 +17,9 @@ namespace SenseNet.Extensions.DependencyInjection
         /// </summary>
         public static IRepositoryBuilder UseLucene29CentralizedSearchEngine(this IRepositoryBuilder repositoryBuilder)
         {
-            var searchEngine = new Lucene29SearchEngine()
-            {
-                IndexingEngine = new Lucene29CentralizedIndexingEngine(),
-                QueryEngine = new Lucene29CentralizedQueryEngine()
-            };
+            var searchEngine = new Lucene29SearchEngine(
+                new Lucene29CentralizedIndexingEngine(null),
+                new Lucene29CentralizedQueryEngine());
 
             repositoryBuilder.UseSearchEngine(searchEngine);
 
@@ -65,6 +63,38 @@ namespace SenseNet.Extensions.DependencyInjection
             SearchServiceClient.Instance = serviceClient;
 
             return repositoryBuilder;
+        }
+
+        /// <summary>
+        /// Adds the Lucene29 centralized search engine to the service collection.
+        /// </summary>
+        public static IServiceCollection AddLucene29CentralizedSearchEngine(this IServiceCollection services)
+        {
+            services
+                .AddSenseNetIndexingEngine<Lucene29CentralizedIndexingEngine>()
+                .AddSenseNetQueryEngine<Lucene29CentralizedQueryEngine>()
+                .AddSenseNetSearchEngine<Lucene29SearchEngine>();
+
+            return services;
+        }
+        /// <summary>
+        /// Registers the provided instance as the client for search service communication.
+        /// </summary>
+        public static IServiceCollection AddLucene29CentralizedServiceClient(this IServiceCollection services,
+            Func<IServiceProvider, ISearchServiceClient> implementationFactory)
+        {
+            services.AddSingleton(implementationFactory);
+
+            return services;
+        }
+        /// <summary>
+        /// Registers the provided type as the client for search service communication.
+        /// </summary>
+        public static IServiceCollection AddLucene29CentralizedServiceClient<T>(this IServiceCollection services) where T: class, ISearchServiceClient
+        {
+            services.AddSingleton<ISearchServiceClient, T>();
+
+            return services;
         }
     }
 }

@@ -736,10 +736,7 @@ namespace SenseNet.Search.Lucene29.Tests
         {
             var indexFolderName = $"Test_{memberName}_{Guid.NewGuid()}";
             var indexingEngine = new Lucene29LocalIndexingEngine(new IndexDirectory(indexFolderName));
-            var searchEngine = new Lucene29SearchEngine
-            {
-                IndexingEngine = indexingEngine
-            };
+            var searchEngine = new Lucene29SearchEngine(indexingEngine, new Lucene29LocalQueryEngine());
             
             await base.Test(builder =>
                 {

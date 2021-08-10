@@ -1,5 +1,4 @@
-﻿using SenseNet.ContentRepository;
-using SenseNet.Search.Lucene29;
+﻿using SenseNet.Search.Lucene29;
 using SenseNet.Tools;
 
 // ReSharper disable once CheckNamespace
@@ -13,11 +12,9 @@ namespace SenseNet.Extensions.DependencyInjection
                 ? null
                 : new IndexDirectory(null, indexDirectoryPath);
 
-            var searchEngine = new Lucene29SearchEngine()
-            {
-                IndexingEngine = new Lucene29LocalIndexingEngine(indexDirectory),
-                QueryEngine = new Lucene29LocalQueryEngine()
-            };
+            var searchEngine = new Lucene29SearchEngine(
+                new Lucene29LocalIndexingEngine(indexDirectory),
+                new Lucene29LocalQueryEngine());
 
             repositoryBuilder.UseSearchEngine(searchEngine);
 

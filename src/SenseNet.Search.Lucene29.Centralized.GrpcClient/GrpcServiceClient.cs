@@ -1,9 +1,12 @@
-﻿using SenseNet.Search.Indexing;
+﻿using System;
+using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Search.Querying;
 using System.Collections.Generic;
 using System.Linq;
 using Grpc.Net.Client;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
 using SenseNet.Extensions.DependencyInjection;
 using SenseNet.Search.Lucene29.Centralized.GrpcService;
@@ -30,9 +33,12 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
         private readonly GrpcSearchClient _searchClient;
         private readonly GrpcChannel _channel;
-        public GrpcServiceClient(GrpcSearchClient searchClient, GrpcChannel channel)
+        private readonly ILogger<GrpcServiceClient> _logger;
+
+        public GrpcServiceClient(GrpcSearchClient searchClient, GrpcChannel channel, GrpcChannelOptions options)
         {
             _searchClient = searchClient;
+            _logger = options?.LoggerFactory?.CreateLogger<GrpcServiceClient>() ?? NullLogger<GrpcServiceClient>.Instance;
 
             // we pin this object only to be able to shut it down properly later
             _channel = channel;
@@ -40,6 +46,8 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
         public void ShutDown()
         {
+            _logger.LogInformation("Shutting down the Grpc channel...");
+
             // as the channel was created on app start, we need to
             // dispose it properly when the connection is closed
             _channel?.Dispose();
@@ -49,19 +57,42 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
         public bool Alive()
         {
-            var result = _searchClient.Alive(new AliveRequest());
+            try
+            {
+                var result = _searchClient.Alive(new AliveRequest());
 
-            return result.Alive;
+                return result.Alive;
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "Alive");
+            }
         }
 
         public void ClearIndex()
         {
-            _searchClient.ClearIndex(new ClearIndexRequest());
+            try
+            {
+                _searchClient.ClearIndex(new ClearIndexRequest());
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "ClearIndex");
+            }
         }
 
         public IndexingActivityStatus ReadActivityStatusFromIndex()
         {
-            var result = _searchClient.ReadActivityStatusFromIndex(new GrpcService.ReadActivityStatusRequest());
+            GrpcService.IndexingActivityStatus result;
+
+            try
+            {
+                result = _searchClient.ReadActivityStatusFromIndex(new ReadActivityStatusRequest());
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "ReadActivityStatusFromIndex");
+            }
 
             return new IndexingActivityStatus() 
             { 
@@ -72,46 +103,84 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
         public void WriteActivityStatusToIndex(IndexingActivityStatus state)
         {
-            _searchClient.WriteActivityStatusToIndex(state.ToGrpcActivityStatus());
+            try
+            {
+                _logger.LogTrace($"Writing activity status {state}");
+                _searchClient.WriteActivityStatusToIndex(state.ToGrpcActivityStatus());
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "WriteActivityStatusToIndex");
+            }
         }
 
         public BackupResponse Backup(IndexingActivityStatus state, string backupDirectoryPath)
         {
-            var response = _searchClient.Backup(new BackupRequest
+            try
             {
-                Status = state.ToGrpcActivityStatus(),
-                Target = backupDirectoryPath
-            });
+                _logger.LogTrace($"Creating index backup in {backupDirectoryPath}");
 
-            return JsonConvert.DeserializeObject<BackupResponse>(response.Response);
+                var response = _searchClient.Backup(new BackupRequest
+                {
+                    Status = state.ToGrpcActivityStatus(),
+                    Target = backupDirectoryPath
+                });
+
+                return JsonConvert.DeserializeObject<BackupResponse>(response.Response);
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "Backup");
+            }
         }
 
         public BackupResponse QueryBackup()
         {
-            var response = _searchClient.QueryBackup(new QueryBackupRequest());
+            try
+            {
+                var response = _searchClient.QueryBackup(new QueryBackupRequest());
 
-            return JsonConvert.DeserializeObject<BackupResponse>(response.Response);
+                return JsonConvert.DeserializeObject<BackupResponse>(response.Response);
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "QueryBackup");
+            }
         }
 
         public BackupResponse CancelBackup()
         {
-            var response = _searchClient.CancelBackup(new CancelBackupRequest());
+            try
+            {
+                var response = _searchClient.CancelBackup(new CancelBackupRequest());
 
-            return JsonConvert.DeserializeObject<BackupResponse>(response.Response);
+                return JsonConvert.DeserializeObject<BackupResponse>(response.Response);
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "CancelBackup");
+            }
         }
 
         public void SetIndexingInfo(IDictionary<string, IndexFieldAnalyzer> analyzerTypes, IDictionary<string, IndexValueType> indexFieldTypes, IDictionary<string, string> sortFieldNames)
         {
-            var request = new GrpcService.SetIndexingInfoRequest();
+            try
+            {
+                var request = new GrpcService.SetIndexingInfoRequest();
 
-            foreach (var at in analyzerTypes)            
-                request.AnalyzerTypes.Add(at.Key, (GrpcService.IndexFieldAnalyzer)at.Value);
-            foreach (var ift in indexFieldTypes)
-                request.IndexFieldTypes.Add(ift.Key, (GrpcService.IndexValueType)ift.Value);
-            foreach (var sfn in sortFieldNames)
-                request.SortFieldNames.Add(sfn.Key, sfn.Value);
+                foreach (var (key, indexFieldAnalyzer) in analyzerTypes)
+                    request.AnalyzerTypes.Add(key, (GrpcService.IndexFieldAnalyzer)indexFieldAnalyzer);
+                foreach (var (key, indexValueType) in indexFieldTypes)
+                    request.IndexFieldTypes.Add(key, (GrpcService.IndexValueType)indexValueType);
+                foreach (var (key, fieldName) in sortFieldNames)
+                    request.SortFieldNames.Add(key, fieldName);
 
-            _searchClient.SetIndexingInfo(request);
+                _searchClient.SetIndexingInfo(request);
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "SetIndexingInfo");
+            }
         }
 
         public void WriteIndex(SnTerm[] deletions, DocumentUpdate[] updates, IndexDocument[] additions)
@@ -122,7 +191,14 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             request.Updates.AddRange(updates.Select(upd => Tools.Serialize(upd)));
             request.Additions.AddRange(additions.Select(add => Tools.Serialize(add)));
 
-            _searchClient.WriteIndex(request);
+            try
+            {
+                _searchClient.WriteIndex(request);
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "WriteIndex");
+            }
         }
 
         public QueryResult<int> ExecuteQuery(SnQuery query, ServiceQueryContext queryContext)
@@ -134,13 +210,20 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             };
             context.DynamicGroups.AddRange(queryContext.DynamicGroups);
 
-            var result = _searchClient.ExecuteQuery(new GrpcService.QueryRequest()
+            try
             {
-                Query = Tools.Serialize(query),
-                Context = context                
-            });
+                var result = _searchClient.ExecuteQuery(new GrpcService.QueryRequest()
+                {
+                    Query = Tools.Serialize(query),
+                    Context = context
+                });
 
-            return new QueryResult<int>(result.Hits, result.TotalCount);
+                return new QueryResult<int>(result.Hits, result.TotalCount);
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "ExecuteQuery");
+            }
         }
 
         public QueryResult<string> ExecuteQueryAndProject(SnQuery query, ServiceQueryContext queryContext)
@@ -152,14 +235,32 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             };
             context.DynamicGroups.AddRange(queryContext.DynamicGroups);
 
-            var result = _searchClient.ExecuteQueryAndProject(new GrpcService.QueryRequest()
+            try
             {
-                Query = Tools.Serialize(query),
-                Context = context
-            });
+                var result = _searchClient.ExecuteQueryAndProject(new GrpcService.QueryRequest()
+                {
+                    Query = Tools.Serialize(query),
+                    Context = context
+                });
 
-            return new QueryResult<string>(result.Hits, result.TotalCount);
+                return new QueryResult<string>(result.Hits, result.TotalCount);
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "ExecuteQueryAndProject");
+            }
         }
+        #endregion
+
+        #region Helper methods
+
+        private Exception LogAndFormatException(Exception ex, string source)
+        {
+            var msg = $"Error in {source}: {ex.Message}";
+            _logger.LogError(ex, msg);
+            throw new InvalidOperationException(msg, ex);
+        }
+
         #endregion
     }
 }
