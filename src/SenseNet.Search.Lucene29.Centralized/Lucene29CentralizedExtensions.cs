@@ -2,6 +2,7 @@
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using SenseNet.Search.Lucene29;
 using SenseNet.Search.Lucene29.Centralized;
 using SenseNet.Search.Lucene29.Centralized.Common;
@@ -18,7 +19,7 @@ namespace SenseNet.Extensions.DependencyInjection
         public static IRepositoryBuilder UseLucene29CentralizedSearchEngine(this IRepositoryBuilder repositoryBuilder)
         {
             var searchEngine = new Lucene29SearchEngine(
-                new Lucene29CentralizedIndexingEngine(null),
+                new Lucene29CentralizedIndexingEngine(null, Options.Create(new CentralizedOptions())),
                 new Lucene29CentralizedQueryEngine());
 
             repositoryBuilder.UseSearchEngine(searchEngine);
@@ -71,6 +72,7 @@ namespace SenseNet.Extensions.DependencyInjection
         public static IServiceCollection AddLucene29CentralizedSearchEngine(this IServiceCollection services)
         {
             services
+                .Configure<CentralizedOptions>(configure => {})
                 .AddSenseNetIndexingEngine<Lucene29CentralizedIndexingEngine>()
                 .AddSenseNetQueryEngine<Lucene29CentralizedQueryEngine>()
                 .AddSenseNetSearchEngine<Lucene29SearchEngine>();

@@ -6,6 +6,7 @@ using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Lucene.Net.Analysis;
+using Microsoft.Extensions.Options;
 using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
@@ -23,7 +24,6 @@ namespace SenseNet.Search.Lucene29
     /// </summary>
     public class Lucene29CentralizedIndexingEngine : ILuceneIndexingEngine
     {
-        private static readonly int ServiceWritePartitionSize = 50;
         private bool _running;
 
         public bool Running
@@ -37,8 +37,9 @@ namespace SenseNet.Search.Lucene29
         } 
         public bool IndexIsCentralized => true;
         public LuceneSearchManager LuceneSearchManager => throw new NotImplementedException(); // this is not necessary in a centralized environment
+        private readonly CentralizedOptions _centralizedOptions;
 
-        public Lucene29CentralizedIndexingEngine(ISearchServiceClient client)
+        public Lucene29CentralizedIndexingEngine(ISearchServiceClient client, IOptions<CentralizedOptions> options)
         {
             //TODO: legacy behavior: remove the pinned instance and create a factory service
             // or a transient service that can do the same thing: provide a new instance every time.
@@ -46,6 +47,8 @@ namespace SenseNet.Search.Lucene29
             // initialize the legacy instance in a DI environment
             if (client != null)
                 SearchServiceClient.Instance = client;
+
+            _centralizedOptions = options.Value;
         }
 
         public Task StartAsync(TextWriter consoleOut, CancellationToken cancellationToken)
@@ -135,14 +138,14 @@ namespace SenseNet.Search.Lucene29
                 if (source == null)
                     return;
 
-                var partition = new List<T>(ServiceWritePartitionSize);
+                var partition = new List<T>(_centralizedOptions.ServiceWritePartitionSize);
 
                 // enumerate the source collection only once
                 foreach (var item in source)
                 {
                     // fill the buffer with items to send
                     partition.Add(item);
-                    if (partition.Count < ServiceWritePartitionSize)
+                    if (partition.Count < _centralizedOptions.ServiceWritePartitionSize)
                         continue;
 
                     // send a bunch of data to the service and clean the buffer
