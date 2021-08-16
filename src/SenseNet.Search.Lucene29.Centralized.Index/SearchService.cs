@@ -12,13 +12,23 @@ using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Search.Lucene29.Centralized.Index.Configuration;
 using SenseNet.Search.Querying;
+using SenseNet.Security;
+using SenseNet.Security.Configuration;
+using SenseNet.Security.Messaging;
 
 namespace SenseNet.Search.Lucene29.Centralized.Index
 {
     // Re-created per request.
     public class SearchService : ISearchServiceContract
     {
-        public static void Start(string indexDirectoryPath = null)
+        private static SecuritySystem _securitySystem;
+
+        public static void Start(
+            ISecurityDataProvider securityDataProvider,
+            IMessageProvider messageProvider,
+            IMissingEntityHandler missingEntityHandler,
+            MessagingOptions messagingOptions,
+            string indexDirectoryPath)
         {
             UpdateTraceCategories();
 
@@ -27,7 +37,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             if (!string.IsNullOrEmpty(indexDirectoryPath))
                 SenseNet.Configuration.Indexing.IndexDirectoryFullPath = indexDirectoryPath;
 
-            SecurityHandler.StartSecurity();
+            _securitySystem = SecurityHandler.StartSecurity(securityDataProvider, messageProvider, missingEntityHandler, messagingOptions);
 
             using (var traceWriter = new TraceTextWriter())
             {
@@ -37,6 +47,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
         public static void ShutDown()
         {
+            _securitySystem.Shutdown();
             SearchManager.Instance.ShutDown();
         }
 
@@ -90,7 +101,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             {
                 Id = queryContext.UserId,
                 DynamicGroups = queryContext.DynamicGroups
-            }));
+            }, _securitySystem));
 
             if (!Enum.TryParse(queryContext.FieldLevel, true, out QueryFieldLevel queryFieldLevel))
                 queryFieldLevel = QueryFieldLevel.HeadOnly;

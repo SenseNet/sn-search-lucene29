@@ -16,9 +16,9 @@
 
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" Version="2.27.0" />
-    <PackageReference Include="SenseNet.Search" Version="2.4.7" />
-    <PackageReference Include="SenseNet.Security.EFCSecurityStore" Version="3.0.1" />
-    <PackageReference Include="SenseNet.Security.Messaging.RabbitMQ" Version="1.2.0" />
+    <PackageReference Include="SenseNet.Search" Version="2.4.7.1" />
+    <PackageReference Include="SenseNet.Security.EFCSecurityStore" Version="3.0.1.1" />
+    <PackageReference Include="SenseNet.Security.Messaging.RabbitMQ" Version="1.2.0.1" />
   </ItemGroup>
 
   <ItemGroup>

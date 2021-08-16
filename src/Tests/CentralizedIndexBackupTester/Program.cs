@@ -6,6 +6,7 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using SenseNet.Configuration;
 using SenseNet.ContentRepository;
@@ -19,7 +20,10 @@ using SenseNet.Search;
 using SenseNet.Search.Lucene29;
 using SenseNet.Search.Lucene29.Centralized;
 using SenseNet.Search.Querying;
+using SenseNet.Security.Configuration;
 using SenseNet.Security.EFCSecurityStore;
+using SenseNet.Security.EFCSecurityStore.Configuration;
+using SenseNet.Security.Messaging;
 using SenseNet.Security.Messaging.RabbitMQ;
 using File = System.IO.File;
 using Task = System.Threading.Tasks.Task;
@@ -69,15 +73,23 @@ args = new[] {TestType.Backup.ToString()};
             //var serviceEndpoint = new EndpointAddress(configuration["sensenet:search:service:address"]);
             //WaitForServiceStarted(serviceBinding, serviceEndpoint);
 
+            var sender = new MessageSenderManager();
+
             var builder = new RepositoryBuilder()
                 .SetConsole(Console.Out)
                 .UseLogger(new SnFileSystemEventLogger())
                 .UseTracer(new SnFileSystemTracer())
                 .UseConfiguration(configuration)
                 .UseDataProvider(new MsSqlDataProvider(Options.Create(ConnectionStringOptions.GetLegacyConnectionStrings())))
-                .UseSecurityDataProvider(new EFCSecurityDataProvider(120, ConnectionStrings.ConnectionString))
-                .UseSecurityMessageProvider(new RabbitMQMessageProvider())
-                //.UseLucene29CentralizedSearchEngine(serviceBinding, serviceEndpoint)
+                .UseSecurityDataProvider(new EFCSecurityDataProvider(sender, 
+                    Options.Create(new SenseNet.Security.EFCSecurityStore.Configuration.DataOptions()
+                    {
+                        ConnectionString = ConnectionStrings.ConnectionString
+                    }),
+                    NullLogger<EFCSecurityDataProvider>.Instance))
+                .UseSecurityMessageProvider(new RabbitMQMessageProvider(sender, 
+                    Options.Create(new MessagingOptions()),
+                    Options.Create(new RabbitMqOptions())))
                 .UseLucene29CentralizedSearchEngineWithGrpc(configuration["sensenet:search:service:address"], options =>
                 {
                     // trust the server in a development environment

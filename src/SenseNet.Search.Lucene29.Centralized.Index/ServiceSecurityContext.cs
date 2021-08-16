@@ -5,20 +5,13 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 {
     public class ServiceSecurityContext : SecurityContext
     {
-        public ServiceSecurityContext(ISecurityUser currentUser) : base(currentUser)
-        {
-        }
-
-        public new static void StartTheSystem(SecurityConfiguration configuration)
-        {
-            SecurityContext.StartTheSystem(configuration);
-        }
+        public ServiceSecurityContext(ISecurityUser currentUser, SecuritySystem securitySystem) : base(currentUser, securitySystem) { }
 
         #region Published protected base methods and properties
 
         public new ISecurityUser CurrentUser => base.CurrentUser;
 
-        public new List<AceInfo> GetEffectiveEntries(int contentId, IEnumerable<int> relatedIdentities = null)
+        public override List<AceInfo> GetEffectiveEntries(int contentId, IEnumerable<int> relatedIdentities = null, EntryType? entryType = null)
         {
             return base.GetEffectiveEntries(contentId, relatedIdentities);
         }

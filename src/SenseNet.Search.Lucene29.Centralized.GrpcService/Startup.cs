@@ -6,11 +6,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using SenseNet.Configuration;
 using SenseNet.Extensions.DependencyInjection;
 using SenseNet.Diagnostics;
-using SenseNet.Search.Lucene29.Centralized.Index.Configuration;
-using SenseNet.Security.EFCSecurityStore;
+using SenseNet.Security;
+using SenseNet.Security.Configuration;
+using SenseNet.Security.Messaging;
 using SenseNet.Security.Messaging.RabbitMQ;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcService
@@ -34,6 +36,10 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
             _ = new EmptyRepositoryBuilder()
                 .UseConfiguration(Configuration);
 
+            services
+                .Configure<RabbitMqOptions>(Configuration.GetSection("sensenet:security:rabbitmq"))
+                .Configure<MessagingOptions>(Configuration.GetSection("sensenet:security:messaging"));
+
             SnLog.Instance = new SnFileSystemEventLogger();
             SnTrace.SnTracers.Add(new SnFileSystemTracer());
 
@@ -43,14 +49,20 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
             services.AddSingleton<Index.SearchService>();
             
             // [sensenet] Security db and message providers.
-            Providers.Instance.SecurityDataProvider = new EFCSecurityDataProvider(
-                    Index.Configuration.Security.SecurityDatabaseCommandTimeoutInSeconds,
-                    ConnectionStrings.SecurityDatabaseConnectionString);
-            Providers.Instance.SecurityMessageProvider = new RabbitMQMessageProvider();
+            services.AddSenseNetSecurity()
+                .AddEFCSecurityDataProvider(options =>
+                {
+                    options.ConnectionString = ConnectionStrings.SecurityDatabaseConnectionString;
+                })
+                .AddRabbitMqSecurityMessageProvider();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime appLifetime)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime appLifetime,
+            ISecurityDataProvider securityDataProvider, 
+            IMessageProvider messageProvider, 
+            IMissingEntityHandler missingEntityHandler,
+            IOptions<MessagingOptions> messagingOptions)
         {
             if (env.IsDevelopment())
             {
@@ -74,7 +86,9 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
             appLifetime.ApplicationStarted.Register(() =>
             {
                 // set the index directory manually based on the current environment
-                Index.SearchService.Start(Path.Combine(Environment.CurrentDirectory, "App_Data", "LocalIndex"));
+                Index.SearchService.Start(
+                    securityDataProvider, messageProvider, missingEntityHandler, messagingOptions.Value,
+                    Path.Combine(Environment.CurrentDirectory, "App_Data", "LocalIndex"));
             });
             appLifetime.ApplicationStopping.Register(Index.SearchService.ShutDown);
         }

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Lucene29.Centralized.Index.Configuration;
 using SenseNet.Security;
+using SenseNet.Security.Configuration;
+using SenseNet.Security.Messaging;
 
 namespace SenseNet.Search.Lucene29.Centralized.Index
 {
@@ -14,37 +16,30 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
     {
         //============================================================================================= Static API
 
-        public static void StartSecurity()
+        public static SecuritySystem StartSecurity(ISecurityDataProvider securityDataProvider, 
+            IMessageProvider messageProvider, 
+            IMissingEntityHandler missingEntityHandler,
+            MessagingOptions messagingOptions)
         {
-            var securityDataProvider = Providers.Instance.SecurityDataProvider;
-            var messageProvider = Providers.Instance.SecurityMessageProvider;
-            var startingThesystem = DateTime.UtcNow;
-
-            ServiceSecurityContext.StartTheSystem(new SecurityConfiguration
+            var securityConfig = new SecurityConfiguration
             {
-                SecurityDataProvider = securityDataProvider,
-                MessageProvider = messageProvider,
                 SystemUserId = Identifiers.SystemUserId,
                 VisitorUserId = Identifiers.VisitorUserId,
                 EveryoneGroupId = Identifiers.EveryoneGroupId,
-                OwnerGroupId = Identifiers.OwnersGroupId,
-                SecuritActivityTimeoutInSeconds = Configuration.Security.SecurityActivityTimeoutInSeconds,
-                SecuritActivityLifetimeInMinutes = Configuration.Security.SecurityActivityLifetimeInMinutes,
-                CommunicationMonitorRunningPeriodInSeconds = Configuration.Security.SecurityMonitorRunningPeriodInSeconds
-            });
+                OwnerGroupId = Identifiers.OwnersGroupId
+            };
 
-            messageProvider.Start(startingThesystem);
+            var securitySystem = new SecuritySystem(securityDataProvider, messageProvider, missingEntityHandler,
+                securityConfig, messagingOptions);
+            securitySystem.Start();
 
             SnLog.WriteInformation("Security subsystem started in Search service", EventId.RepositoryLifecycle,
                 properties: new Dictionary<string, object> {
                     { "DataProvider", securityDataProvider.GetType().FullName },
                     { "MessageProvider", messageProvider.GetType().FullName }
                 });
-        }
 
-        public static ServiceSecurityContext GetSecurityContext(ISecurityUser user)
-        {
-            return new ServiceSecurityContext(user);
+            return securitySystem;
         }
 
         //============================================================================================= Instance API
