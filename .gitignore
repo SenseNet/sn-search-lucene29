@@ -289,3 +289,4 @@ __pycache__/
 /src/nuget/snadmin/install-services/import/System/Schema/ContentTypes
 **/App_Data/LuceneIndex
 **/App_Data/LocalIndex
+**/App_Data/Logs

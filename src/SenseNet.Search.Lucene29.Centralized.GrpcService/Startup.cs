@@ -39,10 +39,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
             services
                 .Configure<RabbitMqOptions>(Configuration.GetSection("sensenet:security:rabbitmq"))
                 .Configure<MessagingOptions>(Configuration.GetSection("sensenet:security:messaging"));
-
-            SnLog.Instance = new SnFileSystemEventLogger();
-            SnTrace.SnTracers.Add(new SnFileSystemTracer());
-
+            
             // [sensenet] Search service singleton. This instance will be used
             // by the communication layer to route incoming client calls to the
             // index layer.
@@ -64,6 +61,10 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
             IMissingEntityHandler missingEntityHandler,
             IOptions<MessagingOptions> messagingOptions)
         {
+            // This will set the global SnLog and SnTrace instances to route log messages to the
+            // official .Net Core ILogger API.
+            app.ApplicationServices.AddSenseNetILogger();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
