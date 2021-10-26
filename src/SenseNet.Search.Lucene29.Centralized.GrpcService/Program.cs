@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using SenseNet.Diagnostics;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcService
 {
@@ -21,7 +23,12 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>();
+                    webBuilder.UseStartup<Startup>()
+                        .ConfigureLogging(loggingConfiguration =>
+                            loggingConfiguration.ClearProviders())
+                        .UseSerilog((hostingContext, loggerConfiguration) =>
+                            loggerConfiguration.ReadFrom
+                                .Configuration(hostingContext.Configuration));
                 });
     }
 }
