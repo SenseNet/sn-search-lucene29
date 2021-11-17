@@ -97,7 +97,9 @@ namespace SenseNet.Extensions.DependencyInjection
                 {
                     ServerCertificateCustomValidationCallback = (message, certificate2, arg3, arg4) => true
                 });
-                options.ChannelOptions.DisposeHttpClient = true;
+
+                // Do not set the DisposeHttpClient property to True because the client may be used
+                // multiple times when starting and stopping the service in a single app domain.
             });
 
             if (configure != null)
@@ -105,13 +107,7 @@ namespace SenseNet.Extensions.DependencyInjection
 
             services
                 .AddLucene29CentralizedSearchEngine()
-                .AddLucene29CentralizedServiceClient(providers =>
-                {
-                    var grpcOptions = providers.GetService<IOptions<GrpcClientOptions>>().Value;
-                    grpcOptions.ChannelOptions.LoggerFactory = providers.GetService<ILoggerFactory>();
-
-                    return CreateGrpcServiceClient(grpcOptions.ServiceAddress, grpcOptions.ChannelOptions);
-                });
+                .AddLucene29CentralizedServiceClient<GrpcServiceClient>();
             return services;
         }
 
@@ -126,6 +122,7 @@ namespace SenseNet.Extensions.DependencyInjection
             return request;
         }
 
+        [Obsolete("Use dependency injection instead.")]
         private static GrpcServiceClient CreateGrpcServiceClient(string serviceAddress, GrpcChannelOptions options)
         {
             // this channel will be disposed later, by the GrpcClientSnService class

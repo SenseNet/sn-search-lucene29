@@ -48,6 +48,16 @@ namespace SenseNet.Search.Lucene29.Centralized
             return this;
         }
 
+        public void Start()
+        {
+            // do nothing
+        }
+
+        public void ShutDown()
+        {
+            // do nothing
+        }
+
         public QueryResult<int> ExecuteQuery(SnQuery query, ServiceQueryContext queryContext)
         {
             using (var client = WcfServiceClient.GetSearchServiceContract())
