@@ -90,5 +90,15 @@ namespace SenseNet.Search.Lucene29.Centralized
         {
             return this;
         }
+
+        public void Start()
+        {
+            // do nothing
+        }
+
+        public void ShutDown()
+        {
+            // do nothing
+        }
     }
 }

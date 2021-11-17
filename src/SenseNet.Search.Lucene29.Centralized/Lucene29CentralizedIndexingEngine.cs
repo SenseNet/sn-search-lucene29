@@ -53,8 +53,8 @@ namespace SenseNet.Search.Lucene29
 
         public Task StartAsync(TextWriter consoleOut, CancellationToken cancellationToken)
         {
-            // warmup
-            var unused = SearchServiceClient.Instance;
+            // start the underlying client
+            SearchServiceClient.Instance?.Start();
 
             _running = true;
             return Task.CompletedTask;
@@ -65,6 +65,10 @@ namespace SenseNet.Search.Lucene29
             //TODO: we may write the indexing state (last activity id) to the index in the future
             // to make the centralized index compatible with the local version. Currently the state
             // is not written there because it is not needed for a centralized index to work.
+
+            SearchServiceClient.Instance?.ShutDown();
+            _running = false;
+
             return Task.CompletedTask;
         }
 

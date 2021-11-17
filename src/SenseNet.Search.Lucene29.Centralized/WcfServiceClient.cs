@@ -160,6 +160,17 @@ namespace SenseNet.Search.Lucene29.Centralized
         }
 
         public ISearchServiceClient CreateInstance() => GetSearchServiceContract();
+
+        public void Start()
+        {
+            // do nothing
+        }
+
+        public void ShutDown()
+        {
+            // do nothing
+        }
+
         #endregion
     }
 }

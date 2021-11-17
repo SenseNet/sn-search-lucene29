@@ -7,6 +7,7 @@ using System.Linq;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using SenseNet.Extensions.DependencyInjection;
 using SenseNet.Search.Lucene29.Centralized.GrpcService;
@@ -31,17 +32,38 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
         /* =================================================== ISearchServiceContract */
 
-        private readonly GrpcSearchClient _searchClient;
-        private readonly GrpcChannel _channel;
+        private GrpcSearchClient _searchClient;
+        private GrpcChannel _channel;
         private readonly ILogger<GrpcServiceClient> _logger;
+        private readonly GrpcClientOptions _options;
 
+        public GrpcServiceClient(IOptions<GrpcClientOptions> options, ILogger<GrpcServiceClient> logger)
+        {
+            _options = options.Value;
+            _logger = logger;
+        }
+
+        [Obsolete("Use the other constructor that is able to work with DI instead.")]
         public GrpcServiceClient(GrpcSearchClient searchClient, GrpcChannel channel, GrpcChannelOptions options)
         {
+            _options = new GrpcClientOptions
+            {
+                ChannelOptions = options,
+                ServiceAddress = channel.Target
+            };
             _searchClient = searchClient;
             _logger = options?.LoggerFactory?.CreateLogger<GrpcServiceClient>() ?? NullLogger<GrpcServiceClient>.Instance;
 
             // we pin this object only to be able to shut it down properly later
             _channel = channel;
+        }
+
+        public void Start()
+        {
+            _logger.LogInformation("Starting the Grpc channel...");
+
+            _channel = GrpcChannel.ForAddress(_options.ServiceAddress, _options.ChannelOptions);
+            _searchClient = new GrpcSearchClient(_channel);
         }
 
         public void ShutDown()
@@ -166,7 +188,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
         {
             try
             {
-                var request = new GrpcService.SetIndexingInfoRequest();
+                var request = new SetIndexingInfoRequest();
 
                 foreach (var (key, indexFieldAnalyzer) in analyzerTypes)
                     request.AnalyzerTypes.Add(key, (GrpcService.IndexFieldAnalyzer)indexFieldAnalyzer);

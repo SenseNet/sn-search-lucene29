@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SenseNet.Search.Lucene29.Centralized.Common
+﻿namespace SenseNet.Search.Lucene29.Centralized.Common
 {
     public interface ISearchServiceClient : ISearchServiceContract
     {
@@ -11,5 +7,14 @@ namespace SenseNet.Search.Lucene29.Centralized.Common
         /// </summary>
         /// <returns>An <see cref="ISearchServiceClient"/> instance.</returns>
         ISearchServiceClient CreateInstance();
+
+        /// <summary>
+        /// Starts the underlying client and opens the connection.
+        /// </summary>
+        void Start();
+        /// <summary>
+        /// Stops the underlying client and closes the connection.
+        /// </summary>
+        void ShutDown();
     }
 }
