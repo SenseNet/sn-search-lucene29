@@ -54,7 +54,11 @@ namespace SenseNet.Search.Lucene29
         public Task StartAsync(TextWriter consoleOut, CancellationToken cancellationToken)
         {
             // start the underlying client
-            SearchServiceClient.Instance?.Start();
+            var client = SearchServiceClient.Instance;
+            if (client == null)
+                throw new InvalidOperationException("Service client is unavailable, service cannot be started.");
+
+            client.Start();
 
             _running = true;
             return Task.CompletedTask;

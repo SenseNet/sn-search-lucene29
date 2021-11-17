@@ -72,7 +72,11 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
             // as the channel was created on app start, we need to
             // dispose it properly when the connection is closed
-            _channel?.Dispose();
+            if (_channel != null)
+            {
+                _channel.Dispose();
+                _channel = null;
+            }
         }
 
         #region ISearchServiceContract implementation
