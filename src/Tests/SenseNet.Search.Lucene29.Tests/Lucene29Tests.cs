@@ -44,7 +44,7 @@ namespace SenseNet.Search.Lucene29.Tests
         {
             await L29Test(() =>
                 {
-                    var engine = IndexManager.IndexingEngine;
+                    var engine = Providers.Instance.IndexManager.IndexingEngine;
                     var indexDir = ((Lucene29LocalIndexingEngine)engine).IndexDirectory.CurrentDirectory;
 
                     Assert.AreEqual(typeof(Lucene29LocalIndexingEngine).FullName, engine.GetType().FullName);
@@ -66,7 +66,7 @@ namespace SenseNet.Search.Lucene29.Tests
                 using (new SystemAccount())
                 {
                     var paths = new List<string>();
-                    var populator = SearchManager.GetIndexPopulator();
+                    var populator = Providers.Instance.SearchManager.GetIndexPopulator();
                     populator.NodeIndexed += (sender, e) => { paths.Add(e.Path); };
 
                     // ACTION
@@ -98,7 +98,7 @@ namespace SenseNet.Search.Lucene29.Tests
             QueryResult queryResult1, queryResult2;
             await L29Test(async () =>
             {
-                var indexPopulator = SearchManager.GetIndexPopulator();
+                var indexPopulator = Providers.Instance.SearchManager.GetIndexPopulator();
 
                 using (new SystemAccount())
                 {
@@ -113,8 +113,8 @@ namespace SenseNet.Search.Lucene29.Tests
                     queryResult2 = CreateSafeContentQuery("Id:2 .COUNTONLY").Execute();
 
                     Assert.AreEqual(typeof(Lucene29LocalIndexingEngine).FullName,
-                        IndexManager.IndexingEngine.GetType().FullName);
-                    var indxDir = ((Lucene29LocalIndexingEngine) IndexManager.IndexingEngine).IndexDirectory
+                        Providers.Instance.IndexManager.IndexingEngine.GetType().FullName);
+                    var indxDir = ((Lucene29LocalIndexingEngine)Providers.Instance.IndexManager.IndexingEngine).IndexDirectory
                         .CurrentDirectory;
                     Assert.IsNotNull(indxDir);
                     Assert.AreEqual(-1, User.Current.Id);
@@ -131,7 +131,7 @@ namespace SenseNet.Search.Lucene29.Tests
         {
             await L29Test(async () =>
             {
-                var indexPopulator = SearchManager.GetIndexPopulator();
+                var indexPopulator = Providers.Instance.SearchManager.GetIndexPopulator();
 
                 using (new SystemAccount())
                 {
@@ -159,7 +159,7 @@ namespace SenseNet.Search.Lucene29.Tests
             QueryResult queryResultBefore, queryResultAfter;
             await L29Test(async () =>
                 {
-                    var indexPopulator = SearchManager.GetIndexPopulator();
+                    var indexPopulator = Providers.Instance.SearchManager.GetIndexPopulator();
 
                     using (new SystemAccount())
                     {
@@ -192,7 +192,7 @@ namespace SenseNet.Search.Lucene29.Tests
         {
             await L29Test(async () =>
             {
-                var indexPopulator = SearchManager.GetIndexPopulator();
+                var indexPopulator = Providers.Instance.SearchManager.GetIndexPopulator();
 
                 using (new SystemAccount())
                 {
@@ -320,7 +320,7 @@ namespace SenseNet.Search.Lucene29.Tests
 
             await L29Test(() =>
             {
-                var expectedPath = Path.Combine(SearchManager.IndexDirectoryPath, folderName);
+                var expectedPath = Path.Combine(Providers.Instance.SearchManager.IndexDirectoryPath, folderName);
                 var indexingEngine = (Lucene29LocalIndexingEngine) Providers.Instance.SearchEngine.IndexingEngine;
                 var currentDir = indexingEngine.IndexDirectory.CurrentDirectory;
                 var guidText = currentDir.Substring(expectedPath.Length + 1);
@@ -347,7 +347,7 @@ namespace SenseNet.Search.Lucene29.Tests
 
             await L29Test(async () =>
             {
-                var searchEngine = SearchManager.SearchEngine;
+                var searchEngine = Providers.Instance.SearchManager.SearchEngine;
                 var originalStatus = await searchEngine.IndexingEngine.ReadActivityStatusFromIndexAsync(CancellationToken.None);
 
                 await searchEngine.IndexingEngine.WriteActivityStatusToIndexAsync(newStatus, CancellationToken.None);
@@ -370,7 +370,7 @@ namespace SenseNet.Search.Lucene29.Tests
         {
             await L29Test(async () =>
             {
-                var searchEngine = SearchManager.SearchEngine;
+                var searchEngine = Providers.Instance.SearchManager.SearchEngine;
                 var originalStatus = await searchEngine.IndexingEngine.ReadActivityStatusFromIndexAsync(CancellationToken.None);
 
                 using (new SystemAccount())
@@ -390,7 +390,7 @@ namespace SenseNet.Search.Lucene29.Tests
         {
             await L29Test(() =>
             {
-                var searchEngine = SearchManager.SearchEngine;
+                var searchEngine = Providers.Instance.SearchManager.SearchEngine;
                 var indexingEngine = (Lucene29LocalIndexingEngine) searchEngine.IndexingEngine;
 
                 var masterAnalyzerAcc = new PrivateObject(indexingEngine.GetAnalyzer());
@@ -413,7 +413,7 @@ namespace SenseNet.Search.Lucene29.Tests
         {
             await L29Test(async () =>
             {
-                var indexPopulator = SearchManager.GetIndexPopulator();
+                var indexPopulator = Providers.Instance.SearchManager.GetIndexPopulator();
 
                 using (new SystemAccount())
                 {
@@ -459,7 +459,7 @@ namespace SenseNet.Search.Lucene29.Tests
         {
             await L29Test(async () =>
             {
-                var indexPopulator = SearchManager.GetIndexPopulator();
+                var indexPopulator = Providers.Instance.SearchManager.GetIndexPopulator();
 
                 using (new SystemAccount())
                 {
@@ -519,7 +519,7 @@ namespace SenseNet.Search.Lucene29.Tests
             await L29Test(async () =>
             {
                 #region infrastructure
-                var indexPopulator = SearchManager.GetIndexPopulator();
+                var indexPopulator = Providers.Instance.SearchManager.GetIndexPopulator();
 
                 using (new SystemAccount())
                 {
@@ -629,7 +629,7 @@ namespace SenseNet.Search.Lucene29.Tests
             {
                 #region infrastructure
 
-                var indexPopulator = SearchManager.GetIndexPopulator();
+                var indexPopulator = Providers.Instance.SearchManager.GetIndexPopulator();
 
                 using (new SystemAccount())
                 {
@@ -801,7 +801,7 @@ namespace SenseNet.Search.Lucene29.Tests
 
         public void EnsureEmptyIndexDirectory()
         {
-            var path = SearchManager.IndexDirectoryPath;
+            var path = Providers.Instance.SearchManager.IndexDirectoryPath;
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
             //IndexDirectory.Instance.CreateNew();
@@ -810,7 +810,7 @@ namespace SenseNet.Search.Lucene29.Tests
 
         public static void DeleteIndexDirectories()
         {
-            var path = SearchManager.IndexDirectoryPath;
+            var path = Providers.Instance.SearchManager.IndexDirectoryPath;
             foreach (var indexDir in Directory.GetDirectories(path))
             {
                 try

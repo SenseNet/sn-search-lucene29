@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Lucene.Net.Search;
+using SenseNet.Configuration;
 using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.Search.Querying;
 using SenseNet.ContentRepository.Search;
@@ -52,7 +53,7 @@ namespace SenseNet.Search.Lucene29
 
         private LucQuery Compile(SnQuery query, IQueryContext context)
         {
-            var indexingEngine = (Lucene29LocalIndexingEngine) IndexManager.IndexingEngine;
+            var indexingEngine = (Lucene29LocalIndexingEngine)Providers.Instance.IndexManager.IndexingEngine;
             var analyzer = indexingEngine.GetAnalyzer();
             var visitor = new SnQueryToLucQueryVisitor(analyzer, context);
             visitor.Visit(query.QueryTree);
@@ -71,7 +72,7 @@ namespace SenseNet.Search.Lucene29
         }
         private static SortField CreateSortField(string fieldName, bool reverse)
         {
-            var info = SearchManager.GetPerFieldIndexingInfo(fieldName);
+            var info = Providers.Instance.SearchManager.GetPerFieldIndexingInfo(fieldName);
             var sortType = SortField.STRING;
             if (info != null)
             {

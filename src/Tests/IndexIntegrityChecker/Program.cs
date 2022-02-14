@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using SenseNet.Configuration;
@@ -11,6 +12,7 @@ using SenseNet.Diagnostics;
 using SenseNet.Extensions.DependencyInjection;
 using SenseNet.Security.EFCSecurityStore;
 using SenseNet.Security.Messaging;
+using SenseNet.Storage.Data.MsSqlClient;
 using File = System.IO.File;
 using Task = System.Threading.Tasks.Task;
 
@@ -53,12 +55,19 @@ namespace IndexIntegrityChecker
 
         static void CheckIndexIntegrity(string indexDirectory, IConfiguration config)
         {
+            var connOptions = Options.Create(ConnectionStringOptions.GetLegacyConnectionStrings());
+            var dbInstallerOptions = Options.Create(new MsSqlDatabaseInstallationOptions());
+
             var builder = new RepositoryBuilder()
                 .SetConsole(Console.Out)
                 .UseLogger(new SnFileSystemEventLogger())
                 .UseTracer(new SnFileSystemTracer())
                 .UseConfiguration(config)
-                .UseDataProvider(new MsSqlDataProvider(Options.Create(ConnectionStringOptions.GetLegacyConnectionStrings())))
+                .UseDataProvider(new MsSqlDataProvider(Options.Create(DataOptions.GetLegacyConfiguration()), connOptions,
+                        dbInstallerOptions,
+                        new MsSqlDatabaseInstaller(dbInstallerOptions, NullLoggerFactory.Instance.CreateLogger<MsSqlDatabaseInstaller>()),
+                        new MsSqlDataInstaller(connOptions, NullLoggerFactory.Instance.CreateLogger<MsSqlDataInstaller>()),
+                        NullLoggerFactory.Instance.CreateLogger<MsSqlDataProvider>()))
                 .UseSecurityDataProvider(new EFCSecurityDataProvider(
                     new MessageSenderManager(),
                     Options.Create(new SenseNet.Security.EFCSecurityStore.Configuration.DataOptions()

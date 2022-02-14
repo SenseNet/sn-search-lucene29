@@ -42,7 +42,7 @@ namespace SenseNet.Search.Lucene29
         /// If not provided, <see cref="SearchManager.IndexDirectoryPath"/> will be used.</param>
         public Lucene29LocalIndexingEngine(IndexDirectory indexDirectory)
         {
-            var indexDir = indexDirectory ?? new IndexDirectory(null, SearchManager.IndexDirectoryPath);
+            var indexDir = indexDirectory ?? new IndexDirectory(null, Providers.Instance.SearchManager.IndexDirectoryPath);
 
             LuceneSearchManager = new LuceneSearchManager(indexDir, Notification.NotificationSender); 
 
@@ -180,7 +180,7 @@ namespace SenseNet.Search.Lucene29
         /// <param name="dirty">Whether the reader should be reopened from the writer. Default is false.</param>
         public static IndexReaderFrame GetReaderFrame(bool dirty = false)
         {
-            return ((Lucene29LocalIndexingEngine)IndexManager.IndexingEngine).GetIndexReaderFrame(dirty);
+            return ((Lucene29LocalIndexingEngine)Providers.Instance.IndexManager.IndexingEngine).GetIndexReaderFrame(dirty);
         }
 
         //===================================================================================== ILuceneIndexingEngine implementation

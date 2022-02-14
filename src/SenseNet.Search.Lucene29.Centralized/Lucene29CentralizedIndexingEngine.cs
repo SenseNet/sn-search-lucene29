@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lucene.Net.Analysis;
 using Microsoft.Extensions.Options;
+using SenseNet.Configuration;
 using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
@@ -87,9 +88,9 @@ namespace SenseNet.Search.Lucene29
                     throw new ArgumentNullException(nameof(target));
                 }
 
-                await IndexManager.DeleteRestorePointsAsync(cancellationToken).ConfigureAwait(false);
+                await Providers.Instance.IndexManager.DeleteRestorePointsAsync(cancellationToken).ConfigureAwait(false);
 
-                var state = await IndexManager.LoadCurrentIndexingActivityStatusAsync(cancellationToken)
+                var state = await Providers.Instance.IndexManager.LoadCurrentIndexingActivityStatusAsync(cancellationToken)
                     .ConfigureAwait(false);
                 SnTrace.System.Write($"Index backup indexing-activity status: {state}");
 

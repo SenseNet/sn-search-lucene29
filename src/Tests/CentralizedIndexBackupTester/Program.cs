@@ -6,6 +6,7 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using SenseNet.Configuration;
@@ -25,6 +26,8 @@ using SenseNet.Security.EFCSecurityStore;
 using SenseNet.Security.EFCSecurityStore.Configuration;
 using SenseNet.Security.Messaging;
 using SenseNet.Security.Messaging.RabbitMQ;
+using SenseNet.Storage.Data.MsSqlClient;
+using DataOptions = SenseNet.Configuration.DataOptions;
 using File = System.IO.File;
 using Task = System.Threading.Tasks.Task;
 
@@ -75,12 +78,19 @@ args = new[] {TestType.Backup.ToString()};
 
             var sender = new MessageSenderManager();
 
+            var connOptions = Options.Create(ConnectionStringOptions.GetLegacyConnectionStrings());
+            var dbInstallerOptions = Options.Create(new MsSqlDatabaseInstallationOptions());
+
             var builder = new RepositoryBuilder()
                 .SetConsole(Console.Out)
                 .UseLogger(new SnFileSystemEventLogger())
                 .UseTracer(new SnFileSystemTracer())
                 .UseConfiguration(configuration)
-                .UseDataProvider(new MsSqlDataProvider(Options.Create(ConnectionStringOptions.GetLegacyConnectionStrings())))
+                .UseDataProvider(new MsSqlDataProvider(Options.Create(DataOptions.GetLegacyConfiguration()), connOptions,
+                    dbInstallerOptions,
+                    new MsSqlDatabaseInstaller(dbInstallerOptions, NullLoggerFactory.Instance.CreateLogger<MsSqlDatabaseInstaller>()),
+                    new MsSqlDataInstaller(connOptions, NullLoggerFactory.Instance.CreateLogger<MsSqlDataInstaller>()),
+                    NullLoggerFactory.Instance.CreateLogger<MsSqlDataProvider>()))
                 .UseSecurityDataProvider(new EFCSecurityDataProvider(sender, 
                     Options.Create(new SenseNet.Security.EFCSecurityStore.Configuration.DataOptions()
                     {
@@ -144,7 +154,7 @@ args = new[] {TestType.Backup.ToString()};
                 }
 
                 // Shut down the service to leave the index.
-                IndexManager.IndexingEngine.ShutDownAsync(CancellationToken.None)
+                Providers.Instance.IndexManager.IndexingEngine.ShutDownAsync(CancellationToken.None)
                     .ConfigureAwait(false).GetAwaiter().GetResult();
             }
         }

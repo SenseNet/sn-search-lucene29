@@ -1,4 +1,5 @@
 ﻿using Lucene.Net.Analysis;
+using SenseNet.Configuration;
 using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.Search.Querying;
 
@@ -13,7 +14,7 @@ namespace SenseNet.Search.Lucene29
 
         public Lucene29Compiler(Analyzer masterAnalyzer = null)
         {
-            _masterAnalyzer = masterAnalyzer ?? ((ILuceneIndexingEngine)IndexManager.IndexingEngine).GetAnalyzer();
+            _masterAnalyzer = masterAnalyzer ?? ((ILuceneIndexingEngine)Providers.Instance.IndexManager.IndexingEngine).GetAnalyzer();
         }
 
         /// <summary>
@@ -24,7 +25,7 @@ namespace SenseNet.Search.Lucene29
             var visitor = new SnQueryToLucQueryVisitor(_masterAnalyzer, context);
             visitor.Visit(snQuery.QueryTree);
 
-            var searchManager = ((ILuceneIndexingEngine) IndexManager.IndexingEngine).LuceneSearchManager;
+            var searchManager = ((ILuceneIndexingEngine)Providers.Instance.IndexManager.IndexingEngine).LuceneSearchManager;
 
             return LucQuery.Create(visitor.Result, searchManager);
         }
