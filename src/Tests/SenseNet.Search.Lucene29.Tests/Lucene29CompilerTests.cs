@@ -6,13 +6,15 @@ using Lucene.Net.Support;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SenseNet.ContentRepository;
 using SenseNet.ContentRepository.Search;
+using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.Extensions.DependencyInjection;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Querying;
 using SenseNet.Search.Querying.Parser;
 using SenseNet.Search.Tests.Implementations;
 using SenseNet.Tests;
-using SenseNet.Tests.Implementations;
+using SenseNet.Tests.Core;
+using SenseNet.Tests.Core.Implementations;
 
 namespace SenseNet.Search.Lucene29.Tests
 {
@@ -22,7 +24,10 @@ namespace SenseNet.Search.Lucene29.Tests
         [TestInitialize]
         public void Initialize()
         {
+            var searchManager = new SearchManager_INSTANCE(null);
             var builder = new RepositoryBuilder()
+                .UseSearchManager(searchManager)
+                .UseIndexManager(new IndexManager_INSTANCE(null, searchManager))
                 .UseLucene29LocalSearchEngine();
         }
 
@@ -172,8 +177,8 @@ namespace SenseNet.Search.Lucene29.Tests
             };
 
             //using (new ContentRepository.Tests.Tools.RepositorySupportSwindler(new TestSearchEngineSupport(indexingInfo)))
-            using (SenseNet.Tests.Tools.Swindle(typeof(SearchManager), "_searchEngineSupport", new TestSearchEngineSupport(indexingInfo)))
-            {
+            //using (SenseNet.Tests.Core.Tools.Swindle(typeof(SearchManager), "_searchEngineSupport", new TestSearchEngineSupport(indexingInfo)))
+            //{
                 var queryContext = new TestQueryContext(QuerySettings.Default, 0, indexingInfo);
                 var parser = new CqlParser();
                 var snQuery = parser.Parse(queryText, queryContext);
@@ -196,7 +201,7 @@ namespace SenseNet.Search.Lucene29.Tests
                 Assert.AreEqual(expected, actual);
 
                 return lucQuery.Query;
-            }
+            //}
         }
 
         private void CheckNumericRange(Query q, Type type)

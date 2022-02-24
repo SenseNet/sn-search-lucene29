@@ -10,14 +10,16 @@ using Lucene.Net.Analysis.Standard;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SenseNet.Configuration;
 using SenseNet.ContentRepository;
+using SenseNet.ContentRepository.Schema;
 using SenseNet.ContentRepository.Search;
 using SenseNet.ContentRepository.Storage.Data;
 using SenseNet.ContentRepository.Storage.Security;
 using SenseNet.Search.Indexing;
 using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.Extensions.DependencyInjection;
-using SenseNet.Tests;
-using SenseNet.Tests.Implementations;
+using SenseNet.Testing;
+using SenseNet.Tests.Core;
+using SenseNet.Tests.Core.Implementations;
 using File = System.IO.File;
 using Task = System.Threading.Tasks.Task;
 
@@ -306,6 +308,8 @@ namespace SenseNet.Search.Lucene29.Tests
                 }, 
                 false);
 
+            repoBuilder.InitialData = null; // (hack :)
+
             // Start the repo again to check if indexmanager is able to start again correctly.
             using (Repository.Start(repoBuilder))
             {
@@ -379,6 +383,8 @@ namespace SenseNet.Search.Lucene29.Tests
                     node.Save();
                 }
 
+                await Task.Delay(100);
+
                 var updatedStatus = await searchEngine.IndexingEngine.ReadActivityStatusFromIndexAsync(CancellationToken.None);
 
                 Assert.AreEqual(originalStatus.LastActivityId + 1, updatedStatus.LastActivityId);
@@ -390,10 +396,14 @@ namespace SenseNet.Search.Lucene29.Tests
         {
             await L29Test(() =>
             {
+//ResetContentTypeManager();
+//ContentType.GetByName("GenericContent");
+//var analyzersAfter = Providers.Instance.SearchManager.SearchEngine.GetAnalyzers();
+
                 var searchEngine = Providers.Instance.SearchManager.SearchEngine;
                 var indexingEngine = (Lucene29LocalIndexingEngine) searchEngine.IndexingEngine;
 
-                var masterAnalyzerAcc = new PrivateObject(indexingEngine.GetAnalyzer());
+                var masterAnalyzerAcc = new ObjectAccessor(indexingEngine.GetAnalyzer());
 
                 Assert.AreEqual(typeof(StandardAnalyzer).FullName, ((Analyzer)masterAnalyzerAcc.Invoke("GetAnalyzer", IndexFieldName.AllText)).GetType().FullName);
                 Assert.AreEqual(typeof(KeywordAnalyzer).FullName, ((Analyzer)masterAnalyzerAcc.Invoke("GetAnalyzer", IndexFieldName.NodeId)).GetType().FullName);

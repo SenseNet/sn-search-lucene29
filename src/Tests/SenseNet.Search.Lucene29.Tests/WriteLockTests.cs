@@ -40,7 +40,7 @@ namespace SenseNet.Search.Lucene29.Tests
             // Start a process that use the directory
             var exePath = Path.GetFullPath(Path.Combine(
                 System.Reflection.Assembly.GetExecutingAssembly().Location,
-                "..\\..\\..\\..\\WorkerForWriteLockDeletionTests\\bin\\Debug\\netcoreapp3.1\\WorkerForWriteLockDeletionTests.exe"));
+                "..\\..\\..\\..\\..\\WorkerForWriteLockDeletionTests\\bin\\Debug\\netcoreapp3.1\\WorkerForWriteLockDeletionTests.exe"));
 
             var process = Process.Start(exePath, $"100000 {indexDir.Name} {indexDir.Path}");
             if (process == null)
