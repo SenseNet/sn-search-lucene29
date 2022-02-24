@@ -10,7 +10,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Tests
     public class ServiceRegistrationTests
     {
         [TestMethod]
-        public void TestMethod1()
+        public void L29_Centralized_ComponentStructure()
         {
             SearchServiceClient.Instance = null;
 

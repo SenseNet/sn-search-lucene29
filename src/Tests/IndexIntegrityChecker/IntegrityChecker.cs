@@ -787,7 +787,7 @@ namespace IndexIntegrityChecker
 
         private LucQuery Compile(SnQuery query, IQueryContext context)
         {
-            var indexingEngine = (ILuceneIndexingEngine)IndexManager.IndexingEngine;
+            var indexingEngine = (ILuceneIndexingEngine)Providers.Instance.IndexManager.IndexingEngine;
             var analyzer = indexingEngine.GetAnalyzer();
             var visitor = new SnQueryToLucQueryVisitor(analyzer, context);
             visitor.Visit(query.QueryTree);
@@ -806,7 +806,7 @@ namespace IndexIntegrityChecker
         }
         private static SortField CreateSortField(string fieldName, bool reverse)
         {
-            var info = SearchManager.GetPerFieldIndexingInfo(fieldName);
+            var info = Providers.Instance.SearchManager.GetPerFieldIndexingInfo(fieldName);
             var sortType = SortField.STRING;
             if (info != null)
             {

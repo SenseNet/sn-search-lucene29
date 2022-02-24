@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using SenseNet.Configuration;
 using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
@@ -59,7 +60,7 @@ namespace CentralizedIndexBackupTester
 
         protected async Task BackupAsync(CancellationToken cancellationToken)
         {
-            var status = await IndexManager.LoadCurrentIndexingActivityStatusAsync(cancellationToken)
+            var status = await Providers.Instance.IndexManager.LoadCurrentIndexingActivityStatusAsync(cancellationToken)
                 .ConfigureAwait(false);
 
             using (var op = SnTrace.StartOperation("#### BACKUP " + this.GetType().Name))

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized.Index;
-using SenseNet.Tests;
+using SenseNet.Tests.Core;
 
 namespace SenseNet.Search.Lucene29.Tests
 {
@@ -21,13 +21,13 @@ namespace SenseNet.Search.Lucene29.Tests
             var service = new SearchService();
 
             var tasks = Enumerable.Range(0, 5)
-                .Select(x => Task.Run(() => service.Backup(null, null)))
+                .Select(x => Task.Run(() => service.Backup(null, "fakeBackupDirectoryPath")))
                 .ToArray();
             // ReSharper disable once CoVariantArrayConversion
             Task.WaitAll(tasks);
 
             var completed = new string(tasks
-                .Select(t => (char) ((int) '0' + (int) t.Result.State))
+                .Select(t => (char) ('0' + (int) t.Result.State))
                 .OrderBy(x => x)
                 .ToArray());
             var faulted = new string(tasks
@@ -65,7 +65,7 @@ namespace SenseNet.Search.Lucene29.Tests
             BackupResponse response;
             var responses = new List<BackupResponse>();
 
-            responses.Add(response = service.Backup(null, null));
+            responses.Add(response = service.Backup(null, "fakeBackupDirectoryPath"));
             var backupInfo = response.Current;
             Assert.IsNotNull(backupInfo);
             Assert.AreEqual(BackupState.Started, response.State);
@@ -136,7 +136,7 @@ namespace SenseNet.Search.Lucene29.Tests
             BackupResponse response;
             var responses = new List<BackupResponse>();
 
-            responses.Add(response = service.Backup(null, null));
+            responses.Add(response = service.Backup(null, "fakeBackupDirectoryPath"));
             var backupInfo = response.Current;
             Assert.IsNotNull(backupInfo);
             Assert.AreEqual(BackupState.Started, response.State);
