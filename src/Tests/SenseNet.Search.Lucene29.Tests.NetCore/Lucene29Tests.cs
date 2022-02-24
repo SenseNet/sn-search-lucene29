@@ -308,6 +308,8 @@ namespace SenseNet.Search.Lucene29.Tests
                 }, 
                 false);
 
+            repoBuilder.InitialData = null; // (hack :)
+
             // Start the repo again to check if indexmanager is able to start again correctly.
             using (Repository.Start(repoBuilder))
             {
@@ -380,6 +382,8 @@ namespace SenseNet.Search.Lucene29.Tests
                     var node = new SystemFolder(Repository.Root) {Name = "L29_ActivityStatus_WithSave"};
                     node.Save();
                 }
+
+                await Task.Delay(100);
 
                 var updatedStatus = await searchEngine.IndexingEngine.ReadActivityStatusFromIndexAsync(CancellationToken.None);
 

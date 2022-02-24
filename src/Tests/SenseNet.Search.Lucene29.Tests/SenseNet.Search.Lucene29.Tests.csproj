@@ -148,8 +148,8 @@
     <Reference Include="SenseNet.Common, Version=7.5.4.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\SenseNet.Common.7.5.4\lib\netstandard2.0\SenseNet.Common.dll</HintPath>
     </Reference>
-    <Reference Include="SenseNet.ContentRepository, Version=7.7.31.2, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\SenseNet.ContentRepository.7.7.31.2\lib\netstandard2.0\SenseNet.ContentRepository.dll</HintPath>
+    <Reference Include="SenseNet.ContentRepository, Version=7.7.31.3, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\SenseNet.ContentRepository.7.7.31.3\lib\netstandard2.0\SenseNet.ContentRepository.dll</HintPath>
     </Reference>
     <Reference Include="SenseNet.ContentRepository.InMemory, Version=0.0.26.1, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\SenseNet.ContentRepository.InMemory.0.0.26.1\lib\netstandard2.0\SenseNet.ContentRepository.InMemory.dll</HintPath>
