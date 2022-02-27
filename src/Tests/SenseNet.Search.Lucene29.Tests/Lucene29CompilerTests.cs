@@ -24,10 +24,10 @@ namespace SenseNet.Search.Lucene29.Tests
         [TestInitialize]
         public void Initialize()
         {
-            var searchManager = new SearchManager_INSTANCE(null);
+            var searchManager = new SearchManager(null);
             var builder = new RepositoryBuilder()
                 .UseSearchManager(searchManager)
-                .UseIndexManager(new IndexManager_INSTANCE(null, searchManager))
+                .UseIndexManager(new IndexManager(null, searchManager))
                 .UseLucene29LocalSearchEngine();
         }
 
