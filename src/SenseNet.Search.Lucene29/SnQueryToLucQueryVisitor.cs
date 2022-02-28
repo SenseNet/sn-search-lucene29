@@ -102,6 +102,7 @@ namespace SenseNet.Search.Lucene29
                 case IndexValueType.StringArray: throw new NotSupportedException();
                 case IndexValueType.Bool:        return value.BooleanValue ? IndexValue.Yes : IndexValue.No;
                 case IndexValueType.Int:         return NumericUtils.IntToPrefixCoded(value.IntegerValue);
+                case IndexValueType.IntArray:    throw new NotSupportedException();
                 case IndexValueType.Long:        return NumericUtils.LongToPrefixCoded(value.LongValue);
                 case IndexValueType.Float:       return NumericUtils.FloatToPrefixCoded(value.SingleValue);
                 case IndexValueType.Double:      return NumericUtils.DoubleToPrefixCoded(value.DoubleValue);
@@ -185,6 +186,7 @@ namespace SenseNet.Search.Lucene29
                     return new IndexValue(input.DateTimeValue.Ticks);
 
                 case IndexValueType.StringArray:
+                case IndexValueType.IntArray:
                 case IndexValueType.Bool:
                     throw new NotSupportedException("Range is not supported for this type: " + input.Type);
                 default:
