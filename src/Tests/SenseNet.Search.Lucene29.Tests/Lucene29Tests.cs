@@ -10,12 +10,14 @@ using Lucene.Net.Analysis.Standard;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SenseNet.Configuration;
 using SenseNet.ContentRepository;
+using SenseNet.ContentRepository.InMemory;
 using SenseNet.ContentRepository.Schema;
 using SenseNet.ContentRepository.Search;
 using SenseNet.ContentRepository.Storage.Data;
 using SenseNet.ContentRepository.Storage.Security;
 using SenseNet.Search.Indexing;
 using SenseNet.ContentRepository.Search.Indexing;
+using SenseNet.ContentRepository.Storage.DataModel;
 using SenseNet.Extensions.DependencyInjection;
 using SenseNet.Testing;
 using SenseNet.Tests.Core;
@@ -104,13 +106,6 @@ namespace SenseNet.Search.Lucene29.Tests
 
                 using (new SystemAccount())
                 {
-                    var root = Repository.Root;
-                    await indexPopulator.RebuildIndexAsync(root, CancellationToken.None, false,
-                        IndexRebuildLevel.DatabaseAndIndex);
-                    var admin = User.Administrator;
-                    await indexPopulator.RebuildIndexAsync(admin, CancellationToken.None, false,
-                        IndexRebuildLevel.DatabaseAndIndex);
-
                     queryResult1 = CreateSafeContentQuery("Id:1").Execute();
                     queryResult2 = CreateSafeContentQuery("Id:2 .COUNTONLY").Execute();
 
@@ -137,10 +132,6 @@ namespace SenseNet.Search.Lucene29.Tests
 
                 using (new SystemAccount())
                 {
-                    var root = Repository.Root;
-                    await indexPopulator.RebuildIndexAsync(root, CancellationToken.None, true,
-                        IndexRebuildLevel.DatabaseAndIndex);
-
                     var queryResult = CreateSafeContentQuery("Id:>1 .TOP:10 .SKIP:20 .AUTOFILTERS:OFF").Execute();
                     var identifiers = queryResult.Identifiers.ToArray();
                     Assert.IsTrue(identifiers.Length > 0);
@@ -166,12 +157,6 @@ namespace SenseNet.Search.Lucene29.Tests
                     using (new SystemAccount())
                     {
                         var root = Repository.Root;
-                        await indexPopulator.RebuildIndexAsync(root, CancellationToken.None, false,
-                            IndexRebuildLevel.DatabaseAndIndex);
-                        var admin = User.Administrator;
-                        await indexPopulator.RebuildIndexAsync(admin, CancellationToken.None, false,
-                            IndexRebuildLevel.DatabaseAndIndex);
-
                         var nodeName = "NodeForL29_SaveAndQuery";
 
                         queryResultBefore = CreateSafeContentQuery($"Name:{nodeName}").Execute();
@@ -199,12 +184,6 @@ namespace SenseNet.Search.Lucene29.Tests
                 using (new SystemAccount())
                 {
                     var root = Repository.Root;
-                    await indexPopulator.RebuildIndexAsync(root, CancellationToken.None, false,
-                        IndexRebuildLevel.DatabaseAndIndex);
-                    var admin = User.Administrator;
-                    await indexPopulator.RebuildIndexAsync(admin, CancellationToken.None, false,
-                        IndexRebuildLevel.DatabaseAndIndex);
-
                     var nodeName = "L29_SaveAndQuery_ModificationDate";
 
                     var node = new SystemFolder(root) {Name = nodeName};
@@ -428,12 +407,6 @@ namespace SenseNet.Search.Lucene29.Tests
                 using (new SystemAccount())
                 {
                     var root = Repository.Root;
-                    await indexPopulator.RebuildIndexAsync(root, CancellationToken.None, false,
-                        IndexRebuildLevel.DatabaseAndIndex);
-                    var admin = User.Administrator;
-                    await indexPopulator.RebuildIndexAsync(admin, CancellationToken.None, false,
-                        IndexRebuildLevel.DatabaseAndIndex);
-
                     var nameBase = "L29_Query_MustAndShould_";
                     for (var i = 0; i < 4; i++)
                     {
@@ -474,12 +447,6 @@ namespace SenseNet.Search.Lucene29.Tests
                 using (new SystemAccount())
                 {
                     var root = Repository.Root;
-                    await indexPopulator.RebuildIndexAsync(root, CancellationToken.None, false,
-                        IndexRebuildLevel.DatabaseAndIndex);
-                    var admin = User.Administrator;
-                    await indexPopulator.RebuildIndexAsync(admin, CancellationToken.None, false,
-                        IndexRebuildLevel.DatabaseAndIndex);
-
                     var nameBase = "L29_Query_MustAndShould_Fulltext_";
                     var descriptions = new[]
                     {
@@ -534,12 +501,6 @@ namespace SenseNet.Search.Lucene29.Tests
                 using (new SystemAccount())
                 {
                     var root = Repository.Root;
-                    await indexPopulator.RebuildIndexAsync(root, CancellationToken.None, false,
-                        IndexRebuildLevel.DatabaseAndIndex);
-                    var admin = User.Administrator;
-                    await indexPopulator.RebuildIndexAsync(admin, CancellationToken.None, false,
-                        IndexRebuildLevel.DatabaseAndIndex);
-
                     var nameBase = "L29_Query_Specialities_";
                     var data = new[]
                     {
@@ -643,13 +604,6 @@ namespace SenseNet.Search.Lucene29.Tests
 
                 using (new SystemAccount())
                 {
-                    var root = Repository.Root;
-                    await indexPopulator.RebuildIndexAsync(root, CancellationToken.None, false,
-                        IndexRebuildLevel.DatabaseAndIndex);
-                    var admin = User.Administrator;
-                    await indexPopulator.RebuildIndexAsync(admin, CancellationToken.None, false,
-                        IndexRebuildLevel.DatabaseAndIndex);
-
                     var nameBase = "L29_Query_Combinations_";
                     var data = new[]
                     {
@@ -750,6 +704,8 @@ namespace SenseNet.Search.Lucene29.Tests
             
             await base.Test(builder =>
                 {
+                    builder.UseInitialData(InitialData.Load(InMemoryTestData.Instance,
+                        InMemoryTestIndexDocuments.IndexDocuments));
                     // important: use a real local search engine instead of in-memory search
                     builder.UseSearchEngine(searchEngine);
 
