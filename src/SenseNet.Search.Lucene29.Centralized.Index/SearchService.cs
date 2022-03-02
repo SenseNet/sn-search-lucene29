@@ -309,6 +309,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
                 case IndexValueType.StringArray:
                     sortType = SortField.STRING;
                     break;
+                case IndexValueType.IntArray:
                 case IndexValueType.Int:
                     sortType = SortField.INT;
                     break;

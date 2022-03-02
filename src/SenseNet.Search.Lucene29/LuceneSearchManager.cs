@@ -358,6 +358,7 @@ namespace SenseNet.Search.Lucene29
 
         private Term GetTerm(SnTerm snTerm)
         {
+            // In the sensenet ecosystem, this method is only used with “VersionId”.
             return GetTerms(snTerm).First();
         }
         private Term[] GetTerms(IEnumerable<SnTerm> snTerms)
@@ -379,6 +380,8 @@ namespace SenseNet.Search.Lucene29
                     return new[] { new Term(snTerm.Name, snTerm.BooleanValue ? IndexValue.Yes : IndexValue.No) };
                 case IndexValueType.Int:
                     return new[] { new Term(snTerm.Name, NumericUtils.IntToPrefixCoded(snTerm.IntegerValue)) };
+                case IndexValueType.IntArray:
+                    return snTerm.IntegerArrayValue.Select(i => new Term(snTerm.Name, NumericUtils.IntToPrefixCoded(i))).ToArray();
                 case IndexValueType.Long:
                     return new[] { new Term(snTerm.Name, NumericUtils.LongToPrefixCoded(snTerm.LongValue)) };
                 case IndexValueType.Float:
@@ -439,6 +442,10 @@ namespace SenseNet.Search.Lucene29
                     break;
                 case IndexValueType.Int:
                     doc.Add(new NumericField(name, store, indexField.Mode != IndexingMode.No).SetIntValue(indexField.IntegerValue));
+                    break;
+                case IndexValueType.IntArray:
+                    foreach (var item in indexField.IntegerArrayValue)
+                        doc.Add(new NumericField(name, store, indexField.Mode != IndexingMode.No).SetIntValue(item));
                     break;
                 case IndexValueType.Long:
                     doc.Add(new NumericField(name, store, indexField.Mode != IndexingMode.No).SetLongValue(indexField.LongValue));

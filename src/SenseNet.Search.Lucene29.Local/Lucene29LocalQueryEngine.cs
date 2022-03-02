@@ -85,6 +85,7 @@ namespace SenseNet.Search.Lucene29
                     case IndexValueType.StringArray:
                         sortType = SortField.STRING;
                         break;
+                    case IndexValueType.IntArray:
                     case IndexValueType.Int:
                         sortType = SortField.INT;
                         break;

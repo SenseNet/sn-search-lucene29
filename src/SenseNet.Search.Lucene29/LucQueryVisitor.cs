@@ -492,6 +492,7 @@ namespace SenseNet.Search.Lucene29
                 case IndexValueType.StringArray:
                     return GetTermText(fieldText);
                 case IndexValueType.Int:
+                case IndexValueType.IntArray:
                     return Convert.ToString(NumericUtils.PrefixCodedToInt(fieldText), CultureInfo.InvariantCulture);
                 case IndexValueType.Long:
                     return Convert.ToString(NumericUtils.PrefixCodedToLong(fieldText), CultureInfo.InvariantCulture);

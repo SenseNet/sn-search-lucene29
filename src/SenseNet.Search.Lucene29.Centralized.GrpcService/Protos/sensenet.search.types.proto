@@ -53,10 +53,11 @@ enum IndexValueType {
 	StringArray = 1;
 	Bool = 2;
 	Int = 3;
-	Long = 4;
-	Float = 5;
-	Double = 6;
-	DateTime = 7;
+	IntArray = 4;
+	Long = 5;
+	Float = 6;
+	Double = 7;
+	DateTime = 8;
 }
 
 message BackupRequest {

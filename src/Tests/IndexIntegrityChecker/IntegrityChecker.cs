@@ -820,6 +820,7 @@ namespace IndexIntegrityChecker
                         sortType = SortField.STRING;
                         break;
                     case IndexValueType.Int:
+                    case IndexValueType.IntArray:
                         sortType = SortField.INT;
                         break;
                     case IndexValueType.DateTime:
