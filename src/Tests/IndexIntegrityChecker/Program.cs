@@ -7,12 +7,10 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using SenseNet.Configuration;
 using SenseNet.ContentRepository;
-using SenseNet.ContentRepository.Storage.Data.MsSqlClient;
 using SenseNet.Diagnostics;
 using SenseNet.Extensions.DependencyInjection;
 using SenseNet.Security.EFCSecurityStore;
 using SenseNet.Security.Messaging;
-using SenseNet.Storage.Data.MsSqlClient;
 using File = System.IO.File;
 using Task = System.Threading.Tasks.Task;
 
@@ -55,28 +53,30 @@ namespace IndexIntegrityChecker
 
         static void CheckIndexIntegrity(string indexDirectory, IConfiguration config)
         {
-            var connOptions = Options.Create(ConnectionStringOptions.GetLegacyConnectionStrings());
-            var dbInstallerOptions = Options.Create(new MsSqlDatabaseInstallationOptions());
+            //var connOptions = Options.Create(ConnectionStringOptions.GetLegacyConnectionStrings());
+            //var dbInstallerOptions = Options.Create(new MsSqlDatabaseInstallationOptions());
 
-            var builder = new RepositoryBuilder()
-                .SetConsole(Console.Out)
-                .UseLogger(new SnFileSystemEventLogger())
-                .UseTracer(new SnFileSystemTracer())
-                .UseConfiguration(config)
-                .UseDataProvider(new MsSqlDataProvider(Options.Create(DataOptions.GetLegacyConfiguration()), connOptions,
-                        dbInstallerOptions,
-                        new MsSqlDatabaseInstaller(dbInstallerOptions, NullLoggerFactory.Instance.CreateLogger<MsSqlDatabaseInstaller>()),
-                        new MsSqlDataInstaller(connOptions, NullLoggerFactory.Instance.CreateLogger<MsSqlDataInstaller>()),
-                        NullLoggerFactory.Instance.CreateLogger<MsSqlDataProvider>()))
-                .UseSecurityDataProvider(new EFCSecurityDataProvider(
-                    new MessageSenderManager(),
-                    Options.Create(new SenseNet.Security.EFCSecurityStore.Configuration.DataOptions()
-                    {
-                        ConnectionString = ConnectionStrings.ConnectionString
-                    }),
-                    NullLogger<EFCSecurityDataProvider>.Instance))
-                .UseLucene29LocalSearchEngine(indexDirectory)
-                .UseTraceCategories(SnTrace.Categories.Select(x => x.Name).ToArray()) as RepositoryBuilder;
+            //UNDONE: Build services using the new API
+            throw new NotImplementedException("Build services using the new API");
+            var builder = new RepositoryBuilder(null);
+                //.SetConsole(Console.Out)
+                //.UseLogger(new SnFileSystemEventLogger())
+                //.UseTracer(new SnFileSystemTracer())
+                //.UseConfiguration(config)
+                //.UseDataProvider(new MsSqlDataProvider(Options.Create(DataOptions.GetLegacyConfiguration()), connOptions,
+                //        dbInstallerOptions,
+                //        new MsSqlDatabaseInstaller(dbInstallerOptions, NullLoggerFactory.Instance.CreateLogger<MsSqlDatabaseInstaller>()),
+                //        new MsSqlDataInstaller(connOptions, NullLoggerFactory.Instance.CreateLogger<MsSqlDataInstaller>()),
+                //        NullLoggerFactory.Instance.CreateLogger<MsSqlDataProvider>()))
+                //.UseSecurityDataProvider(new EFCSecurityDataProvider(
+                //    new MessageSenderManager(),
+                //    Options.Create(new SenseNet.Security.EFCSecurityStore.Configuration.DataOptions()
+                //    {
+                //        ConnectionString = ConnectionStrings.ConnectionString
+                //    }),
+                //    NullLogger<EFCSecurityDataProvider>.Instance))
+                //.UseLucene29LocalSearchEngine(indexDirectory)
+                //.UseTraceCategories(SnTrace.Categories.Select(x => x.Name).ToArray()) as RepositoryBuilder;
 
             using (Repository.Start(builder))
             {

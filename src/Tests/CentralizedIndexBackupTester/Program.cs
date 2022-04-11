@@ -11,9 +11,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using SenseNet.Configuration;
 using SenseNet.ContentRepository;
-using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.ContentRepository.Storage;
-using SenseNet.ContentRepository.Storage.Data.MsSqlClient;
 using SenseNet.ContentRepository.Storage.Search;
 using SenseNet.Diagnostics;
 using SenseNet.Extensions.DependencyInjection;
@@ -23,10 +21,8 @@ using SenseNet.Search.Lucene29.Centralized;
 using SenseNet.Search.Querying;
 using SenseNet.Security.Configuration;
 using SenseNet.Security.EFCSecurityStore;
-using SenseNet.Security.EFCSecurityStore.Configuration;
 using SenseNet.Security.Messaging;
 using SenseNet.Security.Messaging.RabbitMQ;
-using SenseNet.Storage.Data.MsSqlClient;
 using DataOptions = SenseNet.Configuration.DataOptions;
 using File = System.IO.File;
 using Task = System.Threading.Tasks.Task;
@@ -78,40 +74,43 @@ args = new[] {TestType.Backup.ToString()};
 
             var sender = new MessageSenderManager();
 
-            var connOptions = Options.Create(ConnectionStringOptions.GetLegacyConnectionStrings());
-            var dbInstallerOptions = Options.Create(new MsSqlDatabaseInstallationOptions());
+            //UNDONE: Build services using the new API
+            throw new NotImplementedException("Build services using the new API");
 
-            var builder = new RepositoryBuilder()
-                .SetConsole(Console.Out)
-                .UseLogger(new SnFileSystemEventLogger())
-                .UseTracer(new SnFileSystemTracer())
-                .UseConfiguration(configuration)
-                .UseDataProvider(new MsSqlDataProvider(Options.Create(DataOptions.GetLegacyConfiguration()), connOptions,
-                    dbInstallerOptions,
-                    new MsSqlDatabaseInstaller(dbInstallerOptions, NullLoggerFactory.Instance.CreateLogger<MsSqlDatabaseInstaller>()),
-                    new MsSqlDataInstaller(connOptions, NullLoggerFactory.Instance.CreateLogger<MsSqlDataInstaller>()),
-                    NullLoggerFactory.Instance.CreateLogger<MsSqlDataProvider>()))
-                .UseSecurityDataProvider(new EFCSecurityDataProvider(sender, 
-                    Options.Create(new SenseNet.Security.EFCSecurityStore.Configuration.DataOptions()
-                    {
-                        ConnectionString = ConnectionStrings.ConnectionString
-                    }),
-                    NullLogger<EFCSecurityDataProvider>.Instance))
-                .UseSecurityMessageProvider(new RabbitMQMessageProvider(sender, 
-                    Options.Create(new MessagingOptions()),
-                    Options.Create(new RabbitMqOptions())))
-                .UseLucene29CentralizedSearchEngineWithGrpc(configuration["sensenet:search:service:address"], options =>
-                {
-                    // trust the server in a development environment
-                    options.HttpClient = new HttpClient(new HttpClientHandler
-                    {
-                        ServerCertificateCustomValidationCallback = (message, certificate2, arg3, arg4) => true
-                    });
-                    options.DisposeHttpClient = true;
-                })
-                .StartWorkflowEngine(false)
-                .DisableNodeObservers()
-                .UseTraceCategories(SnTrace.Categories.Select(x => x.Name).ToArray()) as RepositoryBuilder;
+            //var connOptions = Options.Create(ConnectionStringOptions.GetLegacyConnectionStrings());
+            //var dbInstallerOptions = Options.Create(new MsSqlDatabaseInstallationOptions());
+
+            var builder = new RepositoryBuilder(null);
+            //    .SetConsole(Console.Out)
+            //    .UseLogger(new SnFileSystemEventLogger())
+            //    .UseTracer(new SnFileSystemTracer())
+            //    .UseConfiguration(configuration)
+            //    .UseDataProvider(new MsSqlDataProvider(Options.Create(DataOptions.GetLegacyConfiguration()), connOptions,
+            //        dbInstallerOptions,
+            //        new MsSqlDatabaseInstaller(dbInstallerOptions, NullLoggerFactory.Instance.CreateLogger<MsSqlDatabaseInstaller>()),
+            //        new MsSqlDataInstaller(connOptions, NullLoggerFactory.Instance.CreateLogger<MsSqlDataInstaller>()),
+            //        NullLoggerFactory.Instance.CreateLogger<MsSqlDataProvider>()))
+            //    .UseSecurityDataProvider(new EFCSecurityDataProvider(sender, 
+            //        Options.Create(new SenseNet.Security.EFCSecurityStore.Configuration.DataOptions()
+            //        {
+            //            ConnectionString = ConnectionStrings.ConnectionString
+            //        }),
+            //        NullLogger<EFCSecurityDataProvider>.Instance))
+            //    .UseSecurityMessageProvider(new RabbitMQMessageProvider(sender, 
+            //        Options.Create(new MessagingOptions()),
+            //        Options.Create(new RabbitMqOptions())))
+            //    .UseLucene29CentralizedSearchEngineWithGrpc(configuration["sensenet:search:service:address"], options =>
+            //    {
+            //        // trust the server in a development environment
+            //        options.HttpClient = new HttpClient(new HttpClientHandler
+            //        {
+            //            ServerCertificateCustomValidationCallback = (message, certificate2, arg3, arg4) => true
+            //        });
+            //        options.DisposeHttpClient = true;
+            //    })
+            //    .StartWorkflowEngine(false)
+            //    .DisableNodeObservers()
+            //    .UseTraceCategories(SnTrace.Categories.Select(x => x.Name).ToArray()) as RepositoryBuilder;
 
             using (Repository.Start(builder))
             {

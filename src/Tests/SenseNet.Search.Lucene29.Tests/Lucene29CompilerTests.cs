@@ -24,11 +24,12 @@ namespace SenseNet.Search.Lucene29.Tests
         [TestInitialize]
         public void Initialize()
         {
+            //UNDONE: Build services using the new API
             var searchManager = new SearchManager(null);
-            var builder = new RepositoryBuilder()
-                .UseSearchManager(searchManager)
-                .UseIndexManager(new IndexManager(null, searchManager))
-                .UseLucene29LocalSearchEngine();
+            //var builder = new RepositoryBuilder()
+            //    .UseSearchManager(searchManager)
+            //    .UseIndexManager(new IndexManager(null, searchManager))
+            //    .UseLucene29LocalSearchEngine();
         }
 
         [TestMethod, TestCategory("IR")] // 38 tests

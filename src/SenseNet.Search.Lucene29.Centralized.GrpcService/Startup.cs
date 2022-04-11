@@ -44,13 +44,15 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
             // by the communication layer to route incoming client calls to the
             // index layer.
             services.AddSingleton<Index.SearchService>();
-            
+
+            // [sensenet]: Set options for EFCSecurityDataProvider
+            services.AddOptions<SenseNet.Security.EFCSecurityStore.Configuration.DataOptions>()
+                .Configure<IOptions<ConnectionStringOptions>>((securityOptions, systemConnections) =>
+                    securityOptions.ConnectionString = systemConnections.Value.Security);
+
             // [sensenet] Security db and message providers.
             services.AddSenseNetSecurity()
-                .AddEFCSecurityDataProvider(options =>
-                {
-                    options.ConnectionString = ConnectionStrings.SecurityDatabaseConnectionString;
-                })
+                .AddEFCSecurityDataProvider()
                 .AddRabbitMqSecurityMessageProvider();
         }
 

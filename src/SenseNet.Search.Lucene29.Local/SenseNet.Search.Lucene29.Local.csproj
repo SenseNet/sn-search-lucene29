@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>7.4.5.3</Version>
+    <Version>7.4.6</Version>
     <Authors>kavics,tusmester</Authors>
     <Company>Sense/Net Inc.</Company>
     <Copyright>Copyright © Sense/Net Inc.</Copyright>
@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <PackageReference Include="SenseNet.Tools" Version="3.2.7" />
-    <PackageReference Include="SenseNet.ContentRepository" Version="7.7.31.5" />
+    <PackageReference Include="SenseNet.ContentRepository" Version="7.7.32" />
   </ItemGroup>
 
   <ItemGroup>

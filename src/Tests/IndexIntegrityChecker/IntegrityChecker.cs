@@ -718,7 +718,9 @@ namespace IndexIntegrityChecker
 
             var sql = string.Format(checkNodeSql, path);
 
-            using var ctx = new MsSqlDataContext(ConnectionStrings.ConnectionString, 
+            //UNDONE: Build services using the new API
+            //using var ctx = new MsSqlDataContext(ConnectionStrings.ConnectionString, 
+            using var ctx = new MsSqlDataContext(string.Empty, 
                 DataOptions.GetLegacyConfiguration(), CancellationToken.None);
 
             return await ctx.ExecuteReaderAsync(sql, async (reader, cancel) =>
@@ -760,7 +762,9 @@ namespace IndexIntegrityChecker
                     sql += " AND " + typeFilter;
             }
 
-            using var ctx = new MsSqlDataContext(ConnectionStrings.ConnectionString,
+            //UNDONE: Build services using the new API
+            //using var ctx = new MsSqlDataContext(ConnectionStrings.ConnectionString,
+            using var ctx = new MsSqlDataContext(string.Empty,
                 DataOptions.GetLegacyConfiguration(), CancellationToken.None);
 
             return await ctx.ExecuteReaderAsync(sql, async (reader, cancel) =>

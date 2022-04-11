@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SenseNet.Configuration;
 using SenseNet.ContentRepository;
@@ -729,15 +730,15 @@ namespace SenseNet.Search.Lucene29.Tests
             return L29Test(null, callback, saveInitialDocuments, memberName);
         }
 
-        protected override RepositoryBuilder CreateRepositoryBuilderForTestInstance()
+        protected override RepositoryBuilder CreateRepositoryBuilderForTestInstance(Action<IServiceCollection> modifyServices = null)
         {
             var repoBuilder = base.CreateRepositoryBuilderForTestInstance();
 
             repoBuilder.Console = new StringWriter();
 
+            //UNDONE: Build services using the new API
             return repoBuilder
-                .UseCacheProvider(new EmptyCache())
-                .UsePermissionFilterFactory(new EverythingAllowedPermissionFilterFactory())
+                //.UsePermissionFilterFactory(new EverythingAllowedPermissionFilterFactory())
                 .UseTraceCategories("ContentOperation", "Event", "Repository", "IndexQueue", "Index", "Query") as RepositoryBuilder;
         }
 
