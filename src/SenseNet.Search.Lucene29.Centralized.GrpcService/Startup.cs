@@ -48,7 +48,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
             // [sensenet]: Set options for EFCSecurityDataProvider
             services.AddOptions<SenseNet.Security.EFCSecurityStore.Configuration.DataOptions>()
                 .Configure<IOptions<ConnectionStringOptions>>((securityOptions, systemConnections) =>
-                    securityOptions.ConnectionString = systemConnections.Value.Security);
+                    securityOptions.ConnectionString = systemConnections.Value.SecurityDatabase);
 
             // [sensenet] Security db and message providers.
             services.AddSenseNetSecurity()
