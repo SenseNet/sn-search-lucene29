@@ -20,6 +20,7 @@ using SenseNet.Search.Indexing;
 using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.ContentRepository.Storage.DataModel;
 using SenseNet.Extensions.DependencyInjection;
+using SenseNet.Search.Querying;
 using SenseNet.Testing;
 using SenseNet.Tests.Core;
 using SenseNet.Tests.Core.Implementations;
@@ -732,13 +733,15 @@ namespace SenseNet.Search.Lucene29.Tests
 
         protected override RepositoryBuilder CreateRepositoryBuilderForTestInstance(Action<IServiceCollection> modifyServices = null)
         {
-            var repoBuilder = base.CreateRepositoryBuilderForTestInstance();
+            var repoBuilder = base.CreateRepositoryBuilderForTestInstance(services =>
+            {
+                services.AddSingleton<IPermissionFilterFactory, EverythingAllowedPermissionFilterFactory>();
+                modifyServices?.Invoke(services);
+            });
 
             repoBuilder.Console = new StringWriter();
 
-            //UNDONE: Build services using the new API
             return repoBuilder
-                //.UsePermissionFilterFactory(new EverythingAllowedPermissionFilterFactory())
                 .UseTraceCategories("ContentOperation", "Event", "Repository", "IndexQueue", "Index", "Query") as RepositoryBuilder;
         }
 
