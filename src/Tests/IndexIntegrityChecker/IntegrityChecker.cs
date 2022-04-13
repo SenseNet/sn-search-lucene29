@@ -673,6 +673,12 @@ namespace IndexIntegrityChecker
                     if (check != fieldText)
                         return null;
                     return Convert.ToString(intValue, CultureInfo.InvariantCulture);
+                case IndexValueType.IntArray:
+                    intValue = NumericUtils.PrefixCodedToInt(fieldText);
+                    check = NumericUtils.IntToPrefixCoded(NumericUtils.PrefixCodedToInt(fieldText));
+                    if (check != fieldText)
+                        return null;
+                    return Convert.ToString(intValue, CultureInfo.InvariantCulture);
                 case IndexValueType.Long:
                     var longValue = NumericUtils.PrefixCodedToLong(fieldText);
                     check = NumericUtils.LongToPrefixCoded(longValue);
@@ -710,6 +716,9 @@ namespace IndexIntegrityChecker
 
         /* ===================================================================================== SQL DATA HANDLING */
 
+        private static SnDataContext CreateDataContext(CancellationToken cancel = default)
+            => ((MsSqlDataProvider)Providers.Instance.DataProvider).CreateDataContext(cancel);
+
         private static async Task<TimestampData> GetTimestampDataForOneNodeIntegrityCheckAsync(string path, int[] excludedNodeTypeIds)
         {
             var checkNodeSql = "SELECT N.NodeId, V.VersionId, CONVERT(bigint, n.timestamp) NodeTimestamp, CONVERT(bigint, v.timestamp) VersionTimestamp, N.LastMajorVersionId, N.LastMinorVersionId from Versions V join Nodes N on V.NodeId = N.NodeId WHERE N.Path = '{0}' COLLATE Latin1_General_CI_AS";
@@ -718,11 +727,7 @@ namespace IndexIntegrityChecker
 
             var sql = string.Format(checkNodeSql, path);
 
-            //UNDONE: Build services using the new API
-            //using var ctx = new MsSqlDataContext(ConnectionStrings.ConnectionString, 
-            using var ctx = new MsSqlDataContext(string.Empty, 
-                DataOptions.GetLegacyConfiguration(), CancellationToken.None);
-
+            using var ctx = CreateDataContext();
             return await ctx.ExecuteReaderAsync(sql, async (reader, cancel) =>
             {
                 cancel.ThrowIfCancellationRequested();
@@ -762,11 +767,7 @@ namespace IndexIntegrityChecker
                     sql += " AND " + typeFilter;
             }
 
-            //UNDONE: Build services using the new API
-            //using var ctx = new MsSqlDataContext(ConnectionStrings.ConnectionString,
-            using var ctx = new MsSqlDataContext(string.Empty,
-                DataOptions.GetLegacyConfiguration(), CancellationToken.None);
-
+            using var ctx = CreateDataContext();
             return await ctx.ExecuteReaderAsync(sql, async (reader, cancel) =>
             {
                 cancel.ThrowIfCancellationRequested();
