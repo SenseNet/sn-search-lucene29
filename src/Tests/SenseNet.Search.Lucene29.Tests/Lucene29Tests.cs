@@ -82,7 +82,7 @@ namespace SenseNet.Search.Lucene29.Tests
                     var db = Providers.Instance.DataProvider;
                     var activityId = await db.GetLastIndexingActivityIdAsync(CancellationToken.None);
                     activities = await db.LoadIndexingActivitiesAsync(1, activityId, 10000, false,
-                        IndexingActivityFactory.Instance, CancellationToken.None);
+                        new IndexingActivityFactory(), CancellationToken.None);
 
                     GetAllIdValuesFromIndex(out var nodeIds, out var versionIds);
 
