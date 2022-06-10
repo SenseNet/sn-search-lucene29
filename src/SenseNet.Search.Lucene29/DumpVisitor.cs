@@ -92,6 +92,16 @@
 //            _dump.Append(")");
 //            return q;
 //        }
+//        public override Query VisitRegexQuery(RegexQuery regexQuery)
+//        {
+//            var term = regexQuery.GetTerm();
+//            var visited = VisitTerm(term);
+//            if (term == visited)
+//                return regexQuery;
+//            if (visited == null)
+//                return null;
+//            return new RegexQuery(visited);
+//        }
 //        public override Query VisitTermQuery(TermQuery termq)
 //        {
 //            _dump.Append("TermQ(");

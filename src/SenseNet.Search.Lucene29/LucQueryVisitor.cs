@@ -8,6 +8,7 @@ using Lucene.Net.Search.Function;
 using Lucene.Net.Search.Spans;
 using Lucene.Net.Index;
 using System.Globalization;
+using Contrib.Regex;
 using Lucene.Net.Util;
 using SenseNet.Search.Querying;
 
@@ -46,6 +47,9 @@ namespace SenseNet.Search.Lucene29
             if (q is TermRangeQuery termRangeq) return VisitTermRangeQuery(termRangeq);
             if (q is NumericRangeQuery numericRangeq) return VisitNumericRangeQuery(numericRangeq);
             // </V2.9.2>
+            // <Contrib>
+            var regexq = q as RegexQuery; if (regexq != null) return VisitRegexQuery(regexq);
+            // </Contrib>
 
             throw new NotSupportedException("Unknown query type: " + q.GetType().FullName);
         }
@@ -192,6 +196,16 @@ namespace SenseNet.Search.Lucene29
             throw new NotSupportedException(string.Format("VisitNumericRangeQuery with {0} minvalue is not supported.", min.GetType().Name));
         }
         // </V2.9.2>
+        // <Contrib>
+        public virtual Query VisitRegexQuery(RegexQuery regexQuery)
+        {
+            var term = regexQuery.GetTerm();
+            var visited = VisitTerm(term);
+            if (term == visited)
+                return regexQuery;
+            return new RegexQuery(visited);
+        }
+        // </Contrib>
         public virtual BooleanClause VisitBooleanClause(BooleanClause clause)
         {
             var occur = clause.GetOccur();
@@ -350,6 +364,16 @@ namespace SenseNet.Search.Lucene29
             _text.Append(BoostToString(prefixq.GetBoost()));
 
             return base.VisitPrefixQuery(prefixq);
+        }
+        public override Query VisitRegexQuery(RegexQuery regexQuery)
+        {
+            var term = regexQuery.GetTerm();
+            _text.Append(term.Field());
+            _text.Append(":\"/");
+            _text.Append(term.Text().Replace(@"\", @"\\"));
+            _text.Append("/\"");
+            _text.Append(BoostToString(regexQuery.GetBoost()));
+            return base.VisitRegexQuery(regexQuery);
         }
         public override Query VisitTermQuery(TermQuery termq)
         {
@@ -669,6 +693,16 @@ namespace SenseNet.Search.Lucene29
             if (visited == null)
                 return null;
             return new WildcardQuery(visited);
+        }
+        public override Query VisitRegexQuery(RegexQuery regexQuery)
+        {
+            var term = regexQuery.GetTerm();
+            var visited = VisitTerm(term);
+            if (term == visited)
+                return regexQuery;
+            if (visited == null)
+                return null;
+            return new RegexQuery(visited);
         }
         public override Query VisitTermQuery(TermQuery termq)
         {
