@@ -3,7 +3,9 @@ using System.Globalization;
 using System.Linq;
 using Lucene.Net.Search;
 using Lucene.Net.Support;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SenseNet.Configuration;
 using SenseNet.ContentRepository;
 using SenseNet.ContentRepository.Search;
 using SenseNet.ContentRepository.Search.Indexing;
@@ -24,12 +26,18 @@ namespace SenseNet.Search.Lucene29.Tests
         [TestInitialize]
         public void Initialize()
         {
-            //UNDONE: Build services using the new API
             var searchManager = new SearchManager(null);
-            //var builder = new RepositoryBuilder()
-            //    .UseSearchManager(searchManager)
-            //    .UseIndexManager(new IndexManager(null, searchManager))
-            //    .UseLucene29LocalSearchEngine();
+
+            var services = new ServiceCollection()
+                .AddSingleton<ISearchManager>(searchManager)
+                .AddSingleton<IIndexManager>(new IndexManager(null, searchManager, null))
+                .BuildServiceProvider();
+
+            Providers.Instance = new Providers(services);
+
+            var indexingEngine = new Lucene29LocalIndexingEngine();
+            var queryEngine = new Lucene29LocalQueryEngine();
+            Providers.Instance.SearchEngine = new Lucene29SearchEngine(indexingEngine, queryEngine);
         }
 
         [TestMethod, TestCategory("IR")] // 38 tests
