@@ -42,7 +42,7 @@ namespace SenseNet.Search.Lucene29.Tests
     }
 
     [TestClass]
-    public class Lucene29Tests : TestBase
+    public class Lucene29Tests : L29TestBase
     {
         [TestMethod, TestCategory("IR, L29")]
         public async Task L29_BasicConditions()
@@ -696,43 +696,10 @@ namespace SenseNet.Search.Lucene29.Tests
         }
 
         /* ======================================================================================= */
-        
-        protected async Task L29Test(Action<RepositoryBuilder> initialize, Func<Task> callback, bool saveInitialDocuments = true, [CallerMemberName]string memberName = "")
-        {
-            var indexFolderName = $"Test_{memberName}_{Guid.NewGuid()}";
-            var indexingEngine = new Lucene29LocalIndexingEngine(new IndexDirectory(indexFolderName));
-            var searchEngine = new Lucene29SearchEngine(indexingEngine, new Lucene29LocalQueryEngine());
-            
-            await base.Test(builder =>
-                {
-                    builder.UseInitialData(InitialData.Load(InMemoryTestData.Instance,
-                        InMemoryTestIndexDocuments.IndexDocuments));
-                    // important: use a real local search engine instead of in-memory search
-                    builder.UseSearchEngine(searchEngine);
 
-                    initialize?.Invoke(builder);
-                },
-                async () =>
-                {
-                    if (saveInitialDocuments)
-                    {
-                        using (new SystemAccount())
-                        {
-                            await SaveInitialIndexDocumentsAsync(CancellationToken.None);
-                        }
-                    }
-
-                    await callback();
-                });
-        }
-        protected Task L29Test(Func<Task> callback, bool saveInitialDocuments = true, [CallerMemberName]string memberName = "")
+        protected override RepositoryBuilder CreateRepositoryBuilderForTest(Action<IServiceCollection> modifyServices = null)
         {
-            return L29Test(null, callback, saveInitialDocuments, memberName);
-        }
-
-        protected override RepositoryBuilder CreateRepositoryBuilderForTestInstance(Action<IServiceCollection> modifyServices = null)
-        {
-            var repoBuilder = base.CreateRepositoryBuilderForTestInstance();
+            var repoBuilder = base.CreateRepositoryBuilderForTest();
 
             repoBuilder.Console = new StringWriter();
 
