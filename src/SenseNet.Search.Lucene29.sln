@@ -37,8 +37,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SenseNet.Search.Lucene29.Ce
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SenseNet.Search.Lucene29.Tests", "Tests\SenseNet.Search.Lucene29.Tests\SenseNet.Search.Lucene29.Tests.csproj", "{6B43B4FD-AFD2-44E1-82AB-AF848DEE15A0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contrib.Regex", "Contrib.Regex\Contrib.Regex.csproj", "{4AD41B2A-EB55-4DDB-9DD4-57E65B13F129}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,10 +95,6 @@ Global
 		{6B43B4FD-AFD2-44E1-82AB-AF848DEE15A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6B43B4FD-AFD2-44E1-82AB-AF848DEE15A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6B43B4FD-AFD2-44E1-82AB-AF848DEE15A0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4AD41B2A-EB55-4DDB-9DD4-57E65B13F129}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4AD41B2A-EB55-4DDB-9DD4-57E65B13F129}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4AD41B2A-EB55-4DDB-9DD4-57E65B13F129}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4AD41B2A-EB55-4DDB-9DD4-57E65B13F129}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

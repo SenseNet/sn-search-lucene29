@@ -18,6 +18,7 @@
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 
+// ReSharper disable once CheckNamespace
 namespace Contrib.Regex
 {
     /// <summary>

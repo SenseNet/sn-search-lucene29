@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+// ReSharper disable once CheckNamespace
 namespace Contrib.Regex
 {
     /// <summary>

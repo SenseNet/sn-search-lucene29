@@ -23,6 +23,7 @@ using Lucene.Net.Search;
 using Lucene.Net.Util;
 using SenseNet.Diagnostics;
 
+// ReSharper disable once CheckNamespace
 namespace Contrib.Regex
 {
     /// <summary>

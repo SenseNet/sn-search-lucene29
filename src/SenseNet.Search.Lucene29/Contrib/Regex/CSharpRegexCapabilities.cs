@@ -17,6 +17,7 @@
 
 using System;
 
+// ReSharper disable once CheckNamespace
 namespace Contrib.Regex
 {
     /// <summary>
