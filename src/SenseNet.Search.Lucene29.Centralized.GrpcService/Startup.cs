@@ -38,7 +38,8 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
 
             services
                 .Configure<RabbitMqOptions>(Configuration.GetSection("sensenet:security:rabbitmq"))
-                .Configure<MessagingOptions>(Configuration.GetSection("sensenet:security:messaging"));
+                .Configure<MessagingOptions>(Configuration.GetSection("sensenet:security:messaging"))
+                .ConfigureConnectionStrings(Configuration);
             
             // [sensenet] Search service singleton. This instance will be used
             // by the communication layer to route incoming client calls to the
