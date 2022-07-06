@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Contrib.Regex;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Tokenattributes;
 using Lucene.Net.Index;
@@ -57,6 +58,12 @@ namespace SenseNet.Search.Lucene29
                     return new TermQuery(new Term(fieldName, stringValue));
                 if (stringValue == SnQuery.EmptyInnerQueryText)
                     return new TermQuery(new Term("Id", NumericUtils.IntToPrefixCoded(0)));
+
+                if (stringValue.Length > 1 && stringValue[0] == '/' && stringValue[stringValue.Length - 1] == '/')
+                {
+                    return new RegexQuery(new Term(fieldName,
+                        stringValue.Substring(1, stringValue.Length - 2)));
+                }
 
                 if (stringValue.Contains('*') || stringValue.Contains('?'))
                 {

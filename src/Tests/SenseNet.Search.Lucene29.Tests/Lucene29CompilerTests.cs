@@ -26,18 +26,18 @@ namespace SenseNet.Search.Lucene29.Tests
         [TestInitialize]
         public void Initialize()
         {
-            var serviceProvider = base.CreateServiceProviderForTestInstance(modifyServices: services =>
-            {
-                services
-                    .AddSingleton<IIndexingEngine, Lucene29LocalIndexingEngine>()
-                    .AddSingleton<IQueryEngine, Lucene29LocalQueryEngine>()
-                    .AddSingleton<ISearchEngine, Lucene29SearchEngine>();
-            });
+            var searchManager = new SearchManager(null);
 
-            Providers.Instance = new Providers(serviceProvider)
-            {
-                SearchEngine = serviceProvider.GetRequiredService<ISearchEngine>()
-            };
+            var services = new ServiceCollection()
+                .AddSingleton<ISearchManager>(searchManager)
+                .AddSingleton<IIndexManager>(new IndexManager(null, searchManager, null))
+                .BuildServiceProvider();
+
+            Providers.Instance = new Providers(services);
+
+            var indexingEngine = new Lucene29LocalIndexingEngine();
+            var queryEngine = new Lucene29LocalQueryEngine();
+            Providers.Instance.SearchEngine = new Lucene29SearchEngine(indexingEngine, queryEngine);
         }
 
         [TestMethod, TestCategory("IR")] // 38 tests

@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>SenseNet.Search.Lucene29</AssemblyName>
     <RootNamespace>SenseNet.Search.Lucene29</RootNamespace>
-    <Version>7.4.5</Version>
+    <Version>7.4.5.1</Version>
     <Company>Sense/Net Inc.</Company>
     <Description>Lucene29 library for the sensenet platform containing the core indexing layer that works with Lucene index files directly.</Description>
     <Copyright>Copyright © Sense/Net Inc.</Copyright>
