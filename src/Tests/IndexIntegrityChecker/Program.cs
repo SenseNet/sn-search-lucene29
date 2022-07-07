@@ -57,7 +57,7 @@ namespace IndexIntegrityChecker
             var builder = new RepositoryBuilder(host.Services)
                 .SetConsole(Console.Out)
                 .UseLogger(new SnFileSystemEventLogger())
-                .UseTracer(new SnFileSystemTracer())
+                //.UseTracer(new SnFileSystemTracer())
                 .UseLucene29LocalSearchEngine(serviceIndexPath)
                 .UseTraceCategories(SnTrace.Categories.Select(x => x.Name).ToArray()) as RepositoryBuilder;
 
@@ -93,7 +93,8 @@ namespace IndexIntegrityChecker
                         .AddSenseNetTaskManager()
                         .AddSenseNetMsSqlProviders()
                         .AddSenseNetSecurity()
-                        .AddEFCSecurityDataProvider();
+                        .AddEFCSecurityDataProvider()
+                        .AddSingleton<ISnTracer, SnFileSystemTracer>();
                 });
 
         static void CheckIndexIntegrity()
