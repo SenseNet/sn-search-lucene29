@@ -17,7 +17,7 @@
     <PackageReference Include="SenseNet.ContentRepository.MsSql" Version="0.0.2" />
     <PackageReference Include="SenseNet.Security.EFCSecurityStore" Version="3.0.3" />
     <PackageReference Include="SenseNet.Security.Messaging.RabbitMQ" Version="1.2.1" />
-    <PackageReference Include="SenseNet.Services.Core" Version="0.0.31.1" />
+    <PackageReference Include="SenseNet.Services.Core" Version="0.0.31.4" />
     <PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
     <PackageReference Include="System.ServiceModel.NetTcp" Version="4.7.0" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.1" />
