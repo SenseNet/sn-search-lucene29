@@ -94,7 +94,7 @@ namespace IndexIntegrityChecker
                         .AddSenseNetMsSqlProviders()
                         .AddSenseNetSecurity()
                         .AddEFCSecurityDataProvider()
-                        .AddSingleton<ISnTracer, SnFileSystemTracer>();
+                        .AddSenseNetTracer<SnFileSystemTracer>();
                 });
 
         static void CheckIndexIntegrity()
