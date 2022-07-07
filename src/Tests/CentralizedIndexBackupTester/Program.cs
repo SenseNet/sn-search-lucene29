@@ -6,6 +6,8 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -23,6 +25,7 @@ using SenseNet.Security.Configuration;
 using SenseNet.Security.EFCSecurityStore;
 using SenseNet.Security.Messaging;
 using SenseNet.Security.Messaging.RabbitMQ;
+using Serilog;
 using DataOptions = SenseNet.Configuration.DataOptions;
 using File = System.IO.File;
 using Task = System.Threading.Tasks.Task;
@@ -39,8 +42,6 @@ namespace CentralizedIndexBackupTester
 
         static void Main(string[] args)
         {
-args = new[] {TestType.Backup.ToString()};
-
             if (args.Length == 0)
             {
                 Console.WriteLine("Missing test type. Expected 'Backup', 'Restore', 'Validity' or 'Cancellation'.");
@@ -63,54 +64,37 @@ args = new[] {TestType.Backup.ToString()};
             Console.WriteLine("Backup directory: ");
             Console.WriteLine(_backupIndexDirectory);
 
-            IConfiguration configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", true, true)
-                .AddEnvironmentVariables()
-                .Build();
+            // --------------------------------
+
+            using var host = CreateHostBuilder(args).Build();
+
+            Providers.Instance = new Providers(host.Services);
+
+            var configuration = host.Services.GetService<IConfiguration>();
+
+            var builder = new RepositoryBuilder(host.Services)
+                .SetConsole(Console.Out)
+                .UseLogger(new SnFileSystemEventLogger())
+                .UseTracer(new SnFileSystemTracer())
+                .UseLucene29CentralizedSearchEngineWithGrpc(configuration["sensenet:search:service:address"], options =>
+                {
+                    // trust the server in a development environment
+                    options.HttpClient = new HttpClient(new HttpClientHandler
+                    {
+                        ServerCertificateCustomValidationCallback = (message, certificate2, arg3, arg4) => true
+                    });
+                    options.DisposeHttpClient = true;
+                })
+                .UseTraceCategories(SnTrace.Categories.Select(x => x.Name).ToArray()) as RepositoryBuilder;
+
+            // --------------------------------
 
             //var serviceBinding = new NetTcpBinding { Security = { Mode = SecurityMode.None } };
             //var serviceEndpoint = new EndpointAddress(configuration["sensenet:search:service:address"]);
             //WaitForServiceStarted(serviceBinding, serviceEndpoint);
 
-            var sender = new MessageSenderManager();
-
-            //UNDONE: Build services using the new API
-            throw new NotImplementedException("Build services using the new API");
-
-            //var connOptions = Options.Create(ConnectionStringOptions.GetLegacyConnectionStrings());
-            //var dbInstallerOptions = Options.Create(new MsSqlDatabaseInstallationOptions());
-
-            var builder = new RepositoryBuilder(null);
-            //    .SetConsole(Console.Out)
-            //    .UseLogger(new SnFileSystemEventLogger())
-            //    .UseTracer(new SnFileSystemTracer())
-            //    .UseConfiguration(configuration)
-            //    .UseDataProvider(new MsSqlDataProvider(Options.Create(DataOptions.GetLegacyConfiguration()), connOptions,
-            //        dbInstallerOptions,
-            //        new MsSqlDatabaseInstaller(dbInstallerOptions, NullLoggerFactory.Instance.CreateLogger<MsSqlDatabaseInstaller>()),
-            //        new MsSqlDataInstaller(connOptions, NullLoggerFactory.Instance.CreateLogger<MsSqlDataInstaller>()),
-            //        NullLoggerFactory.Instance.CreateLogger<MsSqlDataProvider>()))
-            //    .UseSecurityDataProvider(new EFCSecurityDataProvider(sender, 
-            //        Options.Create(new SenseNet.Security.EFCSecurityStore.Configuration.DataOptions()
-            //        {
-            //            ConnectionString = ConnectionStrings.ConnectionString
-            //        }),
-            //        NullLogger<EFCSecurityDataProvider>.Instance))
-            //    .UseSecurityMessageProvider(new RabbitMQMessageProvider(sender, 
-            //        Options.Create(new MessagingOptions()),
-            //        Options.Create(new RabbitMqOptions())))
-            //    .UseLucene29CentralizedSearchEngineWithGrpc(configuration["sensenet:search:service:address"], options =>
-            //    {
-            //        // trust the server in a development environment
-            //        options.HttpClient = new HttpClient(new HttpClientHandler
-            //        {
-            //            ServerCertificateCustomValidationCallback = (message, certificate2, arg3, arg4) => true
-            //        });
-            //        options.DisposeHttpClient = true;
-            //    })
-            //    .StartWorkflowEngine(false)
-            //    .DisableNodeObservers()
-            //    .UseTraceCategories(SnTrace.Categories.Select(x => x.Name).ToArray()) as RepositoryBuilder;
+            //var logger = host.Services.GetService<ILogger<Program>>();
+            //var sender = new MessageSenderManager();
 
             using (Repository.Start(builder))
             {
@@ -157,6 +141,37 @@ args = new[] {TestType.Backup.ToString()};
                     .ConfigureAwait(false).GetAwaiter().GetResult();
             }
         }
+        static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration(builder => builder
+                    .AddJsonFile("appsettings.json", true, true)
+                    .AddUserSecrets<Program>()
+                )
+                .ConfigureServices((hb, services) =>
+                {
+                    // [sensenet]: Set options for EFCSecurityDataProvider
+                    services.AddOptions<SenseNet.Security.EFCSecurityStore.Configuration.DataOptions>()
+                        .Configure<IOptions<ConnectionStringOptions>>((securityOptions, systemConnections) =>
+                            securityOptions.ConnectionString = systemConnections.Value.Security);
+
+                    // [sensenet]: add sensenet services
+                    services
+                        .SetSenseNetConfiguration(hb.Configuration)
+                        .AddLogging(logging =>
+                        {
+                            logging.AddSerilog(new LoggerConfiguration()
+                                .ReadFrom.Configuration(hb.Configuration)
+                                .CreateLogger());
+                        })
+                        .ConfigureConnectionStrings(hb.Configuration)
+                        .AddPlatformIndependentServices()
+                        .AddSenseNetTaskManager()
+                        .AddSenseNetMsSqlProviders()
+                        .AddSenseNetSecurity()
+                        .AddEFCSecurityDataProvider()
+                        .AddRabbitMqSecurityMessageProvider() //TODO: Test this registration
+                        ;
+                });
 
         private static void RestoreFiles()
         {
