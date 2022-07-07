@@ -168,6 +168,36 @@ namespace SenseNet.Search.Lucene29
             return Task.CompletedTask;
         }
 
+        /// <inheritdoc />
+        public IndexProperties GetIndexProperties()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public IDictionary<string, IDictionary<string, List<int>>> GetInvertedIndex()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public IDictionary<string, List<int>> GetInvertedIndex(string fieldName)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public IDictionary<string, string> GetIndexDocumentByVersionId(int versionId)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public IDictionary<string, string> GetIndexDocumentByDocumentId(int documentId)
+        {
+            throw new NotImplementedException();
+        }
+
         //===================================================================================== IndexReader
 
         private IndexReaderFrame GetIndexReaderFrame(bool dirty)
