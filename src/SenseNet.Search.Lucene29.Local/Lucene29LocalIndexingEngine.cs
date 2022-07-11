@@ -171,31 +171,27 @@ namespace SenseNet.Search.Lucene29
         /// <inheritdoc />
         public IndexProperties GetIndexProperties()
         {
-            throw new NotImplementedException();
+            return new IndexExplorer(LuceneSearchManager).GetIndexProperties();
         }
-
         /// <inheritdoc />
         public IDictionary<string, IDictionary<string, List<int>>> GetInvertedIndex()
         {
-            throw new NotImplementedException();
+            return new IndexExplorer(LuceneSearchManager).GetInvertedIndex();
         }
-
         /// <inheritdoc />
         public IDictionary<string, List<int>> GetInvertedIndex(string fieldName)
         {
-            throw new NotImplementedException();
+            return new IndexExplorer(LuceneSearchManager).GetInvertedIndex(fieldName);
         }
-
         /// <inheritdoc />
         public IDictionary<string, string> GetIndexDocumentByVersionId(int versionId)
         {
-            throw new NotImplementedException();
+            return new IndexExplorer(LuceneSearchManager).GetIndexDocumentByVersionId(versionId);
         }
-
         /// <inheritdoc />
         public IDictionary<string, string> GetIndexDocumentByDocumentId(int documentId)
         {
-            throw new NotImplementedException();
+            return new IndexExplorer(LuceneSearchManager).GetIndexDocumentByDocumentId(documentId);
         }
 
         //===================================================================================== IndexReader

@@ -191,7 +191,33 @@ namespace SenseNet.Search.Lucene29
 
             return Task.CompletedTask;
         }
-        
+
+        /// <inheritdoc />
+        public IndexProperties GetIndexProperties()
+        {
+            return new IndexExplorer(LuceneSearchManager).GetIndexProperties();
+        }
+        /// <inheritdoc />
+        public IDictionary<string, IDictionary<string, List<int>>> GetInvertedIndex()
+        {
+            return new IndexExplorer(LuceneSearchManager).GetInvertedIndex();
+        }
+        /// <inheritdoc />
+        public IDictionary<string, List<int>> GetInvertedIndex(string fieldName)
+        {
+            return new IndexExplorer(LuceneSearchManager).GetInvertedIndex(fieldName);
+        }
+        /// <inheritdoc />
+        public IDictionary<string, string> GetIndexDocumentByVersionId(int versionId)
+        {
+            return new IndexExplorer(LuceneSearchManager).GetIndexDocumentByVersionId(versionId);
+        }
+        /// <inheritdoc />
+        public IDictionary<string, string> GetIndexDocumentByDocumentId(int documentId)
+        {
+            return new IndexExplorer(LuceneSearchManager).GetIndexDocumentByDocumentId(documentId);
+        }
+
         public void SetIndexingInfo(IDictionary<string, IPerFieldIndexingInfo> indexingInfo)
         {
             var analyzers = indexingInfo.Where(kvp => kvp.Value.Analyzer != IndexFieldAnalyzer.Default).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Analyzer);
