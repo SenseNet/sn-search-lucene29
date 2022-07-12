@@ -167,31 +167,31 @@ namespace SenseNet.Search.Lucene29.Tests
             var data = new Dictionary<string, IDictionary<string, List<int>>>
             {
                 {"eee", new Dictionary<string, List<int>>
-                {
-                    {"aa", new List<int>{1,2,3}},
-                }},
+                    {
+                        {"aa", new List<int>{1,2,3}},
+                    }},
                 {"ddd", new Dictionary<string, List<int>>
-                {
-                    {"bb", new List<int>{4,5,6}}, {"aa", new List<int>{1,2,3}},
-                }},
+                    {
+                        {"bb", new List<int>{4,5,6}}, {"aa", new List<int>{1,2,3}},
+                    }},
                 {"ccc", new Dictionary<string, List<int>>
-                {
-                    {"cc", new List<int>{7,8,9}}, {"bb", new List<int>{4,5,6}}, {"aa", new List<int>{1,2,3}},
-                }},
+                    {
+                        {"cc", new List<int>{7,8,9}}, {"bb", new List<int>{4,5,6}}, {"aa", new List<int>{1,2,3}},
+                    }},
                 {"bbb", new Dictionary<string, List<int>>
-                {
-                    {"dd", new List<int>{1,3,5}}, {"cc", new List<int>{7,8,9}}, {"bb", new List<int>{4,5,6}}, {"aa", new List<int>{1,2,3}},
-                }},
+                    {
+                        {"dd", new List<int>{1,3,5}}, {"cc", new List<int>{7,8,9}}, {"bb", new List<int>{4,5,6}}, {"aa", new List<int>{1,2,3}},
+                    }},
                 {"aaa", new Dictionary<string, List<int>>
-                {
-                    {"ee", new List<int>{2,4,6}}, {"dd", new List<int>{1,3,5}}, {"cc", new List<int>{7,8,9}}, {"bb", new List<int>{4,5,6}}, {"aa", new List<int>{1,2,3}},
-                }},
+                    {
+                        {"ee", new List<int>{2,4,6}}, {"dd", new List<int>{1,3,5}}, {"cc", new List<int>{7,8,9}}, {"bb", new List<int>{4,5,6}}, {"aa", new List<int>{1,2,3}},
+                    }},
             };
 
             IDictionary<string, List<int>> GetFieldData(ForwardOnlyDictionaryState state, string field)
             {
                 var keys = data[field].Keys;
-                var subState = new ForwardOnlyDictionaryState {FieldName = field, IndexReader = state?.IndexReader};
+                var subState = new ForwardOnlyDictionaryState(state?.IndexReader) {FieldName = field};
                 return new ForwardOnlyDictionary<string, List<int>>(subState, keys, GetTermData);
             }
             List<int> GetTermData(ForwardOnlyDictionaryState state, string term)

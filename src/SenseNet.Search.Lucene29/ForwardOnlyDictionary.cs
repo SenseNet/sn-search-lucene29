@@ -6,10 +6,28 @@ using Lucene.Net.Index;
 
 namespace SenseNet.Search.Lucene29
 {
+    /// <summary>
+    /// Represents a state variables in the ForwardOnlyDictionary enumerations.
+    /// </summary>
     public class ForwardOnlyDictionaryState
     {
-        public IndexReader IndexReader { get; set; }
+        /// <summary>
+        /// Gets the opened <see cref="IndexReader"/>.
+        /// </summary>
+        public IndexReader IndexReader { get; }
+        /// <summary>
+        /// Gets or sets the current field name or null.
+        /// </summary>
         public string FieldName { get; set; }
+
+        /// <summary>
+        /// Initializes the instance of the <see cref="ForwardOnlyDictionaryState"/>
+        /// </summary>
+        /// <param name="ixReader">An opened <see cref="IndexReader"/>.</param>
+        public ForwardOnlyDictionaryState(IndexReader ixReader)
+        {
+            IndexReader = ixReader;
+        }
     }
     /// <summary>
     /// Represents generic key/value pairs for sequential reading only.
@@ -27,10 +45,10 @@ namespace SenseNet.Search.Lucene29
         /// <summary>
         /// Initializes a new instance of the ForwardOnlyDictionary&lt;TKey, TValue&gt;.
         /// </summary>
-        /// <param name="keys"></param>
-        /// <param name="state"></param>
-        /// <param name="itemGetter"></param>
-        /// <param name="keyTransformer"></param>
+        /// <param name="keys">Keys that will be ordered and enumerated for itemGetter function.</param>
+        /// <param name="state">Contains data for itemGetter function.</param>
+        /// <param name="itemGetter">Function that gets a value by passed key and state.</param>
+        /// <param name="keyTransformer">Function that converts the key if needed.</param>
         public ForwardOnlyDictionary(ForwardOnlyDictionaryState state, IEnumerable<TKey> keys,
             Func<ForwardOnlyDictionaryState, TKey, TValue> itemGetter,
             Func<ForwardOnlyDictionaryState, TKey, TKey> keyTransformer = null)

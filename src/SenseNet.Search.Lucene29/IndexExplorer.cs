@@ -118,7 +118,7 @@ namespace SenseNet.Search.Lucene29
         private IDictionary<string, IDictionary<string, List<int>>> GetInvertedIndexLarge(IndexReader ixReader)
         {
             var fieldNames = ixReader.GetFieldNames(IndexReader.FieldOption.ALL).ToArray();
-            var state = new ForwardOnlyDictionaryState {IndexReader = ixReader};
+            var state = new ForwardOnlyDictionaryState(ixReader);
             return new ForwardOnlyDictionary<string, IDictionary<string, List<int>>>(state, fieldNames, GetFieldData);
         }
         IDictionary<string, List<int>> GetFieldData(ForwardOnlyDictionaryState state, string fieldName)
@@ -134,7 +134,7 @@ namespace SenseNet.Search.Lucene29
                 keys.Add(term.Text());
             }
 
-            var subState = new ForwardOnlyDictionaryState { FieldName = fieldName, IndexReader = state.IndexReader };
+            var subState = new ForwardOnlyDictionaryState(state.IndexReader) { FieldName = fieldName };
             return new ForwardOnlyDictionary<string, List<int>>(subState, keys, GetTermData, GetTermText);
         }
         List<int> GetTermData(ForwardOnlyDictionaryState state, string termValue)
