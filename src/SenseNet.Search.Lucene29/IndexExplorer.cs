@@ -74,36 +74,81 @@ namespace SenseNet.Search.Lucene29
 
         public IDictionary<string, IDictionary<string, List<int>>> GetInvertedIndex()
         {
-            var result = new Dictionary<string, IDictionary<string, List<int>>>();
-
             using (var readerFrame = _searchManager.GetIndexReaderFrame())
             {
                 var ixReader = readerFrame.IndexReader;
-                var terms = ixReader.Terms();
-                while (terms.Next())
-                {
-                    var term = terms.Term();
-                    var field = term.Field();
-                    var text = GetTermText(term);
-                    if (text == null)
-                        continue;
 
-                    if (!result.TryGetValue(field, out var fieldData))
-                        result.Add(field, fieldData = new Dictionary<string, List<int>>());
+                var indexSize = ixReader.Directory().ListAll()
+                    .Select(fileName => new FileInfo(fileName))
+                    .Where(file => file.Exists)
+                    .Sum(file => file.Length);
 
-                    if (!fieldData.TryGetValue(text, out var termData))
-                        fieldData.Add(text, termData = new List<int>());
+                return indexSize > 0L ? GetInvertedIndexLarge(ixReader) : GetInvertedIndexSmall(ixReader);
+            }
+        }
+        private IDictionary<string, IDictionary<string, List<int>>> GetInvertedIndexSmall(IndexReader ixReader)
+        {
+            var result = new Dictionary<string, IDictionary<string, List<int>>>();
 
-                    var termDocs = ixReader.TermDocs(term);
-                    int doc;
-                    while (termDocs.Next())
-                        if (!ixReader.IsDeleted((doc = termDocs.Doc())))
-                            termData.Add(doc);
-                    termData.Sort();
-                }
+            var terms = ixReader.Terms();
+            while (terms.Next())
+            {
+                var term = terms.Term();
+                var field = term.Field();
+                var text = GetTermText(term);
+                if (text == null)
+                    continue;
+
+                if (!result.TryGetValue(field, out var fieldData))
+                    result.Add(field, fieldData = new Dictionary<string, List<int>>());
+
+                if (!fieldData.TryGetValue(text, out var termData))
+                    fieldData.Add(text, termData = new List<int>());
+
+                var termDocs = ixReader.TermDocs(term);
+                int doc;
+                while (termDocs.Next())
+                    if (!ixReader.IsDeleted((doc = termDocs.Doc())))
+                        termData.Add(doc);
+                termData.Sort();
             }
 
             return result;
+        }
+        private IDictionary<string, IDictionary<string, List<int>>> GetInvertedIndexLarge(IndexReader ixReader)
+        {
+            var fieldNames = ixReader.GetFieldNames(IndexReader.FieldOption.ALL).ToArray();
+            var state = new ForwardOnlyDictionaryState {IndexReader = ixReader};
+            return new ForwardOnlyDictionary<string, IDictionary<string, List<int>>>(state, fieldNames, GetFieldData);
+        }
+        IDictionary<string, List<int>> GetFieldData(ForwardOnlyDictionaryState state, string fieldName)
+        {
+            var terms = state.IndexReader.Terms();
+            var keys = new List<string>();
+            while (terms.Next())
+            {
+                var term = terms.Term();
+                if (fieldName != term.Field())
+                    continue;
+                //var text = GetTermText(term);
+                keys.Add(term.Text());
+            }
+
+            var subState = new ForwardOnlyDictionaryState { FieldName = fieldName, IndexReader = state.IndexReader };
+            return new ForwardOnlyDictionary<string, List<int>>(subState, keys, GetTermData, GetTermText);
+        }
+        List<int> GetTermData(ForwardOnlyDictionaryState state, string termValue)
+        {
+            var docs = new List<int>();
+            var term = new Term(state.FieldName, termValue);
+            var ixReader = state.IndexReader;
+            var termDocs = ixReader.TermDocs(term);
+            int doc;
+            while (termDocs.Next())
+                if (!ixReader.IsDeleted((doc = termDocs.Doc())))
+                    docs.Add(doc);
+            docs.Sort();
+            return docs;
         }
 
         public IDictionary<string, List<int>> GetInvertedIndex(string fieldName)
@@ -190,11 +235,17 @@ namespace SenseNet.Search.Lucene29
             return result;
         }
 
+        private string GetTermText(ForwardOnlyDictionaryState state, string fieldValue)
+        {
+            return GetTermText(state.FieldName, fieldValue);
+        }
         private string GetTermText(Term term)
         {
-            var fieldName = term.Field();
-            var fieldText = term.Text();
-            if (fieldText == null)
+            return GetTermText(term.Field(), term.Text());
+        }
+        private string GetTermText(string fieldName, string fieldValue)
+        {
+            if (fieldValue == null)
                 return null;
 
             if (!_searchManager.IndexFieldTypeInfo.TryGetValue(fieldName, out var fieldType))
@@ -211,36 +262,36 @@ namespace SenseNet.Search.Lucene29
                 case IndexValueType.Bool:
                 case IndexValueType.String:
                 case IndexValueType.StringArray:
-                    return fieldText;
+                    return fieldValue;
                 case IndexValueType.Int:
                 case IndexValueType.IntArray:
-                    var intValue = NumericUtils.PrefixCodedToInt(fieldText);
+                    var intValue = NumericUtils.PrefixCodedToInt(fieldValue);
                     check = NumericUtils.IntToPrefixCoded(intValue);
-                    if (check != fieldText)
+                    if (check != fieldValue)
                         return null;
                     return Convert.ToString(intValue, CultureInfo.InvariantCulture);
                 case IndexValueType.Long:
-                    var longValue = NumericUtils.PrefixCodedToLong(fieldText);
+                    var longValue = NumericUtils.PrefixCodedToLong(fieldValue);
                     check = NumericUtils.LongToPrefixCoded(longValue);
-                    if (check != fieldText)
+                    if (check != fieldValue)
                         return null;
                     return Convert.ToString(longValue, CultureInfo.InvariantCulture);
                 case IndexValueType.Float:
-                    var floatValue = NumericUtils.PrefixCodedToFloat(fieldText);
+                    var floatValue = NumericUtils.PrefixCodedToFloat(fieldValue);
                     check = NumericUtils.FloatToPrefixCoded(floatValue);
-                    if (check != fieldText)
+                    if (check != fieldValue)
                         return null;
                     return Convert.ToString(floatValue, CultureInfo.InvariantCulture);
                 case IndexValueType.Double:
-                    var doubleValue = NumericUtils.PrefixCodedToDouble(fieldText);
+                    var doubleValue = NumericUtils.PrefixCodedToDouble(fieldValue);
                     check = NumericUtils.DoubleToPrefixCoded(doubleValue);
-                    if (check != fieldText)
+                    if (check != fieldValue)
                         return null;
                     return Convert.ToString(doubleValue, CultureInfo.InvariantCulture);
                 case IndexValueType.DateTime:
-                    var ticksValue = NumericUtils.PrefixCodedToLong(fieldText);
+                    var ticksValue = NumericUtils.PrefixCodedToLong(fieldValue);
                     check = NumericUtils.LongToPrefixCoded(ticksValue);
-                    if (check != fieldText)
+                    if (check != fieldValue)
                         return null;
                     var d = new DateTime(ticksValue);
                     if (d.Hour == 0 && d.Minute == 0 && d.Second == 0)
