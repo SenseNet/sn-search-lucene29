@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Security;
 using System.Text;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using SenseNet.Configuration;
@@ -88,7 +89,7 @@ namespace SenseNet.Search.Lucene29.Tests
                 var indexingEngine = Providers.Instance.SearchEngine.IndexingEngine;
 
                 // ACTION
-                var invertedIndex = indexingEngine.GetInvertedIndex();
+                var invertedIndex = await indexingEngine.GetInvertedIndexAsync(CancellationToken.None);
 
                 // ASSERT
                 // 1 - check serializability
@@ -107,7 +108,7 @@ namespace SenseNet.Search.Lucene29.Tests
                 var indexingEngine = Providers.Instance.SearchEngine.IndexingEngine;
 
                 // ACTION
-                var invertedIndex = indexingEngine.GetInvertedIndex("LoginName");
+                var invertedIndex = await indexingEngine.GetInvertedIndexAsync("LoginName", CancellationToken.None);
 
                 // ASSERT
                 var loginNames = Content.All
@@ -132,7 +133,7 @@ namespace SenseNet.Search.Lucene29.Tests
                 var content = Content.All.First(c => c.TypeIs("User") && (string)c["LoginName"] == "VirtualADUser");
 
                 // ACTION
-                var invertedIndex = indexingEngine.GetInvertedIndex("LoginName");
+                var invertedIndex = await indexingEngine.GetInvertedIndexAsync("LoginName", CancellationToken.None);
                 var docId = invertedIndex["virtualaduser"].First();
                 var doc = indexingEngine.GetIndexDocumentByDocumentId(docId);
 
@@ -191,7 +192,7 @@ namespace SenseNet.Search.Lucene29.Tests
             IDictionary<string, List<int>> GetFieldData(ForwardOnlyDictionaryState state, string field)
             {
                 var keys = data[field].Keys;
-                var subState = new ForwardOnlyDictionaryState(state?.IndexReader) {FieldName = field};
+                var subState = new ForwardOnlyDictionaryState(state?.IndexReader, CancellationToken.None) {FieldName = field};
                 return new ForwardOnlyDictionary<string, List<int>>(subState, keys, GetTermData);
             }
             List<int> GetTermData(ForwardOnlyDictionaryState state, string term)

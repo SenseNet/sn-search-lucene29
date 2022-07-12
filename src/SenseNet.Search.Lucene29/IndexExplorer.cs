@@ -5,6 +5,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Lucene.Net.Index;
 using Lucene.Net.Util;
 using Newtonsoft.Json;
@@ -72,7 +74,7 @@ namespace SenseNet.Search.Lucene29
             return result;
         }
 
-        public IDictionary<string, IDictionary<string, List<int>>> GetInvertedIndex()
+        public Task<IDictionary<string, IDictionary<string, List<int>>>> GetInvertedIndexAsync(CancellationToken cancel)
         {
             using (var readerFrame = _searchManager.GetIndexReaderFrame())
             {
@@ -83,16 +85,22 @@ namespace SenseNet.Search.Lucene29
                     .Where(file => file.Exists)
                     .Sum(file => file.Length);
 
-                return indexSize > 0L ? GetInvertedIndexLarge(ixReader) : GetInvertedIndexSmall(ixReader);
+                var result = indexSize > 0L
+                    ? GetInvertedIndexLarge(ixReader, cancel)
+                    : GetInvertedIndexSmall(ixReader, cancel);
+                return Task.FromResult(result);
             }
         }
-        private IDictionary<string, IDictionary<string, List<int>>> GetInvertedIndexSmall(IndexReader ixReader)
+        private IDictionary<string, IDictionary<string, List<int>>> GetInvertedIndexSmall(IndexReader ixReader, CancellationToken cancel)
         {
             var result = new Dictionary<string, IDictionary<string, List<int>>>();
 
             var terms = ixReader.Terms();
             while (terms.Next())
             {
+                if (cancel.IsCancellationRequested)
+                    throw new OperationCanceledException(cancel);
+
                 var term = terms.Term();
                 var field = term.Field();
                 var text = GetTermText(term);
@@ -108,17 +116,21 @@ namespace SenseNet.Search.Lucene29
                 var termDocs = ixReader.TermDocs(term);
                 int doc;
                 while (termDocs.Next())
+                {
+                    if (cancel.IsCancellationRequested)
+                        throw new OperationCanceledException(cancel);
                     if (!ixReader.IsDeleted((doc = termDocs.Doc())))
                         termData.Add(doc);
+                }
                 termData.Sort();
             }
 
             return result;
         }
-        private IDictionary<string, IDictionary<string, List<int>>> GetInvertedIndexLarge(IndexReader ixReader)
+        private IDictionary<string, IDictionary<string, List<int>>> GetInvertedIndexLarge(IndexReader ixReader, CancellationToken cancel)
         {
             var fieldNames = ixReader.GetFieldNames(IndexReader.FieldOption.ALL).ToArray();
-            var state = new ForwardOnlyDictionaryState(ixReader);
+            var state = new ForwardOnlyDictionaryState(ixReader, cancel);
             return new ForwardOnlyDictionary<string, IDictionary<string, List<int>>>(state, fieldNames, GetFieldData);
         }
         IDictionary<string, List<int>> GetFieldData(ForwardOnlyDictionaryState state, string fieldName)
@@ -127,6 +139,8 @@ namespace SenseNet.Search.Lucene29
             var keys = new List<string>();
             while (terms.Next())
             {
+                if (state.Cancellation.IsCancellationRequested)
+                    throw new OperationCanceledException(state.Cancellation);
                 var term = terms.Term();
                 if (fieldName != term.Field())
                     continue;
@@ -134,7 +148,7 @@ namespace SenseNet.Search.Lucene29
                 keys.Add(term.Text());
             }
 
-            var subState = new ForwardOnlyDictionaryState(state.IndexReader) { FieldName = fieldName };
+            var subState = new ForwardOnlyDictionaryState(state.IndexReader, state.Cancellation) { FieldName = fieldName };
             return new ForwardOnlyDictionary<string, List<int>>(subState, keys, GetTermData, GetTermText);
         }
         List<int> GetTermData(ForwardOnlyDictionaryState state, string termValue)
@@ -145,13 +159,17 @@ namespace SenseNet.Search.Lucene29
             var termDocs = ixReader.TermDocs(term);
             int doc;
             while (termDocs.Next())
+            {
+                if (state.Cancellation.IsCancellationRequested)
+                    throw new OperationCanceledException(state.Cancellation);
                 if (!ixReader.IsDeleted((doc = termDocs.Doc())))
                     docs.Add(doc);
+            }
             docs.Sort();
             return docs;
         }
 
-        public IDictionary<string, List<int>> GetInvertedIndex(string fieldName)
+        public Task<IDictionary<string, List<int>>> GetInvertedIndexAsync(string fieldName, CancellationToken cancel)
         {
             var fieldData = new Dictionary<string, List<int>>();
 
@@ -180,7 +198,7 @@ namespace SenseNet.Search.Lucene29
                 }
             }
 
-            return fieldData;
+            return Task.FromResult((IDictionary<string, List<int>>)fieldData);
         }
 
         public IDictionary<string, string> GetIndexDocumentByVersionId(int versionId)

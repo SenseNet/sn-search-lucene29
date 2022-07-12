@@ -198,14 +198,14 @@ namespace SenseNet.Search.Lucene29
             return new IndexExplorer(LuceneSearchManager).GetIndexProperties();
         }
         /// <inheritdoc />
-        public IDictionary<string, IDictionary<string, List<int>>> GetInvertedIndex()
+        public async Task<IDictionary<string, IDictionary<string, List<int>>>> GetInvertedIndexAsync(CancellationToken cancel)
         {
-            return new IndexExplorer(LuceneSearchManager).GetInvertedIndex();
+            return await new IndexExplorer(LuceneSearchManager).GetInvertedIndexAsync(cancel);
         }
         /// <inheritdoc />
-        public IDictionary<string, List<int>> GetInvertedIndex(string fieldName)
+        public async Task<IDictionary<string, List<int>>> GetInvertedIndexAsync(string fieldName, CancellationToken cancel)
         {
-            return new IndexExplorer(LuceneSearchManager).GetInvertedIndex(fieldName);
+            return await new IndexExplorer(LuceneSearchManager).GetInvertedIndexAsync(fieldName, cancel);
         }
         /// <inheritdoc />
         public IDictionary<string, string> GetIndexDocumentByVersionId(int versionId)

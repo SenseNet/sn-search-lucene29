@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Lucene.Net.Index;
 
 namespace SenseNet.Search.Lucene29
@@ -19,14 +20,17 @@ namespace SenseNet.Search.Lucene29
         /// Gets or sets the current field name or null.
         /// </summary>
         public string FieldName { get; set; }
+        public CancellationToken Cancellation { get; }
 
         /// <summary>
         /// Initializes the instance of the <see cref="ForwardOnlyDictionaryState"/>
         /// </summary>
         /// <param name="ixReader">An opened <see cref="IndexReader"/>.</param>
-        public ForwardOnlyDictionaryState(IndexReader ixReader)
+        /// <param name="cancel"></param>
+        public ForwardOnlyDictionaryState(IndexReader ixReader, CancellationToken cancel)
         {
             IndexReader = ixReader;
+            Cancellation = cancel;
         }
     }
     /// <summary>
