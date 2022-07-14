@@ -75,7 +75,6 @@ namespace CentralizedIndexBackupTester
             var builder = new RepositoryBuilder(host.Services)
                 .SetConsole(Console.Out)
                 .UseLogger(new SnFileSystemEventLogger())
-                .UseTracer(new SnFileSystemTracer())
                 .UseLucene29CentralizedSearchEngineWithGrpc(configuration["sensenet:search:service:address"], options =>
                 {
                     // trust the server in a development environment
@@ -169,6 +168,7 @@ namespace CentralizedIndexBackupTester
                         .AddSenseNetMsSqlProviders()
                         .AddSenseNetSecurity()
                         .AddEFCSecurityDataProvider()
+                        .AddSenseNetTracer<SnFileSystemTracer>()
                         .AddRabbitMqSecurityMessageProvider() //TODO: Test this registration
                         ;
                 });
