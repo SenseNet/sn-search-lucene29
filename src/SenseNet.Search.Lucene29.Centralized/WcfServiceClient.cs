@@ -159,6 +159,23 @@ namespace SenseNet.Search.Lucene29.Centralized
             return Channel.ExecuteQueryAndProject(query, queryContext);
         }
 
+        public IndexProperties GetIndexProperties()
+        {
+            return Channel.GetIndexProperties();
+        }
+        public IDictionary<string, List<int>> GetInvertedIndex(string fieldName)
+        {
+            return Channel.GetInvertedIndex(fieldName);
+        }
+        public IDictionary<string, string> GetIndexDocumentByVersionId(int versionId)
+        {
+            return Channel.GetIndexDocumentByVersionId(versionId);
+        }
+        public IDictionary<string, string> GetIndexDocumentByDocumentId(int documentId)
+        {
+            return Channel.GetIndexDocumentByDocumentId(documentId);
+        }
+
         public ISearchServiceClient CreateInstance() => GetSearchServiceContract();
 
         public void Start()

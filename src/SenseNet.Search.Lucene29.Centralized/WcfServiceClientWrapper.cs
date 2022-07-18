@@ -114,5 +114,35 @@ namespace SenseNet.Search.Lucene29.Centralized
                 client.WriteIndex(deletions, updates, additions);
             }
         }
+
+        public IndexProperties GetIndexProperties()
+        {
+            using (var client = WcfServiceClient.GetSearchServiceContract())
+            {
+                return client.GetIndexProperties();
+            }
+        }
+        public IDictionary<string, List<int>> GetInvertedIndex(string fieldName)
+        {
+            using (var client = WcfServiceClient.GetSearchServiceContract())
+            {
+                return client.GetInvertedIndex(fieldName);
+            }
+        }
+        public IDictionary<string, string> GetIndexDocumentByVersionId(int versionId)
+        {
+            using (var client = WcfServiceClient.GetSearchServiceContract())
+            {
+                return client.GetIndexDocumentByVersionId(versionId);
+            }
+        }
+        public IDictionary<string, string> GetIndexDocumentByDocumentId(int documentId)
+        {
+            using (var client = WcfServiceClient.GetSearchServiceContract())
+            {
+                return client.GetIndexDocumentByDocumentId(documentId);
+            }
+        }
+
     }
 }

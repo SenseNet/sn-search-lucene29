@@ -21,4 +21,9 @@ service GrpcSearch {
 
     rpc ExecuteQuery (QueryRequest) returns (QueryResultIds);
     rpc ExecuteQueryAndProject (QueryRequest) returns (QueryResultProjections);
+
+	rpc GetIndexProperties (GetIndexPropertiesRequest) returns (IndexPropertiesResponse);
+	rpc GetInvertedIndex (GetInvertedIndexRequest) returns (InvertedIndexResponse);
+	rpc GetIndexDocumentByVersionId (GetIndexDocumentRequest) returns (IndexDocumentResponse);
+	rpc GetIndexDocumentByDocumentId (GetIndexDocumentRequest) returns (IndexDocumentResponse);
 }

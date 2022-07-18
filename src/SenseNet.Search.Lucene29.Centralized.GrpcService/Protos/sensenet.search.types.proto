@@ -92,3 +92,29 @@ message ServiceQueryContext {
 	repeated int32 DynamicGroups = 2;
 	string FieldLevel = 3;
 }
+
+/* --------------------------------- Save Index types --------------------------------- */
+
+message GetIndexPropertiesRequest{
+}
+message IndexPropertiesResponse {
+	IndexingActivityStatus IndexingActivityStatus = 1;
+	map<string, int32> FieldInfo = 2;
+	repeated int32 VersionIds = 3;
+}
+
+message GetInvertedIndexRequest{
+	string fieldName = 1;
+}
+message InvertedIndexResponse{
+	map<string, Documents> FieldData = 1;
+}
+message Documents {
+	repeated int32 Ids = 1;
+}
+message GetIndexDocumentRequest{
+	int32 id = 1;
+}
+message IndexDocumentResponse{
+	map<string, string> IndexDocument = 1;
+}

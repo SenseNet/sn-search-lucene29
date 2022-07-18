@@ -195,27 +195,35 @@ namespace SenseNet.Search.Lucene29
         /// <inheritdoc />
         public IndexProperties GetIndexProperties()
         {
-            return new IndexExplorer(LuceneSearchManager).GetIndexProperties();
+            return Retrier.Retry(SearchServiceClient.RetryCount,
+                SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
+                () => SearchServiceClient.Instance.GetIndexProperties());
         }
         /// <inheritdoc />
-        public async Task<IDictionary<string, IDictionary<string, List<int>>>> GetInvertedIndexAsync(CancellationToken cancel)
+        public Task<IDictionary<string, IDictionary<string, List<int>>>> GetInvertedIndexAsync(CancellationToken cancel)
         {
-            return await new IndexExplorer(LuceneSearchManager).GetInvertedIndexAsync(cancel);
+            throw new SnNotSupportedException();
         }
         /// <inheritdoc />
-        public async Task<IDictionary<string, List<int>>> GetInvertedIndexAsync(string fieldName, CancellationToken cancel)
+        public Task<IDictionary<string, List<int>>> GetInvertedIndexAsync(string fieldName, CancellationToken cancel)
         {
-            return await new IndexExplorer(LuceneSearchManager).GetInvertedIndexAsync(fieldName, cancel);
+            return Task.FromResult(Retrier.Retry(SearchServiceClient.RetryCount,
+                SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
+                () => SearchServiceClient.Instance.GetInvertedIndex(fieldName)));
         }
         /// <inheritdoc />
         public IDictionary<string, string> GetIndexDocumentByVersionId(int versionId)
         {
-            return new IndexExplorer(LuceneSearchManager).GetIndexDocumentByVersionId(versionId);
+            return Retrier.Retry(SearchServiceClient.RetryCount,
+                SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
+                () => SearchServiceClient.Instance.GetIndexDocumentByVersionId(versionId));
         }
         /// <inheritdoc />
         public IDictionary<string, string> GetIndexDocumentByDocumentId(int documentId)
         {
-            return new IndexExplorer(LuceneSearchManager).GetIndexDocumentByDocumentId(documentId);
+            return Retrier.Retry(SearchServiceClient.RetryCount,
+                SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
+                () => SearchServiceClient.Instance.GetIndexDocumentByDocumentId(documentId));
         }
 
         public void SetIndexingInfo(IDictionary<string, IPerFieldIndexingInfo> indexingInfo)
