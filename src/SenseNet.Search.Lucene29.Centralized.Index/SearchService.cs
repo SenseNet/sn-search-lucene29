@@ -256,6 +256,24 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             SearchManager.SortFieldNames = sortFieldNames;
         }
 
+        public IndexProperties GetIndexProperties()
+        {
+            return new IndexExplorer(SearchManager.Instance).GetIndexProperties();
+        }
+        public IDictionary<string, List<int>> GetInvertedIndex(string fieldName)
+        {
+            return new IndexExplorer(SearchManager.Instance).GetInvertedIndexAsync(fieldName, CancellationToken.None)
+                .ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+        public IDictionary<string, string> GetIndexDocumentByVersionId(int versionId)
+        {
+            return new IndexExplorer(SearchManager.Instance).GetIndexDocumentByVersionId(versionId);
+        }
+        public IDictionary<string, string> GetIndexDocumentByDocumentId(int documentId)
+        {
+            return new IndexExplorer(SearchManager.Instance).GetIndexDocumentByDocumentId(documentId);
+        }
+
         #endregion
 
         //===================================================================================== Helper methods

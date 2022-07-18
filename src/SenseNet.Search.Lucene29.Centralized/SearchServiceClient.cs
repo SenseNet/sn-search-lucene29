@@ -86,6 +86,23 @@ namespace SenseNet.Search.Lucene29.Centralized
             return QueryResult<string>.Empty;
         }
 
+        public IndexProperties GetIndexProperties()
+        {
+            throw new System.NotImplementedException("NullServiceClient.GetIndexProperties is not implemented.");
+        }
+        public IDictionary<string, List<int>> GetInvertedIndex(string fieldName)
+        {
+            throw new System.NotImplementedException("NullServiceClient.GetInvertedIndex is not implemented.");
+        }
+        public IDictionary<string, string> GetIndexDocumentByVersionId(int versionId)
+        {
+            throw new System.NotImplementedException("NullServiceClient.GetIndexDocumentByVersionId is not implemented.");
+        }
+        public IDictionary<string, string> GetIndexDocumentByDocumentId(int documentId)
+        {
+            throw new System.NotImplementedException("NullServiceClient.GetIndexDocumentByDocumentId is not implemented.");
+        }
+
         public ISearchServiceClient CreateInstance()
         {
             return this;

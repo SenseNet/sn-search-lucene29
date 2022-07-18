@@ -46,5 +46,19 @@ namespace SenseNet.Search.Lucene29.Centralized.Common
 
         [OperationContract]
         QueryResult<string> ExecuteQueryAndProject(SnQuery query, ServiceQueryContext queryContext);
+
+        //=================================================================================================== Save Index
+
+        [OperationContract]
+        IndexProperties GetIndexProperties();
+
+        [OperationContract]
+        IDictionary<string, List<int>> GetInvertedIndex(string fieldName);
+
+        [OperationContract]
+        IDictionary<string, string> GetIndexDocumentByVersionId(int versionId);
+
+        [OperationContract]
+        IDictionary<string, string> GetIndexDocumentByDocumentId(int documentId);
     }
 }

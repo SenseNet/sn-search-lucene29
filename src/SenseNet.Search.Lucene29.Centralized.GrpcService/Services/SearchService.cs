@@ -151,5 +151,55 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
 
             return Task.FromResult(result);
         }
+
+        public override Task<IndexPropertiesResponse> GetIndexProperties(GetIndexPropertiesRequest request, ServerCallContext context)
+        {
+            var status = _indexService.GetIndexProperties();
+
+            var ixStatus = new IndexingActivityStatus
+            {
+                LastActivityId = status.IndexingActivityStatus.LastActivityId,
+            };
+            ixStatus.Gaps.AddRange(status.IndexingActivityStatus.Gaps);
+
+            var result = new IndexPropertiesResponse();
+            result.IndexingActivityStatus = ixStatus;
+            result.FieldInfo.Add(status.FieldInfo.ToDictionary(x=>x.Key, x=>x.Value));
+            result.VersionIds.Add(status.VersionIds);
+
+            return Task.FromResult(result);
+        }
+        public override Task<InvertedIndexResponse> GetInvertedIndex(GetInvertedIndexRequest request, ServerCallContext context)
+        {
+            var invertedIndex = _indexService.GetInvertedIndex(request.FieldName);
+
+            var result = new InvertedIndexResponse();
+            result.FieldData.Add(invertedIndex.ToDictionary(
+                x=>x.Key,
+                x=>
+                {
+                    var docs = new Documents();
+                    docs.Ids.Add(x.Value);
+                    return docs;
+                }));
+
+            return Task.FromResult(result);
+        }
+        public override Task<IndexDocumentResponse> GetIndexDocumentByVersionId(GetIndexDocumentRequest request, ServerCallContext context)
+        {
+            var indexDocument = _indexService.GetIndexDocumentByVersionId(request.Id);
+
+            var result = new IndexDocumentResponse();
+            result.IndexDocument.Add(indexDocument);
+            return Task.FromResult(result);
+        }
+        public override Task<IndexDocumentResponse> GetIndexDocumentByDocumentId(GetIndexDocumentRequest request, ServerCallContext context)
+        {
+            var indexDocument = _indexService.GetIndexDocumentByDocumentId(request.Id);
+
+            var result = new IndexDocumentResponse();
+            result.IndexDocument.Add(indexDocument);
+            return Task.FromResult(result);
+        }
     }
 }

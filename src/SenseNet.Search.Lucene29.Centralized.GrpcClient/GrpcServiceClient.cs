@@ -279,6 +279,84 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
                 throw LogAndFormatException(ex, "ExecuteQueryAndProject");
             }
         }
+
+
+        public IndexProperties GetIndexProperties()
+        {
+            GrpcService.IndexPropertiesResponse result;
+
+            try
+            {
+                _logger.LogTrace("Getting index properties");
+                result = _searchClient.GetIndexProperties(new GetIndexPropertiesRequest());
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "GetIndexProperties");
+            }
+
+            return new IndexProperties
+            {
+                IndexingActivityStatus = new IndexingActivityStatus
+                {
+                    LastActivityId = result.IndexingActivityStatus.LastActivityId,
+                    Gaps = result.IndexingActivityStatus.Gaps.ToArray()
+                },
+                FieldInfo = result.FieldInfo,
+                VersionIds = result.VersionIds
+            };
+        }
+        public IDictionary<string, List<int>> GetInvertedIndex(string fieldName)
+        {
+            GrpcService.InvertedIndexResponse result;
+
+            try
+            {
+                _logger.LogTrace($"Getting inverted index of '{fieldName}' field.");
+                result = _searchClient.GetInvertedIndex(new GetInvertedIndexRequest {FieldName = fieldName});
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "GetInvertedIndexAsync");
+            }
+
+            return result.FieldData.ToDictionary(
+                x=>x.Key,
+                x=>x.Value.Ids.ToList());
+        }
+        public IDictionary<string, string> GetIndexDocumentByVersionId(int versionId)
+        {
+            GrpcService.IndexDocumentResponse result;
+
+            try
+            {
+                _logger.LogTrace($"Getting index document by versionId {versionId}.");
+                result = _searchClient.GetIndexDocumentByVersionId(new GetIndexDocumentRequest { Id = versionId});
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "GetIndexDocumentByVersionId");
+            }
+
+            return result.IndexDocument;
+        }
+        public IDictionary<string, string> GetIndexDocumentByDocumentId(int documentId)
+        {
+            GrpcService.IndexDocumentResponse result;
+
+            try
+            {
+                _logger.LogTrace($"Getting index document by documentId {documentId}.");
+                result = _searchClient.GetIndexDocumentByDocumentId(new GetIndexDocumentRequest { Id = documentId });
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "GetIndexDocumentByDocumentId");
+            }
+
+            return result.IndexDocument;
+        }
+
         #endregion
 
         #region Helper methods
