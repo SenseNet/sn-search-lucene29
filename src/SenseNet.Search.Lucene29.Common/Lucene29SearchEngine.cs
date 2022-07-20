@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Querying;
 using SenseNet.Tools;
@@ -11,6 +12,8 @@ namespace SenseNet.Search.Lucene29
     /// </summary>
     public class Lucene29SearchEngine : ISearchEngine
     {
+        private ILogger<Lucene29SearchEngine> _logger;
+
         /// <summary>
         /// Gets or sets the current indexing engine.
         /// </summary>
@@ -21,7 +24,7 @@ namespace SenseNet.Search.Lucene29
         /// </summary>
         public IQueryEngine QueryEngine { get; set; }
 
-        public Lucene29SearchEngine(IIndexingEngine indexingEngine, IQueryEngine queryEngine)
+        public Lucene29SearchEngine(IIndexingEngine indexingEngine, IQueryEngine queryEngine, ILogger<Lucene29SearchEngine> logger)
         {
             // The constructor parameter has to be the general interface, but we need to
             // check that the provided type is compatible with this engine.
@@ -33,6 +36,8 @@ namespace SenseNet.Search.Lucene29
                 IndexingEngine = indexingEngine;
             if (queryEngine != null)
                 QueryEngine = queryEngine;
+
+            _logger = logger;
         }
 
         static Lucene29SearchEngine()
@@ -57,6 +62,7 @@ namespace SenseNet.Search.Lucene29
         {
             var analyzerTypes = new Dictionary<string, IndexFieldAnalyzer>();
 
+
             foreach (var item in indexingInfo)
             {
                 var fieldName = item.Key;
@@ -66,6 +72,9 @@ namespace SenseNet.Search.Lucene29
                     analyzerTypes.Add(fieldName, fieldInfo.Analyzer);
                 }
             }
+
+            _logger?.LogInformation($"Lucene29SearchEngine: indexing info table is received. " +
+                                   $"{indexingInfo.Count} fields, {analyzerTypes.Count} analyzer types. ");
 
             _analyzers = analyzerTypes;
 

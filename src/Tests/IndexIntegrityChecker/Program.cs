@@ -10,6 +10,7 @@ using SenseNet.Configuration;
 using SenseNet.ContentRepository;
 using SenseNet.Diagnostics;
 using SenseNet.Extensions.DependencyInjection;
+using SenseNet.Search.Lucene29;
 using Serilog;
 using File = System.IO.File;
 using Task = System.Threading.Tasks.Task;
@@ -50,7 +51,7 @@ namespace IndexIntegrityChecker
             // --------------------------------
 
             using var host = CreateHostBuilder(args).Build();
-            var logger = host.Services.GetService<ILogger<Program>>();
+            var searchEngineLogger = host.Services.GetService<ILogger<Lucene29SearchEngine>>();
 
             Providers.Instance = new Providers(host.Services);
 
@@ -58,7 +59,7 @@ namespace IndexIntegrityChecker
                 .SetConsole(Console.Out)
                 .UseLogger(new SnFileSystemEventLogger())
                 //.UseTracer(new SnFileSystemTracer())
-                .UseLucene29LocalSearchEngine(serviceIndexPath)
+                .UseLucene29LocalSearchEngine(searchEngineLogger, serviceIndexPath)
                 .UseTraceCategories(SnTrace.Categories.Select(x => x.Name).ToArray()) as RepositoryBuilder;
 
             // --------------------------------

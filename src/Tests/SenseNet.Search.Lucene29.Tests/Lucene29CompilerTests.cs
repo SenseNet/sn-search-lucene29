@@ -4,6 +4,8 @@ using System.Linq;
 using Lucene.Net.Search;
 using Lucene.Net.Support;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SenseNet.Configuration;
 using SenseNet.ContentRepository;
@@ -37,7 +39,8 @@ namespace SenseNet.Search.Lucene29.Tests
 
             var indexingEngine = new Lucene29LocalIndexingEngine();
             var queryEngine = new Lucene29LocalQueryEngine();
-            Providers.Instance.SearchEngine = new Lucene29SearchEngine(indexingEngine, queryEngine);
+            Providers.Instance.SearchEngine = new Lucene29SearchEngine(indexingEngine, queryEngine,
+                NullLoggerFactory.Instance.CreateLogger<Lucene29SearchEngine>());
         }
 
         [TestMethod, TestCategory("IR")] // 38 tests

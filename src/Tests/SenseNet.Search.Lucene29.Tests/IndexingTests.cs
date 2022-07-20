@@ -12,6 +12,8 @@ using Lucene.Net.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using SenseNet.Configuration;
@@ -36,7 +38,8 @@ namespace SenseNet.Search.Lucene29.Tests
             var indexDirectory = new IndexDirectory(indexFolderName);
             var analyzer = new KeywordAnalyzer();
             var indexingEngine = new Lucene29LocalIndexingEngine(new IndexDirectory(indexFolderName));
-            var searchEngine = new Lucene29SearchEngine(indexingEngine, new Lucene29LocalQueryEngine());
+            var searchEngine = new Lucene29SearchEngine(indexingEngine, new Lucene29LocalQueryEngine(),
+                NullLoggerFactory.Instance.CreateLogger<Lucene29SearchEngine>());
 
             var dir = FSDirectory.Open(new DirectoryInfo(indexDirectory.CurrentDirectory));
             var writer = new IndexWriter(dir, analyzer, true, IndexWriter.MaxFieldLength.UNLIMITED);
@@ -121,7 +124,8 @@ namespace SenseNet.Search.Lucene29.Tests
             var indexDirectory = new IndexDirectory(indexFolderName);
             var analyzer = new KeywordAnalyzer();
             var indexingEngine = new Lucene29LocalIndexingEngine(new IndexDirectory(indexFolderName));
-            var searchEngine = new Lucene29SearchEngine(indexingEngine, new Lucene29LocalQueryEngine());
+            var searchEngine = new Lucene29SearchEngine(indexingEngine, new Lucene29LocalQueryEngine(),
+                NullLoggerFactory.Instance.CreateLogger<Lucene29SearchEngine>());
 
             var dir = FSDirectory.Open(new DirectoryInfo(indexDirectory.CurrentDirectory));
             var writer = new IndexWriter(dir, analyzer, true, IndexWriter.MaxFieldLength.UNLIMITED);
@@ -189,7 +193,8 @@ namespace SenseNet.Search.Lucene29.Tests
             var indexDirectory = new IndexDirectory(indexFolderName);
             var analyzer = new KeywordAnalyzer();
             var indexingEngine = new Lucene29LocalIndexingEngine(new IndexDirectory(indexFolderName));
-            var searchEngine = new Lucene29SearchEngine(indexingEngine, new Lucene29LocalQueryEngine());
+            var searchEngine = new Lucene29SearchEngine(indexingEngine, new Lucene29LocalQueryEngine(),
+                NullLoggerFactory.Instance.CreateLogger<Lucene29SearchEngine>());
 
             var dir = FSDirectory.Open(new DirectoryInfo(indexDirectory.CurrentDirectory));
             var writer = new IndexWriter(dir, analyzer, true, IndexWriter.MaxFieldLength.UNLIMITED);

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using SenseNet.ContentRepository;
 using SenseNet.ContentRepository.InMemory;
 using SenseNet.ContentRepository.Storage.DataModel;
@@ -17,7 +19,8 @@ namespace SenseNet.Search.Lucene29.Tests
         {
             var indexFolderName = $"Test_{memberName}_{Guid.NewGuid()}";
             var indexingEngine = new Lucene29LocalIndexingEngine(new IndexDirectory(indexFolderName));
-            var searchEngine = new Lucene29SearchEngine(indexingEngine, new Lucene29LocalQueryEngine());
+            var searchEngine = new Lucene29SearchEngine(indexingEngine, new Lucene29LocalQueryEngine(),
+                NullLoggerFactory.Instance.CreateLogger<Lucene29SearchEngine>());
 
             await base.Test(builder =>
                 {
