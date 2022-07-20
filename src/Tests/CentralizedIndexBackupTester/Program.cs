@@ -75,7 +75,10 @@ namespace CentralizedIndexBackupTester
             var builder = new RepositoryBuilder(host.Services)
                 .SetConsole(Console.Out)
                 .UseLogger(new SnFileSystemEventLogger())
-                .UseLucene29CentralizedSearchEngineWithGrpc(configuration["sensenet:search:service:address"], options =>
+                .UseLucene29CentralizedSearchEngineWithGrpc(
+                    configuration["sensenet:search:service:address"],
+                    host.Services.GetService<ILogger<Lucene29SearchEngine>>(),
+                    options =>
                 {
                     // trust the server in a development environment
                     options.HttpClient = new HttpClient(new HttpClientHandler

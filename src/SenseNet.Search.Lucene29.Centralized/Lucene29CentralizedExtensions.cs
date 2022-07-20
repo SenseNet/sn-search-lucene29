@@ -2,6 +2,7 @@
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SenseNet.Search.Lucene29;
 using SenseNet.Search.Lucene29.Centralized;
@@ -16,11 +17,13 @@ namespace SenseNet.Extensions.DependencyInjection
         /// <summary>
         /// Sets the Centralized Lucene search engine as the current search engine.
         /// </summary>
-        public static IRepositoryBuilder UseLucene29CentralizedSearchEngine(this IRepositoryBuilder repositoryBuilder)
+        public static IRepositoryBuilder UseLucene29CentralizedSearchEngine(this IRepositoryBuilder repositoryBuilder,
+            ILogger<Lucene29SearchEngine> logger)
         {
             var searchEngine = new Lucene29SearchEngine(
                 new Lucene29CentralizedIndexingEngine(null, Options.Create(new CentralizedOptions())),
-                new Lucene29CentralizedQueryEngine());
+                new Lucene29CentralizedQueryEngine(),
+                logger);
 
             repositoryBuilder.UseSearchEngine(searchEngine);
 
@@ -32,16 +35,16 @@ namespace SenseNet.Extensions.DependencyInjection
         /// </summary>
         [Obsolete("Use the UseLucene29CentralizedSearchEngineWithWcf method instead.")]
         public static IRepositoryBuilder UseLucene29CentralizedSearchEngine(this IRepositoryBuilder repositoryBuilder,
-            Binding binding, EndpointAddress address)
+            Binding binding, EndpointAddress address, ILogger<Lucene29SearchEngine> logger)
         {
-            return repositoryBuilder.UseLucene29CentralizedSearchEngineWithWcf(binding, address);
+            return repositoryBuilder.UseLucene29CentralizedSearchEngineWithWcf(binding, address, logger);
         }
         /// <summary>
         /// Set the centralized Lucene engine as the search engine and initialize it
         /// using the provided WCF endpoint binding.
         /// </summary>
         public static IRepositoryBuilder UseLucene29CentralizedSearchEngineWithWcf(this IRepositoryBuilder repositoryBuilder,
-            Binding binding, EndpointAddress address)
+            Binding binding, EndpointAddress address, ILogger<Lucene29SearchEngine> logger)
         {
             if (binding == null)
                 throw new ArgumentNullException(nameof(binding));
@@ -50,7 +53,7 @@ namespace SenseNet.Extensions.DependencyInjection
             
             WcfServiceClient.InitializeServiceEndpoint(binding, address);
 
-            return repositoryBuilder.UseLucene29CentralizedSearchEngine();
+            return repositoryBuilder.UseLucene29CentralizedSearchEngine(logger);
         }
 
         /// <summary>
