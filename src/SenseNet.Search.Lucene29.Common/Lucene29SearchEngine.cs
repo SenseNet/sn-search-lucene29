@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
+using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Querying;
 using SenseNet.Tools;
@@ -73,8 +74,10 @@ namespace SenseNet.Search.Lucene29
                 }
             }
 
-            _logger?.LogInformation($"Lucene29SearchEngine: indexing info table is received. " +
-                                   $"{indexingInfo.Count} fields, {analyzerTypes.Count} analyzer types. ");
+            var msg = $"Lucene29SearchEngine: indexing info table is received. " +
+                      $"{indexingInfo.Count} fields, {analyzerTypes.Count} analyzer types. ";
+            SnTrace.System.Write(msg);
+            _logger?.LogInformation(msg);
 
             _analyzers = analyzerTypes;
 
