@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ServiceModel;
+using System.Threading;
+using System.Threading.Tasks;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Querying;
 
@@ -43,9 +45,13 @@ namespace SenseNet.Search.Lucene29.Centralized.Common
 
         [OperationContract]
         QueryResult<int> ExecuteQuery(SnQuery query, ServiceQueryContext queryContext);
+        [OperationContract]
+        Task<QueryResult<int>> ExecuteQueryAsync(SnQuery query, ServiceQueryContext queryContext, CancellationToken cancel);
 
         [OperationContract]
         QueryResult<string> ExecuteQueryAndProject(SnQuery query, ServiceQueryContext queryContext);
+        [OperationContract]
+        Task<QueryResult<string>> ExecuteQueryAndProjectAsync(SnQuery query, ServiceQueryContext queryContext, CancellationToken cancel);
 
         //=================================================================================================== Save Index
 

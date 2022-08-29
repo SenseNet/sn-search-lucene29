@@ -72,15 +72,27 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
         public QueryResult<int> ExecuteQuery(SnQuery query, ServiceQueryContext queryContext)
         {
+            return ExecuteQueryAsync(query, queryContext, CancellationToken.None)
+                .ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public Task<QueryResult<int>> ExecuteQueryAsync(SnQuery query, ServiceQueryContext queryContext, CancellationToken cancel)
+        {
             var filter = GetPermissionFilter(query, queryContext);
             var lucQuery = Compile(query, null);
             var lucQueryResult = lucQuery.Execute(filter, null);
             var hits = lucQueryResult?.Select(x => x.NodeId).ToArray() ?? new int[0];
 
-            return new QueryResult<int>(hits, lucQuery.TotalCount);
+            return Task.FromResult(new QueryResult<int>(hits, lucQuery.TotalCount));
         }
 
         public QueryResult<string> ExecuteQueryAndProject(SnQuery query, ServiceQueryContext queryContext)
+        {
+            return ExecuteQueryAndProjectAsync(query, queryContext, CancellationToken.None)
+                .ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public Task<QueryResult<string>> ExecuteQueryAndProjectAsync(SnQuery query, ServiceQueryContext queryContext, CancellationToken cancel)
         {
             var filter = GetPermissionFilter(query, queryContext);
             var lucQuery = Compile(query, null);
@@ -92,7 +104,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
                            .ToArray()
                        ?? new string[0];
 
-            return new QueryResult<string>(hits, lucQuery.TotalCount);
+            return Task.FromResult(new QueryResult<string>(hits, lucQuery.TotalCount));
         }
 
         private static IPermissionFilter GetPermissionFilter(SnQuery query, ServiceQueryContext queryContext)
