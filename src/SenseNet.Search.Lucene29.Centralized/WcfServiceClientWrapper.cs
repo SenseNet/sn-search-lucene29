@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Search.Querying;
@@ -66,12 +68,22 @@ namespace SenseNet.Search.Lucene29.Centralized
             }
         }
 
+        public Task<QueryResult<int>> ExecuteQueryAsync(SnQuery query, ServiceQueryContext queryContext, CancellationToken cancel)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public QueryResult<string> ExecuteQueryAndProject(SnQuery query, ServiceQueryContext queryContext)
         {
             using (var client = WcfServiceClient.GetSearchServiceContract())
             {
                 return client.ExecuteQueryAndProject(query, queryContext);
             }
+        }
+
+        public Task<QueryResult<string>> ExecuteQueryAndProjectAsync(SnQuery query, ServiceQueryContext queryContext, CancellationToken cancel)
+        {
+            throw new System.NotImplementedException();
         }
 
         public BackupResponse QueryBackup()

@@ -4,10 +4,19 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Lucene.Net.Analysis;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SenseNet.Configuration;
+using SenseNet.ContentRepository.Search;
+using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.Search.Indexing;
+using SenseNet.Search.Lucene29.Centralized;
+using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Search.Lucene29.Centralized.Index;
+using SenseNet.Search.Querying;
 using SenseNet.Tests.Core;
+using SearchManager = SenseNet.Search.Lucene29.Centralized.Index.SearchManager;
 
 namespace SenseNet.Search.Lucene29.Tests
 {
@@ -213,6 +222,5 @@ namespace SenseNet.Search.Lucene29.Tests
             }
         }
         #endregion
-
     }
 }

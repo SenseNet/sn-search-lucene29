@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <PackageReference Include="SenseNet.Tools" Version="3.2.7" />
-    <PackageReference Include="SenseNet.ContentRepository" Version="7.7.33" />
+    <PackageReference Include="SenseNet.ContentRepository" Version="7.7.33.1" />
   </ItemGroup>
 
   <ItemGroup>
