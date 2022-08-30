@@ -20,8 +20,8 @@ namespace SenseNet.Search.Lucene29.Centralized
 
         /* =================================================== -------------------- */
 
-        internal static readonly int RetryCount = 5;
-        internal static readonly int RetryWaitMilliseconds = 2000;
+        public static int RetryCount { get; set; } = 5;
+        public static int RetryWaitMilliseconds { get; set; } = 2000;
     }
 
     /// <summary>
