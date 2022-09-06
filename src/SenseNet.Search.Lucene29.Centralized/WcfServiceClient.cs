@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+using System.Threading;
+using System.Threading.Tasks;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized.Common;
@@ -10,6 +12,7 @@ using SenseNet.Search.Querying;
 namespace SenseNet.Search.Lucene29.Centralized
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "<Pending>")]
+    [Obsolete("Do not use this technology anymore.")]
     public class WcfServiceClient : ClientBase<ISearchServiceContract>, ISearchServiceClient, IDisposable
     {
         #region Search service client creation
@@ -154,9 +157,19 @@ namespace SenseNet.Search.Lucene29.Centralized
             return Channel.ExecuteQuery(query, queryContext);
         }
 
+        public Task<QueryResult<int>> ExecuteQueryAsync(SnQuery query, ServiceQueryContext queryContext, CancellationToken cancel)
+        {
+            throw new NotImplementedException();
+        }
+
         public QueryResult<string> ExecuteQueryAndProject(SnQuery query, ServiceQueryContext queryContext)
         {
             return Channel.ExecuteQueryAndProject(query, queryContext);
+        }
+
+        public Task<QueryResult<string>> ExecuteQueryAndProjectAsync(SnQuery query, ServiceQueryContext queryContext, CancellationToken cancel)
+        {
+            throw new NotImplementedException();
         }
 
         public IndexProperties GetIndexProperties()

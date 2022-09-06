@@ -4,6 +4,8 @@ using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Search.Querying;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -254,6 +256,30 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
                 throw LogAndFormatException(ex, "ExecuteQuery");
             }
         }
+        public async Task<QueryResult<int>> ExecuteQueryAsync(SnQuery query, ServiceQueryContext queryContext, CancellationToken cancel)
+        {
+            var context = new GrpcService.ServiceQueryContext()
+            {
+                UserId = queryContext.UserId,
+                FieldLevel = queryContext.FieldLevel
+            };
+            context.DynamicGroups.AddRange(queryContext.DynamicGroups);
+
+            try
+            {
+                var result = await _searchClient.ExecuteQueryAsync(new GrpcService.QueryRequest()
+                {
+                    Query = Tools.Serialize(query),
+                    Context = context
+                }, cancellationToken: cancel);
+
+                return new QueryResult<int>(result.Hits, result.TotalCount);
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "ExecuteQuery");
+            }
+        }
 
         public QueryResult<string> ExecuteQueryAndProject(SnQuery query, ServiceQueryContext queryContext)
         {
@@ -271,6 +297,30 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
                     Query = Tools.Serialize(query),
                     Context = context
                 });
+
+                return new QueryResult<string>(result.Hits, result.TotalCount);
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "ExecuteQueryAndProject");
+            }
+        }
+        public async Task<QueryResult<string>> ExecuteQueryAndProjectAsync(SnQuery query, ServiceQueryContext queryContext, CancellationToken cancel)
+        {
+            var context = new GrpcService.ServiceQueryContext()
+            {
+                UserId = queryContext.UserId,
+                FieldLevel = queryContext.FieldLevel
+            };
+            context.DynamicGroups.AddRange(queryContext.DynamicGroups);
+
+            try
+            {
+                var result = await _searchClient.ExecuteQueryAndProjectAsync(new GrpcService.QueryRequest()
+                {
+                    Query = Tools.Serialize(query),
+                    Context = context
+                }, cancellationToken: cancel);
 
                 return new QueryResult<string>(result.Hits, result.TotalCount);
             }

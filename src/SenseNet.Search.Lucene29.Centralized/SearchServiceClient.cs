@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized.Common;
@@ -18,8 +20,8 @@ namespace SenseNet.Search.Lucene29.Centralized
 
         /* =================================================== -------------------- */
 
-        internal static readonly int RetryCount = 5;
-        internal static readonly int RetryWaitMilliseconds = 2000;
+        public static int RetryCount { get; set; } = 5;
+        public static int RetryWaitMilliseconds { get; set; } = 2000;
     }
 
     /// <summary>
@@ -80,10 +82,22 @@ namespace SenseNet.Search.Lucene29.Centralized
             return QueryResult<int>.Empty;
         }
 
+        public Task<QueryResult<int>> ExecuteQueryAsync(SnQuery query, ServiceQueryContext queryContext, CancellationToken cancel)
+        {
+            SnTrace.Index.Write("NullServiceClient.ExecuteQueryAsync is not implemented.");
+            return Task.FromResult(QueryResult<int>.Empty);
+        }
+
         public QueryResult<string> ExecuteQueryAndProject(SnQuery query, ServiceQueryContext queryContext)
         {
             SnTrace.Index.Write("NullServiceClient.ExecuteQueryAndProject is not implemented.");
             return QueryResult<string>.Empty;
+        }
+
+        public Task<QueryResult<string>> ExecuteQueryAndProjectAsync(SnQuery query, ServiceQueryContext queryContext, CancellationToken cancel)
+        {
+            SnTrace.Index.Write("NullServiceClient.ExecuteQueryAndProjectAsync is not implemented.");
+            return Task.FromResult(QueryResult<string>.Empty);
         }
 
         public IndexProperties GetIndexProperties()

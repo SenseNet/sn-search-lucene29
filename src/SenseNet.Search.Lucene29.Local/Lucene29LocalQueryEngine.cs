@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Lucene.Net.Search;
 using SenseNet.Configuration;
 using SenseNet.ContentRepository.Search.Indexing;
@@ -20,22 +22,35 @@ namespace SenseNet.Search.Lucene29
         /// </summary>
         public QueryResult<int> ExecuteQuery(SnQuery query, IPermissionFilter filter, IQueryContext context)
         {
+            return ExecuteQueryAsync(query, filter, context, CancellationToken.None)
+                .ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public Task<QueryResult<int>> ExecuteQueryAsync(SnQuery query, IPermissionFilter filter, IQueryContext context, CancellationToken cancel)
+        {
             var lucQuery = Compile(query, context);
 
             var lucQueryResult = lucQuery.Execute(filter, context);
             var hits = lucQueryResult?.Select(x => x.NodeId).ToArray() ?? new int[0];
 
-            return new QueryResult<int>(hits, lucQuery.TotalCount);
+            return Task.FromResult(new QueryResult<int>(hits, lucQuery.TotalCount));
         }
 
         /// <inheritdoc />
         public QueryResult<string> ExecuteQueryAndProject(SnQuery query, IPermissionFilter filter, IQueryContext context)
         {
+            return ExecuteQueryAndProjectAsync(query, filter, context, CancellationToken.None)
+                .ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public Task<QueryResult<string>> ExecuteQueryAndProjectAsync(SnQuery query, IPermissionFilter filter, IQueryContext context,
+            CancellationToken cancel)
+        {
             var lucQuery = Compile(query, context);
 
             var projection = query.Projection ?? IndexFieldName.NodeId;
             var indexFieldHandler = context.GetPerFieldIndexingInfo(projection).IndexFieldHandler as IIndexValueConverter;
-            var converter = indexFieldHandler == null ? DefaultConverter : indexFieldHandler.GetBack; 
+            var converter = indexFieldHandler == null ? DefaultConverter : indexFieldHandler.GetBack;
             var lucQueryResult = lucQuery.Execute(filter, context);
             var hits = lucQueryResult?
                            .Select(x => x[projection, false])
@@ -44,7 +59,7 @@ namespace SenseNet.Search.Lucene29
                            .ToArray()
                        ?? new string[0];
 
-            return new QueryResult<string>(hits, lucQuery.TotalCount);
+            return Task.FromResult(new QueryResult<string>(hits, lucQuery.TotalCount));
         }
 
         /* ============================================================================================= */
