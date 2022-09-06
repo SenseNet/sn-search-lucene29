@@ -7,13 +7,9 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:3.1 AS build
 WORKDIR /src
-COPY ["SenseNet.Search.Lucene29.Centralized.GrpcService/SenseNet.Search.Lucene29.Centralized.GrpcService.csproj", "SenseNet.Search.Lucene29.Centralized.GrpcService/"]
-COPY ["SenseNet.Search.Lucene29.Centralized.Index/SenseNet.Search.Lucene29.Centralized.Index.csproj", "SenseNet.Search.Lucene29.Centralized.Index/"]
-COPY ["SenseNet.Search.Lucene29.Centralized.Common/SenseNet.Search.Lucene29.Centralized.Common.csproj", "SenseNet.Search.Lucene29.Centralized.Common/"]
-COPY ["SenseNet.Search.Lucene29/SenseNet.Search.Lucene29.csproj", "SenseNet.Search.Lucene29/"]
-RUN dotnet restore "SenseNet.Search.Lucene29.Centralized.GrpcService/SenseNet.Search.Lucene29.Centralized.GrpcService.csproj"
 COPY . .
 WORKDIR "/src/SenseNet.Search.Lucene29.Centralized.GrpcService"
+RUN dotnet restore "SenseNet.Search.Lucene29.Centralized.GrpcService.csproj"
 RUN dotnet build "SenseNet.Search.Lucene29.Centralized.GrpcService.csproj" -c Release -o /app/build
 
 FROM build AS publish
