@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UserSecretsId>d87b24d7-ed3a-48ac-9f93-0adbf878a1e4</UserSecretsId>
-    <Version>1.0.2</Version>
+    <Version>1.0.2.1</Version>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-	  <DockerfileRunArguments>--network sensenet --name SnSearchService</DockerfileRunArguments>
+    <DockerfileRunArguments>--network sensenet --name SnSearchService</DockerfileRunArguments>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,7 +20,7 @@
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" Version="2.27.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
-    <PackageReference Include="SenseNet.Search" Version="2.4.12" />
+    <PackageReference Include="SenseNet.Search" Version="2.4.12.1" />
     <PackageReference Include="SenseNet.Security.EFCSecurityStore" Version="3.0.3" />
     <PackageReference Include="SenseNet.Security.Messaging.RabbitMQ" Version="1.2.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
