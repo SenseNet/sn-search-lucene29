@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+	<TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
     <Version>0.0.9.1</Version>
     <Company>Sense/Net Inc.</Company>
     <Description>Grpc service client for the Central Lucene29 Search Engine for the sensenet platform.</Description>

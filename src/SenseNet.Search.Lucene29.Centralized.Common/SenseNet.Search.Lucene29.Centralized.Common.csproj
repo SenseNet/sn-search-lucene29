@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+	<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
     <Version>7.5.6.1</Version>
     <Company>Sense/Net Inc.</Company>
     <Description>Common service elements for the Central Lucene29 Search Engine for the sensenet platform.</Description>
