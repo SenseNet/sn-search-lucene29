@@ -18,11 +18,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
-    <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.1" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.10.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="SenseNet.Tools" Version="3.2.7" />
-    <PackageReference Include="SenseNet.Security" Version="4.1.4" />
+    <PackageReference Include="SenseNet.Security" Version="4.1.4.2" />
     <PackageReference Include="SenseNet.Search" Version="2.4.12.1" />
   </ItemGroup>
 
