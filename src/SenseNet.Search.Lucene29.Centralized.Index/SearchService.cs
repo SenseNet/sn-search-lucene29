@@ -26,6 +26,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         public static void Start(
             ISecurityDataProvider securityDataProvider,
             IMessageProvider messageProvider,
+            ISecurityMessageFormatter messageFormatter,
             IMissingEntityHandler missingEntityHandler,
             MessagingOptions messagingOptions,
             string indexDirectoryPath)
@@ -37,7 +38,8 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             if (!string.IsNullOrEmpty(indexDirectoryPath))
                 SenseNet.Configuration.Indexing.IndexDirectoryFullPath = indexDirectoryPath;
 
-            _securitySystem = SecurityHandler.StartSecurity(securityDataProvider, messageProvider, missingEntityHandler, messagingOptions);
+            _securitySystem = SecurityHandler.StartSecurity(securityDataProvider, messageProvider, 
+                messageFormatter, missingEntityHandler, messagingOptions);
 
             using (var traceWriter = new TraceTextWriter())
             {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Contrib.Regex;
 using Lucene.Net.Analysis;
 using Lucene.Net.Search;
@@ -1154,7 +1155,7 @@ namespace SenseNet.Search.Lucene29.Tests
                 return;
 
             root = Content.CreateNew("SystemFolder", Repository.Root, folderName);
-            root.Save();
+            root.SaveAsync(CancellationToken.None).GetAwaiter().GetResult();
 
             var displayNames = testCase.PositiveData.Union(testCase.NegativeData);
 
@@ -1163,7 +1164,7 @@ namespace SenseNet.Search.Lucene29.Tests
             {
                 var content = Content.CreateNew("SystemFolder", root.ContentHandler, $"Content{++index:##}");
                 content.DisplayName = displayName;
-                content.Save();
+                content.SaveAsync(CancellationToken.None).GetAwaiter().GetResult();
             }
         }
         private string GetQueryText(string fieldName, string regularExpression)

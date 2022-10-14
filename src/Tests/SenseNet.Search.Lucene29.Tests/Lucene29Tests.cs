@@ -164,7 +164,7 @@ namespace SenseNet.Search.Lucene29.Tests
                         queryResultBefore = CreateSafeContentQuery($"Name:{nodeName}").Execute();
 
                         var node = new SystemFolder(root) {Name = nodeName};
-                        node.Save();
+                        await node.SaveAsync(CancellationToken.None);
 
                         queryResultAfter = CreateSafeContentQuery($"Name:{nodeName}").Execute();
 
@@ -189,7 +189,7 @@ namespace SenseNet.Search.Lucene29.Tests
                     var nodeName = "L29_SaveAndQuery_ModificationDate";
 
                     var node = new SystemFolder(root) {Name = nodeName};
-                    node.Save();
+                    await node.SaveAsync(CancellationToken.None);
 
                     var date = node.ModificationDate.AddMinutes(-1.5);
                     var value = date.ToString("yyyy-MM-dd HH:mm:ss");
@@ -361,7 +361,7 @@ namespace SenseNet.Search.Lucene29.Tests
                 using (new SystemAccount())
                 {
                     var node = new SystemFolder(Repository.Root) {Name = "L29_ActivityStatus_WithSave"};
-                    node.Save();
+                    await node.SaveAsync(CancellationToken.None);
                 }
 
                 await Task.Delay(100);
@@ -415,7 +415,7 @@ namespace SenseNet.Search.Lucene29.Tests
                         var node = new SystemFolder(root)
                             {Name = $"{nameBase}{i}", Description = $"D{i}", Index = 10000 + i};
                         using (new SystemAccount())
-                            node.Save();
+                            await node.SaveAsync(CancellationToken.None);
                     }
 
                     var query = $"+Name:'{nameBase}0' Index:10001";
@@ -464,7 +464,7 @@ namespace SenseNet.Search.Lucene29.Tests
                     foreach (var description in descriptions)
                     {
                         var node = new SystemFolder(root) {Name = $"{nameBase}{i++}", Description = description};
-                        node.Save();
+                        await node.SaveAsync(CancellationToken.None);
                     }
 
                     string GetResult(string query)
@@ -531,7 +531,7 @@ namespace SenseNet.Search.Lucene29.Tests
                         content["Description"] = data[i].desc;
                         //content["ExtensionData"] = combinationData;
                         content.Index = data[i].id;
-                        content.Save();
+                        await content.SaveAsync(CancellationToken.None);
                     }
 
                     string GetResult(string query)
@@ -634,7 +634,7 @@ namespace SenseNet.Search.Lucene29.Tests
                         content["Description"] = recordData;
                         content["ExtensionData"] = combinationData;
                         content.Index = data[i].id;
-                        content.Save();
+                        await content.SaveAsync(CancellationToken.None);
                     }
 
                     string GetResult(string query)

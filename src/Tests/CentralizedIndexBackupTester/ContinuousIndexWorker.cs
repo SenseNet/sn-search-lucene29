@@ -64,11 +64,11 @@ namespace CentralizedIndexBackupTester
             if (testRoot == null)
             {
                 testRoot = new SystemFolder(Repository.Root) { Name = TestRootName };
-                testRoot.Save();
+                await testRoot.SaveAsync(cancellationToken);
             }
 
             var testFolder = new SystemFolder(testRoot) { Name = Guid.NewGuid().ToString() };
-            testFolder.Save();
+            await testFolder.SaveAsync(cancellationToken);
 
             return testFolder;
         }

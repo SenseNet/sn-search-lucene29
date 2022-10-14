@@ -22,8 +22,8 @@
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.10.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="SenseNet.Tools" Version="3.2.7" />
-    <PackageReference Include="SenseNet.Security" Version="4.1.4.2" />
-    <PackageReference Include="SenseNet.Search" Version="2.4.12.1" />
+    <PackageReference Include="SenseNet.Security" Version="4.1.4.3" />
+    <PackageReference Include="SenseNet.Search" Version="2.4.12.3" />
   </ItemGroup>
 
 </Project>

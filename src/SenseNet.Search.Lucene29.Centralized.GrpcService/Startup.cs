@@ -9,7 +9,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using SenseNet.Configuration;
 using SenseNet.Extensions.DependencyInjection;
-using SenseNet.Diagnostics;
 using SenseNet.Security;
 using SenseNet.Security.Configuration;
 using SenseNet.Security.Messaging;
@@ -60,7 +59,8 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime appLifetime,
             ISecurityDataProvider securityDataProvider, 
-            IMessageProvider messageProvider, 
+            IMessageProvider messageProvider,
+            ISecurityMessageFormatter messageFormatter,
             IMissingEntityHandler missingEntityHandler,
             IOptions<MessagingOptions> messagingOptions)
         {
@@ -91,7 +91,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
             {
                 // set the index directory manually based on the current environment
                 Index.SearchService.Start(
-                    securityDataProvider, messageProvider, missingEntityHandler, messagingOptions.Value,
+                    securityDataProvider, messageProvider, messageFormatter, missingEntityHandler, messagingOptions.Value,
                     Path.Combine(Environment.CurrentDirectory, "App_Data", "LocalIndex"));
             });
             appLifetime.ApplicationStopping.Register(Index.SearchService.ShutDown);

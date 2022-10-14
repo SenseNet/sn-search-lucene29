@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
+using Microsoft.Extensions.Options;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Lucene29.Centralized.Index.Configuration;
 using SenseNet.Security;
@@ -17,7 +19,8 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         //============================================================================================= Static API
 
         public static SecuritySystem StartSecurity(ISecurityDataProvider securityDataProvider, 
-            IMessageProvider messageProvider, 
+            IMessageProvider messageProvider,
+            ISecurityMessageFormatter messageFormatter,
             IMissingEntityHandler missingEntityHandler,
             MessagingOptions messagingOptions)
         {
@@ -29,9 +32,10 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
                 OwnerGroupId = Identifiers.OwnersGroupId
             };
 
-            var securitySystem = new SecuritySystem(securityDataProvider, messageProvider, missingEntityHandler,
-                securityConfig, messagingOptions);
-            securitySystem.Start();
+            var securitySystem = new SecuritySystem(securityDataProvider, messageProvider, messageFormatter,  missingEntityHandler,
+                Options.Create(securityConfig),
+                Options.Create(messagingOptions));
+            securitySystem.StartAsync(CancellationToken.None).GetAwaiter().GetResult();
 
             SnLog.WriteInformation("Security subsystem started in Search service", EventId.RepositoryLifecycle,
                 properties: new Dictionary<string, object> {
