@@ -47,7 +47,10 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
             // pre-check: do not do any other operation
             if (docLevel == DocumentOpenLevel.Denied)
+            {
+                SnTrace.Security.Write($"PermissionFilter: {nodeId} document level is Denied for user {_security.Context.CurrentUser.Id}.");
                 return false;
+            }
 
             if (_allVersions)
             {
@@ -101,6 +104,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             }
             catch (EntityNotFoundException)
             {
+                SnTrace.Security.Write($"No security identities found for node {nodeId}");
                 return DocumentOpenLevel.Denied;
             }
 
