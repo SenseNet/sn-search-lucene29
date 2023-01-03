@@ -140,6 +140,13 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
                 docLevel = DocumentOpenLevel.Open;
             if ((allowBits & PermissionType.OpenMinor.Mask) > 0)
                 docLevel = DocumentOpenLevel.OpenMinor;
+
+            if (docLevel == DocumentOpenLevel.Denied)
+            {
+                SnTrace.Security.Write($"Permission denied on node {nodeId} for user {userId}. " +
+                                       $"Final allow/deny bits: {allowBits}. Deny bits: {denyBits}. Entry count: {entries.Count}");
+            }
+
             return docLevel;
         }
     }
