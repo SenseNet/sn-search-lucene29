@@ -38,10 +38,10 @@ namespace SenseNet.Search.Lucene29
 
         public async Task<QueryResult<int>> ExecuteQueryAsync(SnQuery query, IPermissionFilter filter, IQueryContext context, CancellationToken cancel)
         {
-            var result = await Retrier.RetryAsync<QueryResult<int>>(SearchServiceClient.RetryCount, SearchServiceClient.RetryWaitMilliseconds,
+            var result = await Retrier.RetryAsync(SearchServiceClient.RetryCount, SearchServiceClient.RetryWaitMilliseconds,
                 async () => await SearchServiceClient.Instance.ExecuteQueryAsync(
                     query, GetQueryContext(query, context), cancel),
-                (r, count, error) => error == null);
+                (r, count, error) => error == null, cancel);
 
             return new QueryResult<int>(result.Hits, result.TotalCount);
         }
@@ -67,10 +67,10 @@ namespace SenseNet.Search.Lucene29
                 ? DefaultConverter
                 : indexFieldHandler.GetBack;
 
-            var result = await Retrier.RetryAsync< QueryResult<string>>(SearchServiceClient.RetryCount, SearchServiceClient.RetryWaitMilliseconds,
+            var result = await Retrier.RetryAsync(SearchServiceClient.RetryCount, SearchServiceClient.RetryWaitMilliseconds,
                 async () => await SearchServiceClient.Instance.ExecuteQueryAndProjectAsync(
                     query, GetQueryContext(query, context), cancel),
-                (r, count, error) => error == null);
+                (r, count, error) => error == null, cancel);
 
             return new QueryResult<string>(result.Hits.Select(h => converter(h)?.ToString()), result.TotalCount);
         }
