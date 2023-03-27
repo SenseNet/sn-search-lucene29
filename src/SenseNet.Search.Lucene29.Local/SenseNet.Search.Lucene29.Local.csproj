@@ -1,31 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-	<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
-    <Version>7.4.8.1</Version>
-    <Authors>kavics,tusmester</Authors>
-    <Company>Sense/Net Inc.</Company>
-    <Copyright>Copyright © Sense/Net Inc.</Copyright>
-    <PackageLicenseUrl>https://github.com/SenseNet/sn-search-lucene29/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/SenseNet/sn-search-lucene29</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/SenseNet/sn-resources/master/images/sn-icon/sensenet-icon-64.png</PackageIconUrl>
-    <RepositoryUrl>https://github.com/SenseNet/sn-search-lucene29.git</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageTags>sensenet ecm ecms indexing lucene</PackageTags>
-    <PackageReleaseNotes>See release notes on GitHub.</PackageReleaseNotes>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Product>sensenet Lucene29 Local Search Engine</Product>
-    <Description>Lucene29 Local library for the sensenet platform containing the Lucene-based local indexing and query engine implementations.</Description>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+		<Version>7.4.8.1</Version>
+		<Authors>kavics,tusmester</Authors>
+		<Company>Sense/Net Inc.</Company>
+		<Copyright>Copyright © Sense/Net Inc.</Copyright>
+		<PackageLicenseUrl>https://github.com/SenseNet/sn-search-lucene29/blob/master/LICENSE</PackageLicenseUrl>
+		<PackageProjectUrl>https://github.com/SenseNet/sn-search-lucene29</PackageProjectUrl>
+		<PackageIconUrl>https://raw.githubusercontent.com/SenseNet/sn-resources/master/images/sn-icon/sensenet-icon-64.png</PackageIconUrl>
+		<RepositoryUrl>https://github.com/SenseNet/sn-search-lucene29.git</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>sensenet ecm ecms indexing lucene</PackageTags>
+		<PackageReleaseNotes>See release notes on GitHub.</PackageReleaseNotes>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Product>sensenet Lucene29 Local Search Engine</Product>
+		<Description>Lucene29 Local library for the sensenet platform containing the Lucene-based local indexing and query engine implementations.</Description>
+		<DebugType>portable</DebugType>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="SenseNet.Tools" Version="3.2.9.1" />
-    <PackageReference Include="SenseNet.ContentRepository" Version="7.7.35.2" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="SenseNet.Tools" Version="3.2.11" />
+		<PackageReference Include="SenseNet.ContentRepository" Version="7.7.36" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\SenseNet.Search.Lucene29\SenseNet.Search.Lucene29.csproj" />
-    <ProjectReference Include="..\SenseNet.Search.Lucene29.Common\SenseNet.Search.Lucene29.Common.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\SenseNet.Search.Lucene29\SenseNet.Search.Lucene29.csproj" />
+		<ProjectReference Include="..\SenseNet.Search.Lucene29.Common\SenseNet.Search.Lucene29.Common.csproj" />
+	</ItemGroup>
 
 </Project>

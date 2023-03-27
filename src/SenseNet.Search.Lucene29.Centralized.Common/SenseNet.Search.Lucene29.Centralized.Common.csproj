@@ -1,29 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-	<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
-    <Version>7.5.7.1</Version>
-    <Company>Sense/Net Inc.</Company>
-    <Description>Common service elements for the Central Lucene29 Search Engine for the sensenet platform.</Description>
-    <Copyright>Copyright © Sense/Net Inc.</Copyright>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageProjectUrl>https://github.com/SenseNet/sn-search-lucene29</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/SenseNet/sn-search-lucene29/blob/master/LICENSE</PackageLicenseUrl>
-    <RepositoryUrl>https://github.com/SenseNet/sn-search-lucene29.git</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageReleaseNotes>See release notes on GitHub.</PackageReleaseNotes>
-    <PackageTags>sensenet search indexing lucene</PackageTags>
-    <PackageIconUrl>https://raw.githubusercontent.com/SenseNet/sn-resources/master/images/sn-icon/sensenet-icon-64.png</PackageIconUrl>
-    <Authors>kavics,tusmester</Authors>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+		<Version>7.5.7.1</Version>
+		<Company>Sense/Net Inc.</Company>
+		<Description>Common service elements for the Central Lucene29 Search Engine for the sensenet platform.</Description>
+		<Copyright>Copyright © Sense/Net Inc.</Copyright>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageProjectUrl>https://github.com/SenseNet/sn-search-lucene29</PackageProjectUrl>
+		<PackageLicenseUrl>https://github.com/SenseNet/sn-search-lucene29/blob/master/LICENSE</PackageLicenseUrl>
+		<RepositoryUrl>https://github.com/SenseNet/sn-search-lucene29.git</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageReleaseNotes>See release notes on GitHub.</PackageReleaseNotes>
+		<PackageTags>sensenet search indexing lucene</PackageTags>
+		<PackageIconUrl>https://raw.githubusercontent.com/SenseNet/sn-resources/master/images/sn-icon/sensenet-icon-64.png</PackageIconUrl>
+		<Authors>kavics,tusmester</Authors>
+		<DebugType>portable</DebugType>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.1" />
-    <PackageReference Include="System.ServiceModel.Primitives" Version="4.10.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="SenseNet.Tools" Version="3.2.9.1" />
-    <PackageReference Include="SenseNet.Security" Version="4.1.5.3" />
-    <PackageReference Include="SenseNet.Search" Version="2.4.14.2" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.1" />
+		<PackageReference Include="System.ServiceModel.Primitives" Version="4.10.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+		<PackageReference Include="SenseNet.Tools" Version="3.2.11" />
+		<PackageReference Include="SenseNet.Security" Version="4.2.0" />
+		<PackageReference Include="SenseNet.Search" Version="2.4.15" />
+	</ItemGroup>
 
 </Project>
