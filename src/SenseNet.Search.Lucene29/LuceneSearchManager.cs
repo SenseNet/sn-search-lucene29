@@ -629,6 +629,10 @@ namespace SenseNet.Search.Lucene29
         {
             AnalyzerInfo = analyzerInfo;
             IndexFieldTypeInfo = indexFieldTypeInfo;
+
+            if(_writer!= null)
+                using (var wrFrame = IndexWriterFrame.Get(_writer, _writerRestartLock, false))
+                    ((SnPerFieldAnalyzerWrapper) wrFrame.IndexWriter.GetAnalyzer()).RefreshAnalyzers(analyzerInfo);
         }
 
         private Document GetFakeDocument()

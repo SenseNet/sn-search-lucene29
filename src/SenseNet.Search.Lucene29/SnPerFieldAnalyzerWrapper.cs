@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
+using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 
 namespace SenseNet.Search.Lucene29
@@ -10,7 +12,7 @@ namespace SenseNet.Search.Lucene29
     /// </summary>
     public class SnPerFieldAnalyzerWrapper : Analyzer
     {
-        private IDictionary<string, Analyzer> AnalyzerInfo { get; }
+        private IDictionary<string, Analyzer> _analyzerInfo;
 
         private readonly Analyzer _defaultAnalyzer = new KeywordAnalyzer();
         private readonly Dictionary<IndexFieldAnalyzer, Analyzer> _analyzers = new Dictionary<IndexFieldAnalyzer, Analyzer>
@@ -22,7 +24,12 @@ namespace SenseNet.Search.Lucene29
 
         internal SnPerFieldAnalyzerWrapper(IDictionary<string, Analyzer> analyzerInfo)
         {
-            AnalyzerInfo = analyzerInfo;
+            _analyzerInfo = analyzerInfo;
+            if (analyzerInfo == null)
+            {
+                SnTrace.Index.Write("WARNING: Creating SnPerFieldAnalyzerWrapper without AnalyzerInfo");
+                SnTrace.Index.Write(Environment.StackTrace);
+            }
         }
 
         private Analyzer GetAnalyzer(string fieldName)
@@ -33,7 +40,7 @@ namespace SenseNet.Search.Lucene29
 
             // For everything else, ask the ContentTypeManager
             Analyzer analyzer = null;
-            AnalyzerInfo?.TryGetValue(fieldName, out analyzer);
+            _analyzerInfo?.TryGetValue(fieldName, out analyzer);
 
             // Return with analyzer by indexing info  or the default analyzer if indexing info was not found.
             return analyzer ?? _defaultAnalyzer;
@@ -79,6 +86,12 @@ namespace SenseNet.Search.Lucene29
         {
             // {{Aroush-2.9}} will 'analyzerMap.ToString()' work in the same way as Java's java.util.HashMap.toString()? 
             return "SnPerFieldAnalyzerWrapper(" + _analyzers + ", default=" + _defaultAnalyzer + ")";
+        }
+
+        public void RefreshAnalyzers(IDictionary<string, Analyzer> analyzerInfo)
+        {
+            SnTrace.Index.Write($"REFRESH SnPerFieldAnalyzerWrapper.AnalyzerInfo with {analyzerInfo.Count} items.");
+            _analyzerInfo = analyzerInfo;
         }
     }
 }
