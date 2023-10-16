@@ -166,7 +166,7 @@ namespace CentralizedIndexBackupTester
                                 .CreateLogger());
                         })
                         .ConfigureConnectionStrings(hb.Configuration)
-                        .AddPlatformIndependentServices()
+                        .AddPlatformIndependentServices(hb.Configuration)
                         .AddSenseNetTaskManager()
                         .AddSenseNetMsSqlProviders()
                         .AddSenseNetSecurity()
