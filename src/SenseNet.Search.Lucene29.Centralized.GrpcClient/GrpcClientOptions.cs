@@ -1,9 +1,14 @@
 ﻿using Grpc.Net.Client;
+using SenseNet.Tools.Configuration;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 {
+    [OptionsClass(sectionName: "sensenet:search:service")]
     public class GrpcClientOptions
     {
+        /// <summary>
+        /// Url for the Grpc channel.
+        /// </summary>
         public string ServiceAddress { get; set; }
 
         /// <summary>
