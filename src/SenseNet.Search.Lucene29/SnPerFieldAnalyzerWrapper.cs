@@ -26,10 +26,7 @@ namespace SenseNet.Search.Lucene29
         {
             _analyzerInfo = analyzerInfo;
             if (analyzerInfo == null)
-            {
-                SnTrace.Index.Write("WARNING: Creating SnPerFieldAnalyzerWrapper without AnalyzerInfo");
-                SnTrace.Index.Write(Environment.StackTrace);
-            }
+                SnTrace.Index.Write("WARNING: Creating SnPerFieldAnalyzerWrapper without AnalyzerInfo. Indexing and querying components are incomplete.");
         }
 
         private Analyzer GetAnalyzer(string fieldName)
@@ -90,8 +87,8 @@ namespace SenseNet.Search.Lucene29
 
         public void RefreshAnalyzers(IDictionary<string, Analyzer> analyzerInfo)
         {
-            SnTrace.Index.Write($"REFRESH SnPerFieldAnalyzerWrapper.AnalyzerInfo with {analyzerInfo.Count} items.");
             _analyzerInfo = analyzerInfo;
+            SnTrace.Index.Write($"REFRESH SnPerFieldAnalyzerWrapper.AnalyzerInfo with {analyzerInfo.Count} items. Indexing and querying components are complete.");
         }
     }
 }
