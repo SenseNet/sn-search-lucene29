@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Lucene29.Centralized.Index.Configuration;
 using SenseNet.Security;
 using SenseNet.Security.Configuration;
 using SenseNet.Security.Messaging;
+using EventId = SenseNet.Diagnostics.EventId;
 
 namespace SenseNet.Search.Lucene29.Centralized.Index
 {
     /// <summary>
-    /// Central security API entry point. When instatiated, it contains a security context,
+    /// Central security API entry point. When instantiated, it contains a security context,
     /// therefore it is related to a particular user.
     /// </summary>
     public class SecurityHandler
@@ -22,7 +24,8 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             IMessageProvider messageProvider,
             ISecurityMessageFormatter messageFormatter,
             IMissingEntityHandler missingEntityHandler,
-            MessagingOptions messagingOptions)
+            MessagingOptions messagingOptions,
+            ILogger<SecuritySystem> logger)
         {
             var securityConfig = new SecurityConfiguration
             {
@@ -34,7 +37,9 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
             var securitySystem = new SecuritySystem(securityDataProvider, messageProvider, messageFormatter,  missingEntityHandler,
                 Options.Create(securityConfig),
-                Options.Create(messagingOptions));
+                Options.Create(messagingOptions),
+                logger);
+
             securitySystem.StartAsync(CancellationToken.None).GetAwaiter().GetResult();
 
             SnLog.WriteInformation("Security subsystem started in Search service", EventId.RepositoryLifecycle,

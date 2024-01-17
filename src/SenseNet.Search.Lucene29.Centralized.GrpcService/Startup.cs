@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SenseNet.Configuration;
 using SenseNet.Extensions.DependencyInjection;
@@ -30,6 +31,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddGrpc();
+            //services.AddLogging();
 
             // [sensenet] Ensure configuration.
             _ = new EmptyRepositoryBuilder()
@@ -62,7 +64,8 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
             IMessageProvider messageProvider,
             ISecurityMessageFormatter messageFormatter,
             IMissingEntityHandler missingEntityHandler,
-            IOptions<MessagingOptions> messagingOptions)
+            IOptions<MessagingOptions> messagingOptions,
+            ILogger<SecuritySystem> securityLogger)
         {
             // This will set the global SnLog and SnTrace instances to route log messages to the
             // official .Net Core ILogger API.
@@ -92,7 +95,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
                 // set the index directory manually based on the current environment
                 Index.SearchService.Start(
                     securityDataProvider, messageProvider, messageFormatter, missingEntityHandler, messagingOptions.Value,
-                    Path.Combine(Environment.CurrentDirectory, "App_Data", "LocalIndex"));
+                    Path.Combine(Environment.CurrentDirectory, "App_Data", "LocalIndex"), securityLogger);
             });
             appLifetime.ApplicationStopping.Register(Index.SearchService.ShutDown);
         }

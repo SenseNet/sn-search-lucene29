@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Search;
+using Microsoft.Extensions.Logging;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized.Common;
@@ -15,6 +16,7 @@ using SenseNet.Search.Querying;
 using SenseNet.Security;
 using SenseNet.Security.Configuration;
 using SenseNet.Security.Messaging;
+using EventId = SenseNet.Diagnostics.EventId;
 
 namespace SenseNet.Search.Lucene29.Centralized.Index
 {
@@ -29,7 +31,8 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             ISecurityMessageFormatter messageFormatter,
             IMissingEntityHandler missingEntityHandler,
             MessagingOptions messagingOptions,
-            string indexDirectoryPath)
+            string indexDirectoryPath,
+            ILogger<SecuritySystem> logger)
         {
             UpdateTraceCategories();
 
@@ -39,7 +42,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
                 SenseNet.Configuration.Indexing.IndexDirectoryFullPath = indexDirectoryPath;
 
             _securitySystem = SecurityHandler.StartSecurity(securityDataProvider, messageProvider, 
-                messageFormatter, missingEntityHandler, messagingOptions);
+                messageFormatter, missingEntityHandler, messagingOptions, logger);
 
             using (var traceWriter = new TraceTextWriter())
             {

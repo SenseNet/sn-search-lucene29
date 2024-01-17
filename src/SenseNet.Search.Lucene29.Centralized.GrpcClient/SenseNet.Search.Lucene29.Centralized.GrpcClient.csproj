@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
-		<Version>0.0.12.1</Version>
+		<Version>0.0.12.2</Version>
 		<Company>Sense/Net Inc.</Company>
 		<Description>Grpc service client for the Central Lucene29 Search Engine for the sensenet platform.</Description>
 		<Copyright>Copyright © Sense/Net Inc.</Copyright>
@@ -33,7 +33,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="SenseNet.Tools" Version="3.2.12" />
+		<PackageReference Include="SenseNet.Tools" Version="3.2.13" />
 	</ItemGroup>
 
 	<ItemGroup>

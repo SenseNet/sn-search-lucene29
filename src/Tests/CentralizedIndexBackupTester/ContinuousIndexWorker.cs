@@ -50,7 +50,7 @@ namespace CentralizedIndexBackupTester
                 // Delete the last created content.
                 if (lastId > 0)
                 {
-                    Node.ForceDelete(lastId);
+                    await Node.ForceDeleteAsync(lastId, cancellationToken);
                     SnTrace.Write("#### node deleted: " + lastId);
                 }
 
