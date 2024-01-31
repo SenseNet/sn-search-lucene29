@@ -17,6 +17,10 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
         /// Default value is true. Do not set this to false unless in a development environment.
         /// </summary>
         public bool ValidateServerCertificate { get; set; } = true;
+        /// <summary>
+        /// An options class for configuring a GrpcChannel. For more information, see
+        /// the Grpc.Net.Client.GrpcChannelOptions documentation.
+        /// </summary>
         public GrpcChannelOptions ChannelOptions { get; set; } = new GrpcChannelOptions();
     }
 }
