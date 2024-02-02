@@ -290,3 +290,4 @@ __pycache__/
 **/App_Data/LuceneIndex
 **/App_Data/LocalIndex
 **/App_Data/Logs
+**/App_Data/indexbackup
