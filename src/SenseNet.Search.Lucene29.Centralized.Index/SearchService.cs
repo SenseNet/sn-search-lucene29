@@ -32,9 +32,10 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             IMissingEntityHandler missingEntityHandler,
             MessagingOptions messagingOptions,
             string indexDirectoryPath,
-            ILogger<SecuritySystem> logger)
+            ILogger<SecuritySystem> logger,
+            ILogger<SearchService> searchServiceLogger)
         {
-            UpdateTraceCategories();
+            UpdateTraceCategories(searchServiceLogger);
 
             // Set index directory before touching the SearchManager class, so that the value
             // comes from the application above instead of an automatism in this library.
@@ -371,13 +372,14 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
                 : new SortField(fieldName, sortType, reverse);
         }
 
-        private static void UpdateTraceCategories()
+        private static void UpdateTraceCategories(ILogger logger)
         {
             foreach (var category in SnTrace.Categories.Where(c => !c.Enabled))
                 category.Enabled = Tracing.TraceCategories.Contains(category.Name);
 
-            SnLog.WriteInformation("Trace settings were updated in Search service.", EventId.NotDefined,
-                properties: SnTrace.Categories.ToDictionary(c => c.Name, c => (object)c.Enabled.ToString()));
+            var categories = string.Join(", ", SnTrace.Categories.Select(category => $"{category.Name}: {category.Enabled}"));
+
+            logger.LogInformation("Trace settings were updated in Search service. {TraceCategories}", categories);
         }
 
         public static void InitializeForTest(IBackupManagerFactory factoryForTest)

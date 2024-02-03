@@ -42,11 +42,9 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
 
             securitySystem.StartAsync(CancellationToken.None).GetAwaiter().GetResult();
 
-            SnLog.WriteInformation("Security subsystem started in Search service", EventId.RepositoryLifecycle,
-                properties: new Dictionary<string, object> {
-                    { "DataProvider", securityDataProvider.GetType().FullName },
-                    { "MessageProvider", messageProvider.GetType().FullName }
-                });
+            logger.LogInformation("Security subsystem started in Search service. " +
+                                  "Data provider: {DataProvider}, Message provider: {MessageProvider}",
+                securityDataProvider.GetType().FullName, messageProvider.GetType().FullName);
 
             return securitySystem;
         }
