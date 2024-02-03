@@ -65,7 +65,8 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
             ISecurityMessageFormatter messageFormatter,
             IMissingEntityHandler missingEntityHandler,
             IOptions<MessagingOptions> messagingOptions,
-            ILogger<SecuritySystem> securityLogger)
+            ILogger<SecuritySystem> securityLogger,
+            ILogger<Index.SearchService> searchServiceLogger)
         {
             // This will set the global SnLog and SnTrace instances to route log messages to the
             // official .Net Core ILogger API.
@@ -95,7 +96,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
                 // set the index directory manually based on the current environment
                 Index.SearchService.Start(
                     securityDataProvider, messageProvider, messageFormatter, missingEntityHandler, messagingOptions.Value,
-                    Path.Combine(Environment.CurrentDirectory, "App_Data", "LocalIndex"), securityLogger);
+                    Path.Combine(Environment.CurrentDirectory, "App_Data", "LocalIndex"), securityLogger, searchServiceLogger);
             });
             appLifetime.ApplicationStopping.Register(Index.SearchService.ShutDown);
         }
