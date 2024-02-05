@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -8,6 +9,7 @@ using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Search;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized.Common;
@@ -48,6 +50,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             using (var traceWriter = new TraceTextWriter())
             {
                 SearchManager.Instance.Start(traceWriter);
+                LoadIndexingInfo();
             }
         }
 
@@ -262,16 +265,85 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             };
         }
 
+        private static readonly object SaveIndexingInfoLock = new object();
         public void SetIndexingInfo(IDictionary<string, IndexFieldAnalyzer> analyzerTypes, 
             IDictionary<string, IndexValueType> indexFieldTypes,
             IDictionary<string, string> sortFieldNames)
         {
-            var analyzers = analyzerTypes.ToDictionary(kvp => kvp.Key, kvp => GetAnalyzer(kvp.Value));
+            lock (SaveIndexingInfoLock)
+            {
+                var analyzers = analyzerTypes
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => GetAnalyzer(kvp.Value));
 
-            SnTrace.Index.Write("Indexing info set.");
+                SnTrace.Index.Write("Indexing info set.");
+                SaveIndexingInfo(analyzerTypes, indexFieldTypes, sortFieldNames);
+
+                SearchManager.Instance.SetIndexingInfo(analyzers, indexFieldTypes);
+                SearchManager.SortFieldNames = sortFieldNames;
+            }
+        }
+
+        private static readonly string IndexingInfoRootPath =
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "IndexingInfo");
+        private static readonly string AnalyzersPath = Path.Combine(IndexingInfoRootPath, "Analyzers");
+        private static readonly string FieldTypesPath = Path.Combine(IndexingInfoRootPath, "IndexFieldTypes");
+        private static readonly string SortNamesPath = Path.Combine(IndexingInfoRootPath, "SortFieldNames");
+        private void SaveIndexingInfo(
+            IDictionary<string, IndexFieldAnalyzer> analyzerTypes,
+            IDictionary<string, IndexValueType> indexFieldTypes,
+            IDictionary<string, string> sortFieldNames)
+        {
+            try
+            {
+                if (!Directory.Exists(IndexingInfoRootPath))
+                    Directory.CreateDirectory(IndexingInfoRootPath);
+
+                using (var writer = new StreamWriter(AnalyzersPath))
+                    writer.Write(JsonConvert.SerializeObject(analyzerTypes, Formatting.Indented));
+                using (var writer = new StreamWriter(FieldTypesPath))
+                    writer.Write(JsonConvert.SerializeObject(indexFieldTypes, Formatting.Indented));
+                using (var writer = new StreamWriter(SortNamesPath))
+                   writer.Write(JsonConvert.SerializeObject(sortFieldNames, Formatting.Indented));
+
+                SnTrace.Index.Write("Indexing info is saved to App_Data/IndexingInfo");
+            }
+            catch (Exception ex)
+            {
+                SnTrace.Index.WriteError("Cannot persist indexing info: " + ex.Message);
+            }
+
+        }
+        private static void LoadIndexingInfo()
+        {
+            var analyzers = LoadIndexingInfoFile<Dictionary<string, IndexFieldAnalyzer>>(AnalyzersPath)?
+                .ToDictionary(kvp => kvp.Key, kvp => GetAnalyzer(kvp.Value));
+            var indexFieldTypes = LoadIndexingInfoFile<Dictionary<string, IndexValueType>>(FieldTypesPath);
+            var sortFieldNames = LoadIndexingInfoFile<Dictionary<string, string>>(SortNamesPath);
+
+            if (analyzers == null || indexFieldTypes == null || sortFieldNames == null)
+            {
+                SnTrace.Index.Write("Indexing info cannot be loaded from App_Data/IndexingInfo because " +
+                                    "a file is missing or incomplete.");
+                return;
+            }
+
+            SnTrace.Index.Write($"Indexing info is loaded from App_Data/IndexingInfo");
 
             SearchManager.Instance.SetIndexingInfo(analyzers, indexFieldTypes);
             SearchManager.SortFieldNames = sortFieldNames;
+        }
+        private static T LoadIndexingInfoFile<T>(string path) where T : class
+        {
+            if (!File.Exists(path))
+                return null;
+
+            using (var reader = new StreamReader(path))
+            {
+                var fileText = reader.ReadToEnd();
+                return JsonConvert.DeserializeObject<T>(fileText);
+            }
         }
 
         public IndexProperties GetIndexProperties()
