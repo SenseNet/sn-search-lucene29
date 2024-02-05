@@ -32,7 +32,8 @@ namespace SenseNet.Search.Lucene29.Tests
 
             var services = new ServiceCollection()
                 .AddSingleton<ISearchManager>(searchManager)
-                .AddSingleton<IIndexManager>(new IndexManager(null, searchManager, null))
+                .AddSingleton<IIndexManager>(new IndexManager(null, searchManager, null,
+                    NullLogger<IndexManager>.Instance))
                 .BuildServiceProvider();
 
             Providers.Instance = new Providers(services);
