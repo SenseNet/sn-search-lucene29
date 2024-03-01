@@ -1,10 +1,15 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
+using Microsoft.Extensions.Logging;
 using SenseNet.Search.Lucene29;
 using SenseNet.Tools;
 
 // ReSharper disable once CheckNamespace
 namespace SenseNet.Extensions.DependencyInjection
 {
+    /// <summary>
+    /// Extension methods for setting up the Lucene29
+    /// local search engine.
+    /// </summary>
     public static class Lucene29LocalExtensions
     {
         public static IRepositoryBuilder UseLucene29LocalSearchEngine(this IRepositoryBuilder repositoryBuilder,

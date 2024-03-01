@@ -24,6 +24,7 @@ namespace SenseNet.Search.Lucene29
     /// It requires a central search service accessible for all web servers at all times. All operations
     /// are routed towards that service with a short retry period.
     /// </summary>
+    /// <inheritdoc/>
     public class Lucene29CentralizedQueryEngine : IQueryEngine
     {
         public IServiceQueryContextFactory ServiceQueryContextFactory { get; set; }

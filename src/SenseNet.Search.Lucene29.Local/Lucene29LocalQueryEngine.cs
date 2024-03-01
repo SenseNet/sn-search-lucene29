@@ -20,6 +20,7 @@ namespace SenseNet.Search.Lucene29
         /// Executes the provided <see cref="T:SenseNet.Search.Querying.SnQuery" /> on the local Lucene index and returns results
         /// permitted by the provided permission filter.
         /// </summary>
+        /// <inheritdoc/>
         public QueryResult<int> ExecuteQuery(SnQuery query, IPermissionFilter filter, IQueryContext context)
         {
             return ExecuteQueryAsync(query, filter, context, CancellationToken.None)

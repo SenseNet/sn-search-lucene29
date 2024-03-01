@@ -1,5 +1,11 @@
-﻿namespace SenseNet.Search.Lucene29.Centralized
+﻿using SenseNet.Tools.Configuration;
+
+namespace SenseNet.Search.Lucene29.Centralized
 {
+    /// <summary>
+    /// Options for the centralized search engine.
+    /// </summary>
+    [OptionsClass("sensenet:search:service")]
     public class CentralizedOptions
     {
         /// <summary>

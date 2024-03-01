@@ -17,6 +17,7 @@ namespace SenseNet.Search.Lucene29
     /// <summary>
     /// Lucene29 indexing engine for a local environment. Works with a Lucene index stored in the file system.
     /// </summary>
+    /// <inheritdoc/>
     public class Lucene29LocalIndexingEngine : ILuceneIndexingEngine
     {
         internal IndexDirectory IndexDirectory => LuceneSearchManager.IndexDirectory;
