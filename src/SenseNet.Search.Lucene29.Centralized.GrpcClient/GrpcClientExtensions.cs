@@ -13,6 +13,10 @@ using SenseNet.Tools;
 // ReSharper disable once CheckNamespace
 namespace SenseNet.Extensions.DependencyInjection
 {
+    /// <summary>
+    /// Extension methods for setting up the Lucene29 
+    /// centralized search engine with the gRPC client.
+    /// </summary>
     public static class GrpcClientExtensions
     {
         /// <summary>

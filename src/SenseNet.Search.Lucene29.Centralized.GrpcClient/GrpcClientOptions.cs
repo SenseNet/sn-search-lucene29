@@ -3,6 +3,9 @@ using SenseNet.Tools.Configuration;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 {
+    /// <summary>
+    /// Options for the gRPC search service client.
+    /// </summary>
     [OptionsClass(sectionName: "sensenet:search:service")]
     public class GrpcClientOptions
     {
