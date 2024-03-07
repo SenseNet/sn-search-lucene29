@@ -4,7 +4,7 @@
 		<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
 		<AssemblyName>SenseNet.Search.Lucene29</AssemblyName>
 		<RootNamespace>SenseNet.Search.Lucene29</RootNamespace>
-		<Version>7.4.10.3</Version>
+		<Version>7.4.10.4</Version>
 		<Company>Sense/Net Inc.</Company>
 		<Description>Lucene29 library for the sensenet platform containing the core indexing layer that works with Lucene index files directly.</Description>
 		<Copyright>Copyright © Sense/Net Inc.</Copyright>
@@ -28,8 +28,8 @@
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="SenseNet.Tools" Version="3.2.13" />
-		<PackageReference Include="SenseNet.Security" Version="4.2.1.3" />
-		<PackageReference Include="SenseNet.Search" Version="2.4.17.2" />
+		<PackageReference Include="SenseNet.Security" Version="4.2.1.4" />
+		<PackageReference Include="SenseNet.Search" Version="2.4.17.4" />
 		<PackageReference Include="SenseNet.Search.Lucene29.Lucene.Net" Version="2.9.4.301" />
 	</ItemGroup>
 
