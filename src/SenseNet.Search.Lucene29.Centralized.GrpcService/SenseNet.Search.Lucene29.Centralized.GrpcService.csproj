@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <UserSecretsId>d87b24d7-ed3a-48ac-9f93-0adbf878a1e4</UserSecretsId>
-    <Version>1.0.6.4</Version>
+    <Version>1.0.7</Version>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileRunArguments>--network sensenet --name SnSearchService</DockerfileRunArguments>
   </PropertyGroup>
@@ -21,8 +21,8 @@
     <PackageReference Include="Grpc.AspNetCore" Version="2.48.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="SenseNet.Security.EFCSecurityStore" Version="3.1.1.2" />
-    <PackageReference Include="SenseNet.Security.Messaging.RabbitMQ" Version="1.2.4.3" />
+    <PackageReference Include="SenseNet.Security.EFCSecurityStore" Version="3.1.2" />
+    <PackageReference Include="SenseNet.Security.Messaging.RabbitMQ" Version="1.2.5" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
     <PackageReference Include="Serilog.Sinks.Graylog" Version="2.3.0" />
   </ItemGroup>
