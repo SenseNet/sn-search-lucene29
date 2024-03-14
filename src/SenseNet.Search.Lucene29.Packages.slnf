@@ -1,0 +1,16 @@
+{
+  "solution": {
+    "path": "SenseNet.Search.Lucene29.sln",
+    "projects": [
+      "SenseNet.Search.Lucene29\\SenseNet.Search.Lucene29.csproj",
+      "SenseNet.Search.Lucene29.Local\\SenseNet.Search.Lucene29.Local.csproj",
+      "SenseNet.Search.Lucene29.Common\\SenseNet.Search.Lucene29.Common.csproj",
+      "SenseNet.Search.Lucene29.Centralized\\SenseNet.Search.Lucene29.Centralized.csproj",
+      "SenseNet.Search.Lucene29.Centralized.Index\\SenseNet.Search.Lucene29.Centralized.Index.csproj",
+      "SenseNet.Search.Lucene29.Centralized.GrpcService\\SenseNet.Search.Lucene29.Centralized.GrpcService.csproj",
+      "SenseNet.Search.Lucene29.Centralized.GrpcClient\\SenseNet.Search.Lucene29.Centralized.GrpcClient.csproj",
+      "SenseNet.Search.Lucene29.Centralized.Common\\SenseNet.Search.Lucene29.Centralized.Common.csproj",
+      "SenseNet.Search.Lucene29.Centralized.Service\\SenseNet.Search.Lucene29.Centralized.Service.csproj"
+    ]
+  }
+}

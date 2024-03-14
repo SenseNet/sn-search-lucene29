@@ -15,7 +15,7 @@ jobs:
 
     env:
       BUILD_CONFIG: 'Release'
-      SOLUTION: 'SenseNet.Search.Lucene29.sln'
+      SOLUTION: 'SenseNet.Search.Lucene29.Packages.slnf'
 
     steps:
     - name: Checkout
