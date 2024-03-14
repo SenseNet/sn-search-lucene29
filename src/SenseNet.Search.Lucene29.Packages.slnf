@@ -10,7 +10,6 @@
       "SenseNet.Search.Lucene29.Centralized.GrpcService\\SenseNet.Search.Lucene29.Centralized.GrpcService.csproj",
       "SenseNet.Search.Lucene29.Centralized.GrpcClient\\SenseNet.Search.Lucene29.Centralized.GrpcClient.csproj",
       "SenseNet.Search.Lucene29.Centralized.Common\\SenseNet.Search.Lucene29.Centralized.Common.csproj",
-      "SenseNet.Search.Lucene29.Centralized.Service\\SenseNet.Search.Lucene29.Centralized.Service.csproj"
     ]
   }
 }
