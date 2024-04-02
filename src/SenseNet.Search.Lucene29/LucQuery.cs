@@ -70,24 +70,6 @@ namespace SenseNet.Search.Lucene29
             };
         }
 
-        [Obsolete("Use Lucene29LocalQueryEngine.CreateSortField instead.", true)]
-        public static SortField CreateSortField(string fieldName, bool reverse)
-        {
-            // CreateSortField has been moved up to the query engine.
-            throw new NotSupportedException();
-        }
-
-        [Obsolete("Use SearchManager.IsAutofilterEnabled", true)]
-        public static bool IsAutofilterEnabled(FilterStatus value)
-        {
-            throw new InvalidOperationException();
-        }
-        [Obsolete("Use SearchManager.IsLifespanFilterEnabled", true)]
-        public static bool IsLifespanFilterEnabled(FilterStatus value)
-        {
-            throw new InvalidOperationException();
-        }
-
         // ========================================================================================
 
         public IEnumerable<LucObject> Execute(IPermissionFilter filter, IQueryContext context)
@@ -175,13 +157,6 @@ namespace SenseNet.Search.Lucene29
                         c[i] = '.';
                 return new String(c);
             }
-        }
-
-        [Obsolete("SetSort is not supported anymore.", true)]
-        public void SetSort(IEnumerable<SortInfo> sort)
-        {
-            // SearchManager.GetPerFieldIndexingInfo is not accessible in this layer.
-            throw new NotSupportedException();
         }
 
         public void AddAndClause(LucQuery q2)
