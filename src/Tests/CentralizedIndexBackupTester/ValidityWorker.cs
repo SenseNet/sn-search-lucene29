@@ -52,7 +52,8 @@ namespace CentralizedIndexBackupTester
                     SnTrace.Write("#### document deleted: " + lastId);
                 }
 
-                var result = ContentQuery.Query("Id:1").Identifiers;
+                var result = ContentQuery.QueryAsync("Id:1", CancellationToken.None)
+                    .GetAwaiter().GetResult().Identifiers;
 
                 // ... and memorize its Id as "lastId".
                 lastId = id;

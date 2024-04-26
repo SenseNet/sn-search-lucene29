@@ -108,7 +108,8 @@ namespace CentralizedIndexBackupTester
 
                 Console.WriteLine("CHECK SEARCH SERVER CONNECTIVITY (query top level nodes):");
                 var queryContext = new SnQueryContext(QuerySettings.AdminSettings, User.Current.Id);
-                var result = SnQuery.Query("InFolder:/Root", queryContext);
+                var result = SnQuery.QueryAsync("InFolder:/Root", queryContext, CancellationToken.None)
+                    .GetAwaiter().GetResult();
                 foreach(var id in result.Hits)
                     Console.WriteLine(NodeHead.Get(id).Path);
                 Console.WriteLine();
