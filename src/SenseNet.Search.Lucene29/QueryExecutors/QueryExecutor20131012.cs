@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Lucene.Net.Documents;
 using Lucene.Net.Search;
+using SenseNet.Diagnostics;
 
 namespace SenseNet.Search.Lucene29.QueryExecutors
 {
@@ -16,8 +17,8 @@ namespace SenseNet.Search.Lucene29.QueryExecutors
                 return SearchResult.Empty;
 
             //TODO: check r and r1 for null below (see hints)
-            SearchResult r = null;
-            SearchResult r1;
+            SearchResult totalHits = null;
+            SearchResult partitionHits;
 
             var howManyList = new List<int>(Configuration.Lucene29.DefaultTopAndGrowth);
             if (howManyList[howManyList.Count - 1] == 0)
@@ -27,7 +28,7 @@ namespace SenseNet.Search.Lucene29.QueryExecutors
             {
                 var howMany = p.top;
                 if ((long)howMany > maxtop)
-                    howMany = maxtop - p.skip;
+                    howMany = maxtop;
                 while (howManyList.Count > 0)
                 {
                     if (howMany < howManyList[0])
@@ -37,7 +38,7 @@ namespace SenseNet.Search.Lucene29.QueryExecutors
                 howManyList.Insert(0, howMany);
             }
 
-            var top0 = p.top;
+            var originalTop = p.top;
             for (var i = 0; i < howManyList.Count; i++)
             {
                 var defaultTop = howManyList[i];
@@ -46,22 +47,32 @@ namespace SenseNet.Search.Lucene29.QueryExecutors
 
                 p.howMany = defaultTop;
                 p.useHowMany = i < howManyList.Count - 1;
-                var maxSize = i == 0 ? p.numDocs : r.totalCount;
+                var maxSize = i == 0 ? p.numDocs : totalHits.totalCount;
                 p.collectorSize = Math.Min(defaultTop, maxSize - p.skip) + p.skip;
+                var currentSkip = p.skip;
 
-                r1 = Search(p);
+                partitionHits = Search(p);
 
                 if (i == 0)
-                    r = r1;
+                    totalHits = partitionHits;
                 else
-                    r.Add(r1);
-                p.skip += r.nextIndex;
-                p.top = top0 - r.result.Count;
+                    totalHits.Add(partitionHits);
+                p.skip += totalHits.nextIndex;
+                p.top = originalTop - totalHits.result.Count;
 
-                if (r.result.Count == 0 || r.result.Count >= top0 || r.result.Count >= r.totalCount)
+                SnTrace.Query.Write($"Collector size: {p.collectorSize}, skip: {currentSkip}" +
+                                    $", Current hits: {partitionHits.result.Count}" +
+                                    $", collected hits: {totalHits.result.Count}" +
+                                    $", total hits: {totalHits.totalCount}");
+                if ( //                                                  Do not get the next partition if...
+                    totalHits.result.Count == 0 //                       there is no any hit
+                    || partitionHits.result.Count == 0 //                or there is no any hit in the current partition
+                    || totalHits.result.Count >= originalTop //          or the result reaches the limit
+                    || totalHits.result.Count >= totalHits.totalCount // or the result contains the all items
+                   )
                     break;
             }
-            return r;
+            return totalHits;
         }
         protected override void GetResultPage(ScoreDoc[] hits, SearchParams p, SearchResult r)
         {
