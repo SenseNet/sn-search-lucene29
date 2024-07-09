@@ -244,5 +244,19 @@ namespace SenseNet.Search.Lucene29
             // this is not needed on the web server in a centralized environment
             throw new NotImplementedException();
         }
+
+        public IDictionary<string, string> GetConfigurationInfo()
+        {
+            return Retrier.Retry(SearchServiceClient.RetryCount,
+                SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
+                () => SearchServiceClient.Instance.GetConfigurationInfo());
+        }
+
+        public IDictionary<string, string> GetHealth()
+        {
+            return Retrier.Retry(SearchServiceClient.RetryCount,
+                SearchServiceClient.RetryWaitMilliseconds, typeof(CommunicationException),
+                () => SearchServiceClient.Instance.GetHealth());
+        }
     }
 }

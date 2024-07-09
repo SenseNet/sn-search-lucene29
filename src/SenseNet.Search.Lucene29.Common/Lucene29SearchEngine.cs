@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
@@ -84,6 +86,16 @@ namespace SenseNet.Search.Lucene29
             // Indexing info is stored in memory in the indexing engine
             // and should be refreshed when the list changes.
             ((ILuceneIndexingEngine)IndexingEngine).SetIndexingInfo(indexingInfo);
+        }
+
+        public object GetConfigurationForHealthDashboard()
+        {
+            return ((ILuceneIndexingEngine) IndexingEngine).GetConfigurationInfo();
+        }
+
+        public Task<object> GetHealthAsync(CancellationToken cancel)
+        {
+            throw new NotImplementedException();
         }
     }
 }

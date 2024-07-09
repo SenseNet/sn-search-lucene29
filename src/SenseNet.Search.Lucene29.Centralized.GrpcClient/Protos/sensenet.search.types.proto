@@ -118,3 +118,16 @@ message GetIndexDocumentRequest{
 message IndexDocumentResponse{
 	map<string, string> IndexDocument = 1;
 }
+
+/* --------------------------------- Health types --------------------------------- */
+
+message GetConfigurationInfoRequest{
+}
+message ConfigurationInfoResponse{
+	map<string, string> Configuration = 1;
+}
+message GetHealthRequest{
+}
+message HealthResponse{
+	map<string, string> Health = 1;
+}

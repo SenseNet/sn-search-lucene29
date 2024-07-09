@@ -193,6 +193,16 @@ namespace SenseNet.Search.Lucene29.Tests
             {
                 throw new NotImplementedException();
             }
+
+            public IDictionary<string, string> GetConfigurationInfo()
+            {
+                throw new NotImplementedException();
+            }
+            public IDictionary<string, string> GetHealth()
+            {
+                throw new NotImplementedException();
+            }
+
             public void Start()
             {
                 throw new NotImplementedException();
