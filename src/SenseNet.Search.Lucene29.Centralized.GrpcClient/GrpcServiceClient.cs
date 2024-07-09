@@ -407,6 +407,40 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             return result.IndexDocument;
         }
 
+        public IDictionary<string, string> GetConfigurationInfo()
+        {
+            GrpcService.ConfigurationInfoResponse result;
+
+            try
+            {
+                _logger.LogTrace($"Getting configuration info.");
+                result = _searchClient.GetConfigurationInfo(new GetConfigurationInfoRequest());
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "getting configuration info");
+            }
+
+            return result.Configuration;
+        }
+
+        public IDictionary<string, string> GetHealth()
+        {
+            GrpcService.HealthResponse result;
+
+            try
+            {
+                _logger.LogTrace($"Getting health info.");
+                result = _searchClient.GetHealth(new GetHealthRequest());
+            }
+            catch (Exception ex)
+            {
+                throw LogAndFormatException(ex, "getting health info");
+            }
+
+            return result.Health;
+        }
+
         #endregion
 
         #region Helper methods

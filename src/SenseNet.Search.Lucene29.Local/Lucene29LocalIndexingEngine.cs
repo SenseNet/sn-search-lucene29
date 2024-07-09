@@ -216,6 +216,20 @@ namespace SenseNet.Search.Lucene29
             return LuceneSearchManager.GetAnalyzer();
         }
 
+        public IDictionary<string, string> GetConfigurationInfo()
+        {
+            return new Dictionary<string, string>
+            {
+                {"IndexIsCentralized", "false"},
+                {"IndexDirectory", IndexDirectory.CurrentDirectory}
+            };
+        }
+
+        public IDictionary<string, string> GetHealth()
+        {
+            throw new NotImplementedException();
+        }
+
         /// <inheritdoc />
         public void SetIndexingInfo(IDictionary<string, IPerFieldIndexingInfo> indexingInfo)
         {

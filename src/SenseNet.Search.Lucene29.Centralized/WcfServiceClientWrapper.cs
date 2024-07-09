@@ -156,5 +156,20 @@ namespace SenseNet.Search.Lucene29.Centralized
             }
         }
 
+        public IDictionary<string, string> GetConfigurationInfo()
+        {
+            using (var client = WcfServiceClient.GetSearchServiceContract())
+            {
+                return client.GetConfigurationInfo();
+            }
+        }
+
+        public IDictionary<string, string> GetHealth()
+        {
+            using (var client = WcfServiceClient.GetSearchServiceContract())
+            {
+                return client.GetHealth();
+            }
+        }
     }
 }

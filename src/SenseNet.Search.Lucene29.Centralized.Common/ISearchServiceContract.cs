@@ -66,5 +66,13 @@ namespace SenseNet.Search.Lucene29.Centralized.Common
 
         [OperationContract]
         IDictionary<string, string> GetIndexDocumentByDocumentId(int documentId);
+
+        //=================================================================================================== Health
+
+        [OperationContract]
+        IDictionary<string, string> GetConfigurationInfo();
+        [OperationContract]
+        IDictionary<string, string> GetHealth();
+
     }
 }

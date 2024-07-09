@@ -26,4 +26,7 @@ service GrpcSearch {
 	rpc GetInvertedIndex (GetInvertedIndexRequest) returns (InvertedIndexResponse);
 	rpc GetIndexDocumentByVersionId (GetIndexDocumentRequest) returns (IndexDocumentResponse);
 	rpc GetIndexDocumentByDocumentId (GetIndexDocumentRequest) returns (IndexDocumentResponse);
+
+	rpc GetConfigurationInfo(GetConfigurationInfoRequest) returns (ConfigurationInfoResponse);
+	rpc GetHealth(GetHealthRequest) returns (HealthResponse);
 }

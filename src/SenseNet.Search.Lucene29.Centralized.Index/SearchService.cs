@@ -364,6 +364,27 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             return new IndexExplorer(SearchManager.Instance).GetIndexDocumentByDocumentId(documentId);
         }
 
+        //===================================================================================== Health methods
+
+        public IDictionary<string, string> GetConfigurationInfo()
+        {
+            var searchManager = SearchManager.Instance;
+            return new Dictionary<string, string>
+            {
+                {"IndexIsCentralized", "true"},
+                {"SearchService_IndexDirectory", searchManager.IndexDirectory.CurrentDirectory},
+                {"SearchService_Security_ConnectionString", _securitySystem.DataProvider.ConnectionString},
+                {"SearchService_Security_Messaging_ComputerId", _securitySystem.MessageSenderManager.ComputerId},
+                {"SearchService_Security_Messaging_InstanceId", _securitySystem.MessageSenderManager.InstanceId},
+                {"SearchService_Security_Messaging_ReceiverName", _securitySystem.MessageProvider.ReceiverName},
+            };
+        }
+
+        public IDictionary<string, string> GetHealth()
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         //===================================================================================== Helper methods

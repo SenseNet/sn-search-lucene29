@@ -189,6 +189,15 @@ namespace SenseNet.Search.Lucene29.Centralized
             return Channel.GetIndexDocumentByDocumentId(documentId);
         }
 
+        public IDictionary<string, string> GetConfigurationInfo()
+        {
+            return Channel.GetConfigurationInfo();
+        }
+        public IDictionary<string, string> GetHealth()
+        {
+            return Channel.GetHealth();
+        }
+
         public ISearchServiceClient CreateInstance() => GetSearchServiceContract();
 
         public void Start()

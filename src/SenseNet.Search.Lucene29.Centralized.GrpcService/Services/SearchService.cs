@@ -1,10 +1,14 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Querying;
+using SenseNet.Security.Configuration;
+using SenseNet.Security.Messaging.RabbitMQ;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcService
 {
@@ -12,11 +16,15 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
     {
         private readonly ILogger<SearchService> _logger;
         private readonly Index.SearchService _indexService;
+        private readonly RabbitMqOptions _rabbitMqOptions;
 
-        public SearchService(ILogger<SearchService> logger, Index.SearchService indexService)
+
+        public SearchService(ILogger<SearchService> logger, Index.SearchService indexService,
+            IOptions<RabbitMqOptions> rabbitMqOptions)
         {
             _logger = logger;
             _indexService = indexService;
+            _rabbitMqOptions = rabbitMqOptions.Value;
         }
 
         public override Task<AliveResponse> Alive(AliveRequest request, ServerCallContext context)
@@ -199,6 +207,26 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
 
             var result = new IndexDocumentResponse();
             result.IndexDocument.Add(indexDocument);
+            return Task.FromResult(result);
+        }
+
+        public override Task<ConfigurationInfoResponse> GetConfigurationInfo(GetConfigurationInfoRequest request, ServerCallContext context)
+        {
+            var config = _indexService.GetConfigurationInfo();
+            config.Add("SearchService_AspNetCore_ApplicationUrl", Environment.GetEnvironmentVariable("ASPNETCORE_URLS"));
+            config.Add("SearchService_RabbitMq_ServiceUrl", _rabbitMqOptions.ServiceUrl);
+            config.Add("SearchService_RabbitMq_MessageExchange", _rabbitMqOptions.MessageExchange);
+
+            var result = new ConfigurationInfoResponse();
+            result.Configuration.Add(config);
+            return Task.FromResult(result);
+        }
+
+        public override Task<HealthResponse> GetHealth(GetHealthRequest request, ServerCallContext context)
+        {
+            var health = _indexService.GetConfigurationInfo();
+            var result = new HealthResponse();
+            result.Health.Add(health);
             return Task.FromResult(result);
         }
     }

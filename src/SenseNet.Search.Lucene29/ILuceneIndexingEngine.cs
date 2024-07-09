@@ -20,5 +20,9 @@ namespace SenseNet.Search.Lucene29
         /// Returns an <see cref="SnPerFieldAnalyzerWrapper"/> containing the data set by the <see cref="SetIndexingInfo"/> method.
         /// </summary>
         Analyzer GetAnalyzer();
+
+        IDictionary<string, string> GetConfigurationInfo();
+        IDictionary<string, string> GetHealth();
+
     }
 }

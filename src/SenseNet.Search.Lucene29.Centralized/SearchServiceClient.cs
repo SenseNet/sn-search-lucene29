@@ -117,6 +117,16 @@ namespace SenseNet.Search.Lucene29.Centralized
             throw new System.NotImplementedException("NullServiceClient.GetIndexDocumentByDocumentId is not implemented.");
         }
 
+        public IDictionary<string, string> GetConfigurationInfo()
+        {
+            throw new System.NotImplementedException("NullServiceClient.GetConfigurationInfo is not implemented.");
+        }
+
+        public IDictionary<string, string> GetHealth()
+        {
+            throw new System.NotImplementedException("NullServiceClient.GetHealth is not implemented.");
+        }
+
         public ISearchServiceClient CreateInstance()
         {
             return this;
