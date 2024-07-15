@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
-		<Version>7.5.11.4</Version>
+		<Version>7.5.12</Version>
 		<Company>Sense/Net Inc.</Company>
 		<Description>Common service elements for the Central Lucene29 Search Engine for the sensenet platform.</Description>
 		<Copyright>Copyright © Sense/Net Inc.</Copyright>
