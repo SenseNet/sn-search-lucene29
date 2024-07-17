@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
-		<Version>1.4.12</Version>
+		<Version>1.4.13</Version>
 		<Authors>kavics,tusmester</Authors>
 		<Company>Sense/Net Inc.</Company>
 		<Copyright>Copyright © Sense/Net Inc.</Copyright>
@@ -25,7 +25,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="SenseNet.Tools" Version="3.2.13" />
-		<PackageReference Include="SenseNet.ContentRepository" Version="7.7.40.9" />
+		<PackageReference Include="SenseNet.ContentRepository" Version="7.7.41" />
 		<PackageReference Include="SenseNet.Search.Lucene29.Lucene.Net" Version="2.9.4.301" />
 		<PackageReference Include="System.ServiceModel.Primitives" Version="4.10.0" />
 	</ItemGroup>
