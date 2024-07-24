@@ -224,6 +224,11 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
             try
             {
+                _logger.LogTrace($"WriteIndexRequest: deletions count: {request.Deletions?.Count ?? 0}, " +
+                                 $"updates count: {request.Updates?.Count ?? 0}, " +
+                                 $"updates size: {request.Updates?.Sum(x => x.Length) ?? 0}, " +
+                                 $"additions count: {request.Additions?.Count ?? 0}, " +
+                                 $"additions size: {request.Additions?.Sum(x => x.Length) ?? 0}");
                 _searchClient.WriteIndex(request);
             }
             catch (Exception ex)
@@ -421,7 +426,12 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
                 throw LogAndFormatException(ex, "getting configuration info");
             }
 
-            return result.Configuration;
+            var configData = result.Configuration
+                .ToDictionary(x => x.Key, x => x.Value);
+            configData.Add("GRPC_CLIENT:MaxReceiveMessageSize", _options.ChannelOptions.MaxReceiveMessageSize?.ToString() ?? "null");
+            configData.Add("GRPC_CLIENT:MaxSendMessageSize", _options.ChannelOptions.MaxSendMessageSize?.ToString() ?? "null");
+
+            return configData;
         }
 
         public IDictionary<string, string> GetHealth()

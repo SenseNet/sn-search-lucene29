@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Grpc.AspNetCore.Server;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -17,14 +18,16 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
         private readonly ILogger<SearchService> _logger;
         private readonly Index.SearchService _indexService;
         private readonly RabbitMqOptions _rabbitMqOptions;
+        private readonly GrpcServiceOptions _grpcOptions;
 
 
         public SearchService(ILogger<SearchService> logger, Index.SearchService indexService,
-            IOptions<RabbitMqOptions> rabbitMqOptions)
+            IOptions<RabbitMqOptions> rabbitMqOptions, IOptions<GrpcServiceOptions> grpcOptions)
         {
             _logger = logger;
             _indexService = indexService;
             _rabbitMqOptions = rabbitMqOptions.Value;
+            _grpcOptions = grpcOptions.Value;
         }
 
         public override Task<AliveResponse> Alive(AliveRequest request, ServerCallContext context)
@@ -116,7 +119,6 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
             var additions = request.Additions
                 .Select(add => string.IsNullOrEmpty(add) ? null : IndexDocument.Deserialize(add))
                 .Where(add => add != null).ToArray();
-
             _indexService.WriteIndex(deletions, updates, additions);
 
             return Task.FromResult(new WriteIndexResponse());
@@ -216,6 +218,9 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
             config.Add("SearchService_AspNetCore_ApplicationUrl", Environment.GetEnvironmentVariable("ASPNETCORE_URLS"));
             config.Add("SearchService_RabbitMq_ServiceUrl", _rabbitMqOptions.ServiceUrl);
             config.Add("SearchService_RabbitMq_MessageExchange", _rabbitMqOptions.MessageExchange);
+            config.Add("SearchService_GRPC_MaxReceiveMessageSize", _grpcOptions.MaxReceiveMessageSize?.ToString() ?? "null");
+            config.Add("SearchService_GRPC_MaxSendMessageSize", _grpcOptions.MaxSendMessageSize?.ToString() ?? "null");
+            config.Add("SearchService_GRPC_EnableDetailedErrors", _grpcOptions.EnableDetailedErrors?.ToString() ?? "null");
 
             var result = new ConfigurationInfoResponse();
             result.Configuration.Add(config);
