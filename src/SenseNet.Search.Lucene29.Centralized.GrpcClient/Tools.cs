@@ -5,12 +5,12 @@ using System.Xml;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 {
-    internal static class Tools
+    public static class Tools
     {
         /// <summary>
         /// Serialize an object to an xml string. Uses <see cref="DataContractSerializer"/>.
         /// </summary>
-        internal static string Serialize(object obj)
+        public static string Serialize(object obj)
         {
             var serializer = new DataContractSerializer(obj.GetType());
 

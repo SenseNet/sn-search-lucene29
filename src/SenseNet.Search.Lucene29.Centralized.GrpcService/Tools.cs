@@ -5,12 +5,12 @@ using SenseNet.Tools;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcService
 {
-    internal static class Tools
+    public static class Tools
     {
         /// <summary>
         /// Deserialize an object from an xml string. Uses <see cref="DataContractSerializer"/>.
         /// </summary>
-        internal static T Deserialize<T>(string srcXml)
+        public static T Deserialize<T>(string srcXml)
         {
             var serializer = new DataContractSerializer(typeof(T));
 
