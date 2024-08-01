@@ -8,6 +8,7 @@ using Microsoft.VisualBasic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using SenseNet.Search.Indexing;
+using SenseNet.Search.Querying;
 using SenseNet.Testing;
 using SenseNet.Tests.Core;
 
@@ -17,11 +18,30 @@ namespace SenseNet.Search.Lucene29.Tests
     public class SerializationTests : TestBase
     {
         [TestMethod]
+        public void Serialization_SnTerm()
+        {
+            var snTerm = new SnTerm("Name", "Value");
+            var ixValue = new IndexValue("Value");
+
+            Assert.Fail("Not implemented test");
+        }
+
+        [TestMethod]
+        public void Serialization_DocumentUpdate()
+        {
+            DocumentUpdate documentUpdate = new DocumentUpdate();
+            //documentUpdate.UpdateTerm;
+            //documentUpdate.Document;
+            Assert.Fail("Not implemented test");
+        }
+
+        [TestMethod]
         public void Serialization_IndexDocument()
         {
-            var mode = IndexingMode.NotAnalyzed;
+            var mode = IndexingMode.Analyzed;
             var storing = IndexStoringMode.No;
             var termVect = IndexTermVector.Default;
+            // One sentence from the hungarian Lorem ipsum: http://www.lorumipse.hu/
             var stringData = "Lórum ipse védes, csingós, de a tasztergás kező, a csalártvány pedig egészen forózus kodás.";
             var fullTextData = stringData + "\r\n/root/mycontent\r\n123\r\n456\r\n789";
             var indexDocument = new IndexDocument
@@ -39,30 +59,14 @@ namespace SenseNet.Search.Lucene29.Tests
             };
 
             // ACT
-            // /* 1 */
-            //var serialized = Centralized.GrpcClient.Tools.Serialize(indexDocument);
-            //var deserialized = Centralized.GrpcService.Tools.Deserialize<IndexDocument>(serialized);
-            /* 2 */
-            var serialized = indexDocument.Serialize();
-            var deserialized = IndexDocument.Deserialize(serialized);
+            var serialized = Centralized.GrpcClient.Tools.Serialize(indexDocument);
+            var deserialized = Centralized.GrpcService.Tools.Deserialize<IndexDocument>(serialized);
 
             // ASSERT
-            var expected = new StringBuilder();
-            foreach (var item in indexDocument)
-            {
-                if (item.Type == IndexValueType.StringArray)
-                    continue;
-                expected.Append(item).AppendLine();
-            }
+            var serialized2 = Centralized.GrpcClient.Tools.Serialize(deserialized);
+            Assert.AreEqual(serialized, serialized2); // JSON
+            Assert.IsTrue(serialized[0] == '{', "Not a JSON"); // JSON
 
-            var actual = new StringBuilder();
-            foreach (var item in deserialized)
-            {
-                if (item.Type == IndexValueType.StringArray)
-                    continue;
-                actual.Append(item).AppendLine();
-            }
-            Assert.AreEqual(expected.ToString(), actual.ToString());
         }
     }
 }
