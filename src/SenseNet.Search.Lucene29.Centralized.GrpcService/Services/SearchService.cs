@@ -111,10 +111,10 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
         public override Task<WriteIndexResponse> WriteIndex(WriteIndexRequest request, ServerCallContext context)
         {
             var deletions = request.Deletions
-                .Select(del => string.IsNullOrEmpty(del) ? null : Tools.Deserialize<SnTerm>(del))
+                .Select(del => string.IsNullOrEmpty(del) ? null : SnTerm.Deserialize(del))
                 .Where(term => term != null).ToArray();
             var updates = request.Updates
-                .Select(upd => string.IsNullOrEmpty(upd) ? null : Tools.Deserialize<DocumentUpdate>(upd))
+                .Select(upd => string.IsNullOrEmpty(upd) ? null : DocumentUpdate.Deserialize(upd))
                 .Where(upd => upd != null).ToArray();
             var additions = request.Additions
                 .Select(add => string.IsNullOrEmpty(add) ? null : IndexDocument.Deserialize(add))

@@ -216,9 +216,9 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             var request = new GrpcService.WriteIndexRequest();
             
             if (deletions != null)
-                request.Deletions.AddRange(deletions.Select(Tools.Serialize));
+                request.Deletions.AddRange(deletions.Select(x=>x.Serialize()));
             if (updates != null)
-                request.Updates.AddRange(updates.Where(x => x.Document != null).Select(Tools.Serialize));
+                request.Updates.AddRange(updates.Where(x => x.Document != null).Select(x=>x.Serialize()));
             if (additions != null)
                 request.Additions.AddRange(additions.Where(doc => doc != null).Select(doc => doc.Serialize()));
 
