@@ -126,7 +126,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
         public override Task<QueryResultIds> ExecuteQuery(QueryRequest request, ServerCallContext context)
         {
             var queryResult = _indexService.ExecuteQuery(
-                Tools.Deserialize<SnQuery>(request.Query), 
+                Tools.DeserializeSnQuery(request.Query), 
                 new Common.ServiceQueryContext() 
                 { 
                     UserId = request.Context.UserId,
@@ -145,7 +145,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
         public override Task<QueryResultProjections> ExecuteQueryAndProject(QueryRequest request, ServerCallContext context)
         {
             var queryResult = _indexService.ExecuteQueryAndProject(
-                Tools.Deserialize<SnQuery>(request.Query),
+                Tools.DeserializeSnQuery(request.Query),
                 new Common.ServiceQueryContext()
                 {
                     UserId = request.Context.UserId,

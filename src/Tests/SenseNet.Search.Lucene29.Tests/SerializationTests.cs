@@ -9,8 +9,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Querying;
+using SenseNet.Search.Tests.Implementations;
 using SenseNet.Testing;
 using SenseNet.Tests.Core;
+using SenseNet.Tests.Core.Implementations;
 
 namespace SenseNet.Search.Lucene29.Tests
 {
@@ -102,5 +104,61 @@ namespace SenseNet.Search.Lucene29.Tests
             Assert.AreEqual(serialized, serialized2); // JSON
             Assert.IsTrue(serialized[0] == '[', "Not a JSON"); // JSON
         }
+
+        [TestMethod]
+        public void Serialization_SnQuery()
+        {
+            var indexingInfo = new Dictionary<string, IPerFieldIndexingInfo>
+            {
+                //{"_Text", new TestPerfieldIndexingInfoString()},
+                {"#Field1", new TestPerfieldIndexingInfoString()},
+                {"Field1", new TestPerfieldIndexingInfoString()},
+                {"Field2", new TestPerfieldIndexingInfoString()},
+                {"Field3", new TestPerfieldIndexingInfoString()},
+                {"F1", new TestPerfieldIndexingInfoString()},
+                {"F2", new TestPerfieldIndexingInfoString()},
+                {"F3", new TestPerfieldIndexingInfoString()},
+                {"F4", new TestPerfieldIndexingInfoString()},
+                {"f1", new TestPerfieldIndexingInfoString()},
+                {"f2", new TestPerfieldIndexingInfoString()},
+                {"f3", new TestPerfieldIndexingInfoString()},
+                {"f4", new TestPerfieldIndexingInfoString()},
+                {"f5", new TestPerfieldIndexingInfoString()},
+                {"f6", new TestPerfieldIndexingInfoString()},
+                {"mod_date", new TestPerfieldIndexingInfoInt()},
+                {"title", new TestPerfieldIndexingInfoString()},
+                {"Name", new TestPerfieldIndexingInfoString()},
+                {"Id", new TestPerfieldIndexingInfoInt()},
+                {"LongField1", new TestPerfieldIndexingInfoLong()},
+                {"SingleField1", new TestPerfieldIndexingInfoSingle()},
+                {"DoubleField1", new TestPerfieldIndexingInfoDouble()},
+                {"DateTimeField1", new TestPerfieldIndexingInfoDateTime()},
+            };
+
+            // ACT-1: Keywords
+            var queryText = "F1:V0 OR (F1:V1 AND F2:V2) .ALLVERSIONS .COUNTONLY .TOP:3 .SKIP:4 .SORT:F1 .REVERSESORT:F2 .AUTOFILTERS:OFF .LIFESPAN:ON .QUICK";
+            var snQuery = SnQuery.Parse(queryText, new TestQueryContext(QuerySettings.Default, 1, indexingInfo));
+            var serialized = Centralized.GrpcClient.Tools.SerializeSnQuery(snQuery);
+            var deserialized = Centralized.GrpcService.Tools.DeserializeSnQuery(serialized);
+            // ASSERT-1
+            Assert.AreEqual(serialized, Centralized.GrpcClient.Tools.SerializeSnQuery(deserialized));
+
+            // ACT-2: Ranges
+            queryText = "Id:>100 Id:<10 Id:[ TO 10] Id:[10 TO ] Id:[10 TO 20] Id:{20 TO 30] Id:[30 TO 40} Id:{40 TO 50}";
+            snQuery = SnQuery.Parse(queryText, new TestQueryContext(QuerySettings.Default, 1, indexingInfo));
+            serialized = Centralized.GrpcClient.Tools.SerializeSnQuery(snQuery);
+            deserialized = Centralized.GrpcService.Tools.DeserializeSnQuery(serialized);
+            // ASSERT-2
+            Assert.AreEqual(serialized, Centralized.GrpcClient.Tools.SerializeSnQuery(deserialized));
+
+            // ACT-3: Projection
+            queryText = "F1:V0 AND NOT F2:V2 .SELECT:Name";
+            snQuery = SnQuery.Parse(queryText, new TestQueryContext(QuerySettings.Default, 1, indexingInfo));
+            serialized = Centralized.GrpcClient.Tools.SerializeSnQuery(snQuery);
+            deserialized = Centralized.GrpcService.Tools.DeserializeSnQuery(serialized);
+            // ASSERT-3
+            Assert.AreEqual(serialized, Centralized.GrpcClient.Tools.SerializeSnQuery(deserialized));
+        }
+
     }
 }

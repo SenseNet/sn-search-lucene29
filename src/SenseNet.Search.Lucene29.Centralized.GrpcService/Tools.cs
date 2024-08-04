@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Runtime.Serialization;
 using System.Xml;
+using SenseNet.Search.Querying;
 using SenseNet.Tools;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcService
@@ -10,16 +11,15 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
         /// <summary>
         /// Deserialize an object from an xml string. Uses <see cref="DataContractSerializer"/>.
         /// </summary>
-        public static T Deserialize<T>(string srcXml)
+        public static SnQuery DeserializeSnQuery(string srcXml)
         {
-            var serializer = new DataContractSerializer(typeof(T));
+            var serializer = new DataContractSerializer(typeof(SnQuery));
 
-            object result;
-            using (var stringReader = new StringReader(srcXml))
-            using (var xmlReader = XmlReader.Create(stringReader))
-                result = serializer.ReadObject(xmlReader);
+            using var stringReader = new StringReader(srcXml);
+            using var xmlReader = XmlReader.Create(stringReader);
+            var result = (SnQuery)serializer.ReadObject(xmlReader);
 
-            return (T)result;
+            return result;
         }
     }
 

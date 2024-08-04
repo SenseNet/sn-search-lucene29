@@ -250,7 +250,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             {
                 var result = _searchClient.ExecuteQuery(new GrpcService.QueryRequest()
                 {
-                    Query = Tools.Serialize(query),
+                    Query = Tools.SerializeSnQuery(query),
                     Context = context
                 });
 
@@ -274,7 +274,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             {
                 var result = await _searchClient.ExecuteQueryAsync(new GrpcService.QueryRequest()
                 {
-                    Query = Tools.Serialize(query),
+                    Query = Tools.SerializeSnQuery(query),
                     Context = context
                 }, cancellationToken: cancel);
 
@@ -299,7 +299,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             {
                 var result = _searchClient.ExecuteQueryAndProject(new GrpcService.QueryRequest()
                 {
-                    Query = Tools.Serialize(query),
+                    Query = Tools.SerializeSnQuery(query),
                     Context = context
                 });
 
@@ -323,7 +323,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             {
                 var result = await _searchClient.ExecuteQueryAndProjectAsync(new GrpcService.QueryRequest()
                 {
-                    Query = Tools.Serialize(query),
+                    Query = Tools.SerializeSnQuery(query),
                     Context = context
                 }, cancellationToken: cancel);
 
