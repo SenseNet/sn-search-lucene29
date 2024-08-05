@@ -149,8 +149,10 @@ namespace SenseNet.Search.Lucene29
                     return;
 
                 var partition = new List<T>(_centralizedOptions.ServiceWritePartitionSize);
+                var maxSize = _centralizedOptions.ChannelOptions.MaxSendMessageSize ?? 4_194_304;
 // méret ellenőrzéskor a MaxSendMessageSize értékből le kell vonni valamennyit infrastruktúrális célokból (5-10%?)
 // mert nem csak a nyers adat, hanem paraméterek, tömbök és függvénynevek is utazhatnak.
+
                 // enumerate the source collection only once
                 foreach (var item in source)
                 {
