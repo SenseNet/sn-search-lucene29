@@ -13,6 +13,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using SenseNet.Extensions.DependencyInjection;
 using SenseNet.Search.Lucene29.Centralized.GrpcService;
+using SenseNet.Tools;
 using static SenseNet.Search.Lucene29.Centralized.GrpcService.GrpcSearch;
 using BackupResponse = SenseNet.Search.Indexing.BackupResponse;
 using IndexFieldAnalyzer = SenseNet.Search.Indexing.IndexFieldAnalyzer;
@@ -28,21 +29,26 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
     /// </summary>
     public class GrpcServiceClient : ISearchServiceClient
     {
-        /* =================================================== ISearchServiceClient */
-
         public ISearchServiceClient CreateInstance() => this;
-
-        /* =================================================== ISearchServiceContract */
 
         private GrpcSearchClient _searchClient;
         private GrpcChannel _channel;
-        private readonly ILogger<GrpcServiceClient> _logger;
-        private readonly GrpcClientOptions _options;
 
-        public GrpcServiceClient(IOptions<GrpcClientOptions> options, ILogger<GrpcServiceClient> logger)
+        private IRetrier _retrier;
+
+        private readonly GrpcClientOptions _options;
+        private int _maxSendMessageSize;
+        private int _maxSendMessageSizeEffective;
+
+        private readonly ILogger<GrpcServiceClient> _logger;
+
+        public GrpcServiceClient(IRetrier retrier, IOptions<GrpcClientOptions> options, ILogger<GrpcServiceClient> logger)
         {
+            _retrier = retrier;
             _options = options.Value;
             _logger = logger;
+            _maxSendMessageSize = _options.ChannelOptions.MaxSendMessageSize ?? 4_194_304;
+            _maxSendMessageSizeEffective = _maxSendMessageSize * 9 / 10; // default: 3_774_873
         }
 
         [Obsolete("Use the other constructor that is able to work with DI instead.")]
@@ -213,28 +219,72 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
         public void WriteIndex(SnTerm[] deletions, DocumentUpdate[] updates, IndexDocument[] additions)
         {
-            var request = new GrpcService.WriteIndexRequest();
-            
             if (deletions != null)
-                request.Deletions.AddRange(deletions.Select(x=>x.Serialize()));
+                SendByPartitions(deletions,
+                    snTerm => snTerm.Serialize(),
+                    (item, request) => { request.Deletions.Add(item);});
             if (updates != null)
-                request.Updates.AddRange(updates.Where(x => x.Document != null).Select(x=>x.Serialize()));
+                SendByPartitions(updates,
+                    documentUpdate => documentUpdate.Serialize(),
+                    (item, request) => { request.Updates.Add(item); });
             if (additions != null)
-                request.Additions.AddRange(additions.Where(doc => doc != null).Select(doc => doc.Serialize()));
+                SendByPartitions(additions,
+                    indexDocument => indexDocument.Serialize(),
+                    (item, request) => { request.Additions.Add(item); });
+        }
 
-            try
+        private void SendByPartitions<T>(T[] items, Func<T, string> serialize,
+            Action<string, GrpcService.WriteIndexRequest> addToRequest)
+        {
+            var request = new GrpcService.WriteIndexRequest();
+            var length = 0;
+            foreach (var item in items)
             {
-                _logger.LogTrace($"WriteIndexRequest: deletions count: {request.Deletions?.Count ?? 0}, " +
-                                 $"updates count: {request.Updates?.Count ?? 0}, " +
-                                 $"updates size: {request.Updates?.Sum(x => x.Length) ?? 0}, " +
-                                 $"additions count: {request.Additions?.Count ?? 0}, " +
-                                 $"additions size: {request.Additions?.Sum(x => x.Length) ?? 0}");
-                _searchClient.WriteIndex(request);
+                var serialized = serialize(item);
+                if (length + serialized.Length > _maxSendMessageSizeEffective)
+                {
+                    SendWriteIndexRequestAsync(request, CancellationToken.None).GetAwaiter().GetResult();
+                    request = new GrpcService.WriteIndexRequest();
+                    length = 0;
+                }
+                addToRequest(serialized, request);
+                length += serialized.Length;
             }
-            catch (Exception ex)
-            {
-                throw LogAndFormatException(ex, "WriteIndex");
-            }
+
+            if (length > 0)
+                SendWriteIndexRequestAsync(request, CancellationToken.None).GetAwaiter().GetResult();
+        }
+        private async Task SendWriteIndexRequestAsync(WriteIndexRequest request, CancellationToken cancel)
+        {
+            _logger.LogTrace($"WriteIndexRequest: deletions count: {request.Deletions?.Count ?? 0}, " +
+                             $"updates count: {request.Updates?.Count ?? 0}, " +
+                             $"updates size: {request.Updates?.Sum(x => x.Length) ?? 0}, " +
+                             $"additions count: {request.Additions?.Count ?? 0}, " +
+                             $"additions size: {request.Additions?.Sum(x => x.Length) ?? 0}");
+            await _retrier.RetryAsync(
+                action: async () =>
+                {
+                    await _searchClient.WriteIndexAsync(request);
+                },
+                shouldRetryOnError: (e, i) =>
+                {
+                    _logger.LogWarning($"WriteIndex failed. Iteration: {i}, Error: {e.Message}");
+                    return true;
+                },
+                onAfterLastIteration: (e, i) =>
+                {
+                    _logger.LogError(e, $"WriteIndex failed after {i} iteration.");
+                }
+                , cancel: cancel);
+
+            //try
+            //{
+            //    _searchClient.WriteIndex(request);
+            //}
+            //catch (Exception ex)
+            //{
+            //    throw LogAndFormatException(ex, "WriteIndex");
+            //}
         }
 
         public QueryResult<int> ExecuteQuery(SnQuery query, ServiceQueryContext queryContext)
