@@ -220,21 +220,24 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
         public void WriteIndex(SnTerm[] deletions, DocumentUpdate[] updates, IndexDocument[] additions)
         {
             if (deletions != null)
-                SendByPartitions(deletions,
+                SendByPartitionsAsync(deletions,
                     snTerm => snTerm.Serialize(),
-                    (item, request) => { request.Deletions.Add(item);});
+                    (item, request) => { request.Deletions.Add(item);},
+                    CancellationToken.None).GetAwaiter().GetResult(); ;
             if (updates != null)
-                SendByPartitions(updates,
+                SendByPartitionsAsync(updates,
                     documentUpdate => documentUpdate.Serialize(),
-                    (item, request) => { request.Updates.Add(item); });
+                    (item, request) => { request.Updates.Add(item); },
+                    CancellationToken.None).GetAwaiter().GetResult(); ;
             if (additions != null)
-                SendByPartitions(additions,
+                SendByPartitionsAsync(additions,
                     indexDocument => indexDocument.Serialize(),
-                    (item, request) => { request.Additions.Add(item); });
+                    (item, request) => { request.Additions.Add(item); },
+                    CancellationToken.None).GetAwaiter().GetResult();
         }
 
-        private void SendByPartitions<T>(T[] items, Func<T, string> serialize,
-            Action<string, GrpcService.WriteIndexRequest> addToRequest)
+        private async Task SendByPartitionsAsync<T>(T[] items, Func<T, string> serialize,
+            Action<string, GrpcService.WriteIndexRequest> addToRequest, CancellationToken cancel)
         {
             var request = new GrpcService.WriteIndexRequest();
             var length = 0;
@@ -243,7 +246,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
                 var serialized = serialize(item);
                 if (length + serialized.Length > _maxSendMessageSizeEffective)
                 {
-                    SendWriteIndexRequestAsync(request, CancellationToken.None).GetAwaiter().GetResult();
+                    await SendWriteIndexRequestAsync(request, cancel).ConfigureAwait(false);
                     request = new GrpcService.WriteIndexRequest();
                     length = 0;
                 }
@@ -252,7 +255,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             }
 
             if (length > 0)
-                SendWriteIndexRequestAsync(request, CancellationToken.None).GetAwaiter().GetResult();
+                await SendWriteIndexRequestAsync(request, cancel).ConfigureAwait(false);
         }
         private async Task SendWriteIndexRequestAsync(WriteIndexRequest request, CancellationToken cancel)
         {

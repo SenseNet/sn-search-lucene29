@@ -144,4 +144,88 @@ public class GrpcPartitioningTests
             Assert.IsTrue(length < maxSendMessageSizeEffective, $"Request {i} too long: {length}. Expected max: {maxSendMessageSizeEffective}");
         }
     }
+
+    [TestMethod]
+    public void GrpcPartitioning_Updates_Big()
+    {
+        var maxSendMessageSize = 1_500;
+        var maxSendMessageSizeEffective = maxSendMessageSize * 9 / 10;
+        CreateInfrastructure(maxSendMessageSize, out var serviceClient, out var testGrpcSearchClient);
+
+        // ACT
+        var updates = Enumerable.Range(0, 10).Select(i => new DocumentUpdate
+        {
+            UpdateTerm = new SnTerm("String1", "Value" + i),
+            Document = new IndexDocument
+            {
+                new IndexField("String1", "value" + i, IndexingMode.Analyzed, IndexStoringMode.Default,
+                    IndexTermVector.Default),
+                new IndexField("Binary", "Small binary", IndexingMode.Default, IndexStoringMode.Default,
+                    IndexTermVector.Default),
+                new IndexField("Integer1", i, IndexingMode.No, IndexStoringMode.Yes,
+                    IndexTermVector.Default),
+            }
+        }).ToArray();
+
+        var bigData = string.Join(" ", Enumerable.Range(0, 500).Select(i => "xxxxxxxxxx" + i));
+        updates[5].Document.Fields["Binary"] = new IndexField("Binary", bigData, IndexingMode.Default,
+            IndexStoringMode.Default, IndexTermVector.Default);
+
+        serviceClient.WriteIndex(null, updates, null);
+
+        // ASSERT
+        var partitions = testGrpcSearchClient.Requests.Select(x => x.Updates.ToArray()).ToArray();
+        var expectedTotalLength = updates.Sum(x => x.Serialize().Length);
+        var totalLength = partitions.SelectMany(x => x).Sum(x => x.Length);
+        Assert.AreEqual(expectedTotalLength, totalLength);
+
+        for (int i = 0; i < partitions.Length; i++)
+        {
+            var request = partitions[i];
+            var length = request.Sum(x => x.Length);
+            Assert.IsTrue(length < maxSendMessageSizeEffective, $"Request {i} too long: {length}. Expected max: {maxSendMessageSizeEffective}");
+        }
+    }
+    [TestMethod]
+    public void GrpcPartitioning_Additions_Big()
+    {
+        var maxSendMessageSize = 5_000;
+        var maxSendMessageSizeEffective = maxSendMessageSize * 9 / 10;
+        CreateInfrastructure(maxSendMessageSize, out var serviceClient, out var testGrpcSearchClient);
+
+        // ACT
+        var additions = Enumerable.Range(0, 10).Select(i => new IndexDocument
+        {
+            new IndexField("Name", "Content" + i, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
+            new IndexField("Binary", "Small binary", IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
+            new IndexField("String1", "value", IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
+            new IndexField("StringArray1", new[] {"value1", "value2"}, IndexingMode.Analyzed, IndexStoringMode.No, IndexTermVector.No),
+            new IndexField("Boolean1", true, IndexingMode.AnalyzedNoNorms, IndexStoringMode.Yes, IndexTermVector.WithOffsets),
+            new IndexField("Integer1", 42, IndexingMode.No, IndexStoringMode.Default, IndexTermVector.WithPositions),
+            new IndexField("IntegerArray1", new[] {42, 43, 44}, IndexingMode.NotAnalyzed, IndexStoringMode.Default, IndexTermVector.WithPositions),
+            new IndexField("Long1", 42L, IndexingMode.Analyzed, IndexStoringMode.Default, IndexTermVector.WithPositionsOffsets),
+            new IndexField("Float1", (float) 123.45, IndexingMode.NotAnalyzed, IndexStoringMode.Default, IndexTermVector.Yes),
+            new IndexField("Double1", 123.45d, IndexingMode.NotAnalyzedNoNorms, IndexStoringMode.Default, IndexTermVector.Default),
+            new IndexField("DateTime1", new DateTime(2019, 04, 19, 9, 38, 15), IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default)
+        }).ToArray();
+
+        var bigData = string.Join(" ", Enumerable.Range(0, 1000).Select(i => "xxxxxxxxxx" + i));
+        additions[5].Fields["Binary"] = new IndexField("Binary", bigData, IndexingMode.Default,
+            IndexStoringMode.Default, IndexTermVector.Default);
+
+        serviceClient.WriteIndex(null, null, additions);
+
+        // ASSERT
+        var partitions = testGrpcSearchClient.Requests.Select(x => x.Additions.ToArray()).ToArray();
+        var expectedTotalLength = additions.Sum(x => x.Serialize().Length);
+        var totalLength = partitions.SelectMany(x => x).Sum(x => x.Length);
+        Assert.AreEqual(expectedTotalLength, totalLength);
+
+        for (int i = 0; i < partitions.Length; i++)
+        {
+            var request = partitions[i];
+            var length = request.Sum(x => x.Length);
+            Assert.IsTrue(length < maxSendMessageSizeEffective, $"Request {i} too long: {length}. Expected max: {maxSendMessageSizeEffective}");
+        }
+    }
 }
