@@ -146,53 +146,6 @@ public class GrpcPartitioningTests
             Assert.IsTrue(length < maxSendMessageSizeEffective, $"Request {i} too long: {length}. Expected max: {maxSendMessageSizeEffective}");
         }
     }
-
-    [TestMethod]
-    public void GrpcPartitioning_Updates_Big()
-    {
-        var maxSendMessageSize = 1_500;
-        var maxSendMessageSizeEffective = maxSendMessageSize * 9 / 10;
-        CreateInfrastructure(maxSendMessageSize, out var serviceClient, out var testGrpcSearchClient);
-
-        // ACT
-        var updates = Enumerable.Range(0, 10).Select(i => new DocumentUpdate
-        {
-            UpdateTerm = new SnTerm("String1", "Value" + i),
-            Document = new IndexDocument
-            {
-                new IndexField("VersionId", 42, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
-                new IndexField("String1", "value" + i, IndexingMode.Analyzed, IndexStoringMode.Default,
-                    IndexTermVector.Default),
-                new IndexField("Binary", "Small binary", IndexingMode.Default, IndexStoringMode.Default,
-                    IndexTermVector.Default),
-                new IndexField("Integer1", i, IndexingMode.No, IndexStoringMode.Yes,
-                    IndexTermVector.Default),
-                new IndexField("_Text", "Small binary", IndexingMode.No, IndexStoringMode.Yes,
-                    IndexTermVector.Default),
-            }
-        }).ToArray();
-
-        var bigData = string.Join(" ", Enumerable.Range(0, 500).Select(i => "xxxxxxxxxx" + i));
-        updates[5].Document.Fields["Binary"] = new IndexField("Binary", bigData, IndexingMode.Default,
-            IndexStoringMode.Default, IndexTermVector.Default);
-        updates[5].Document.Fields["_Text"] = new IndexField("_Text", bigData, IndexingMode.Default,
-            IndexStoringMode.Default, IndexTermVector.Default);
-
-        serviceClient.WriteIndex(null, updates, null);
-
-        // ASSERT
-        var partitions = testGrpcSearchClient.Requests.Select(x => x.Updates.ToArray()).ToArray();
-        var expectedTotalLength = updates.Sum(x => x.Serialize().Length);
-        var totalLength = partitions.SelectMany(x => x).Sum(x => x.Length);
-        Assert.AreEqual(expectedTotalLength, totalLength);
-
-        for (int i = 0; i < partitions.Length; i++)
-        {
-            var request = partitions[i];
-            var length = request.Sum(x => x.Length);
-            Assert.IsTrue(length < maxSendMessageSizeEffective, $"Request {i} too long: {length}. Expected max: {maxSendMessageSizeEffective}");
-        }
-    }
     [TestMethod]
     public void GrpcPartitioning_Additions_Big_MoreFields()
     {
@@ -288,6 +241,7 @@ public class GrpcPartitioningTests
             IndexStoringMode.Default, IndexTermVector.Default);
         additions[5].Fields["_Text"] = new IndexField("_Text", bigData, IndexingMode.Default,
             IndexStoringMode.Default, IndexTermVector.Default);
+//var ie = 0;
         var expectedTotalLength = additions.Sum(x =>
         {
             var versionId = x.Fields["VersionId"].IntegerValue;
@@ -295,6 +249,8 @@ public class GrpcPartitioningTests
             foreach (var item in x.Fields)
                 y.Fields.Add(item);
             var s = y.Serialize();
+//using (var writer = new StreamWriter($@"D:\dev\__temp\indexdocserialization\expected{ie++}.txt"))
+//    writer.Write(s);
             return s.Length;
         });
 
@@ -302,10 +258,77 @@ public class GrpcPartitioningTests
 
         // ASSERT
         var partitions = testGrpcSearchClient.Requests.Select(x => x.Additions.ToArray()).ToArray();
-        var totalLength = partitions.SelectMany(x => x).Sum(x => x.Length);
+//var ia = 0;
+        var totalLength = partitions.SelectMany(x => x).Sum(x =>
+        {
+//using (var writer = new StreamWriter($@"D:\dev\__temp\indexdocserialization\actual{ia++}.txt"))
+//    writer.Write(x);
+            return x.Length;
+        });
         expectedTotalLength -= 147; // Original skeleton of the Binary and _Text fields.
         expectedTotalLength += 4 * (151 + 150); // Skeletons of the additional document slices (common field + Binary or _Text)
         expectedTotalLength -= 6; // Dropped whitespaces when the big fields sliced.
+        Assert.AreEqual(expectedTotalLength, totalLength);
+
+        for (int i = 0; i < partitions.Length; i++)
+        {
+            var request = partitions[i];
+            var length = request.Sum(x => x.Length);
+            Assert.IsTrue(length < maxSendMessageSizeEffective, $"Request {i} too long: {length}. Expected max: {maxSendMessageSizeEffective}");
+        }
+    }
+
+    [TestMethod]
+    public void GrpcPartitioning_Updates_Big_LargeFields()
+    {
+        var maxSendMessageSize = 2_500;
+        var maxSendMessageSizeEffective = maxSendMessageSize * 9 / 10;
+        CreateInfrastructure(maxSendMessageSize, out var serviceClient, out var testGrpcSearchClient);
+
+        // ACT
+        var updates = Enumerable.Range(0, 10).Select(i => new DocumentUpdate
+        {
+            UpdateTerm = new SnTerm("VersionId", 100 + i),
+            Document = new IndexDocument
+            {
+                new IndexField("VersionId", 100 + i, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
+                new IndexField("String1", "value" + i, IndexingMode.Analyzed, IndexStoringMode.Default,
+                    IndexTermVector.Default),
+                new IndexField("Binary", "Small binary", IndexingMode.Default, IndexStoringMode.Default,
+                    IndexTermVector.Default),
+                new IndexField("Integer1", i, IndexingMode.No, IndexStoringMode.Yes,
+                    IndexTermVector.Default),
+                new IndexField("_Text", "Small binary", IndexingMode.No, IndexStoringMode.Yes,
+                    IndexTermVector.Default),
+            }
+        }).ToArray();
+
+        var bigData = string.Join(" ", Enumerable.Range(0, 200).Select(i => "Xxxxxxxxxx" + i));
+        updates[5].Document.Fields["Binary"] = new IndexField("Binary", bigData, IndexingMode.Default,
+            IndexStoringMode.Default, IndexTermVector.Default);
+        updates[5].Document.Fields["_Text"] = new IndexField("_Text", bigData, IndexingMode.Default,
+            IndexStoringMode.Default, IndexTermVector.Default);
+        var expectedTotalLength = updates.Sum(x =>
+        {
+            var versionId = x.Document.Fields["VersionId"].IntegerValue;
+            var y = new IndexDocument();
+            foreach (var item in x.Document.Fields)
+                y.Fields.Add(item);
+            var z = new DocumentUpdate {UpdateTerm = x.UpdateTerm, Document = y};
+            var s = z.Serialize();
+            return s.Length;
+        });
+
+        serviceClient.WriteIndex(null, updates, null);
+
+        // ASSERT
+        var partitions = testGrpcSearchClient.Requests.Select(x => x.Deletions.Union(x.Updates).Union(x.Additions).ToArray()).ToArray();
+        var totalLength = partitions.SelectMany(x => x).Sum(x => x.Length);
+        expectedTotalLength += 62; //  delete request
+        expectedTotalLength -= 147; // Original skeleton of the Binary and _Text fields.
+        expectedTotalLength -= 101; // Original skeleton of the DocumentUpdate
+        expectedTotalLength += 2 * (152 + 151); // Skeletons of the additional document slices (common field + Binary or _Text)
+        expectedTotalLength -= 2; // Dropped whitespaces when the big fields sliced.
         Assert.AreEqual(expectedTotalLength, totalLength);
 
         for (int i = 0; i < partitions.Length; i++)
