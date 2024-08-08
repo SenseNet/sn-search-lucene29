@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Org.BouncyCastle.Math.EC.Rfc7748;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Lucene29.Centralized.GrpcClient;
@@ -146,6 +147,8 @@ public class GrpcPartitioningTests
             Assert.IsTrue(length < maxSendMessageSizeEffective, $"Request {i} too long: {length}. Expected max: {maxSendMessageSizeEffective}");
         }
     }
+
+    private readonly string[] _commonFieldNames = new[] { "Id", "VersionId", "IsLastPublic", "IsLastDraft" };
     [TestMethod]
     public void GrpcPartitioning_Additions_Big_MoreFields()
     {
@@ -156,19 +159,22 @@ public class GrpcPartitioningTests
             return s;
         }
 
-        var maxSendMessageSize = 2_200;
+        var maxSendMessageSize = 2_600;
         var maxSendMessageSizeEffective = maxSendMessageSize * 9 / 10;
         CreateInfrastructure(maxSendMessageSize, out var serviceClient, out var testGrpcSearchClient);
 
         // ACT
         var additions = Enumerable.Range(0, 10).Select(i => new IndexDocument
         {
+            new IndexField("Id", 100 + i, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
             new IndexField("Name", "Content" + i, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
             new IndexField("VersionId", 42 + i, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
             new IndexField("Binary", "Small binary", IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
             new IndexField("String1", "value", IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
             new IndexField("StringArray1", new[] {"value1", "value2"}, IndexingMode.Analyzed, IndexStoringMode.No, IndexTermVector.No),
             new IndexField("Boolean1", true, IndexingMode.AnalyzedNoNorms, IndexStoringMode.Yes, IndexTermVector.WithOffsets),
+            new IndexField("IsLastPublic", false, IndexingMode.AnalyzedNoNorms, IndexStoringMode.Yes, IndexTermVector.WithOffsets),
+            new IndexField("IsLastDraft", true, IndexingMode.AnalyzedNoNorms, IndexStoringMode.Yes, IndexTermVector.WithOffsets),
             new IndexField("Integer1", 42, IndexingMode.No, IndexStoringMode.Default, IndexTermVector.WithPositions),
             new IndexField("IntegerArray1", new[] {42, 43, 44}, IndexingMode.NotAnalyzed, IndexStoringMode.Default, IndexTermVector.WithPositions),
             new IndexField("Long1", 42L, IndexingMode.Analyzed, IndexStoringMode.Default, IndexTermVector.WithPositionsOffsets),
@@ -179,8 +185,11 @@ public class GrpcPartitioningTests
         }).ToArray();
         additions[5] = new IndexDocument
         {
+            new("Id", 100 + 5, 0, 0, 0),
             new("Name", "Content" + 5, 0, 0, 0),
             new("VersionId", 42 + 5, 0, 0, 0),
+            new("IsLastPublic", false, 0, 0, 0),
+            new("IsLastDraft", true, 0, 0, 0),
             new("String01", GetStringValue(100), 0, 0, 0),
             new("String02", GetStringValue(100), 0, 0, 0),
             new("String03", GetStringValue(100), 0, 0, 0),
@@ -195,21 +204,67 @@ public class GrpcPartitioningTests
             new("String12", GetStringValue(900), 0, 0, 0),
             new("String13", GetStringValue(1000), 0, 0, 0),
         };
+        var expectedTotalLength = additions.Sum(x =>
+        {
+            var length = 0;
+            var doc = new IndexDocument();
+            foreach (var indexField in x.Fields.Values)
+            {
+                doc.Add(indexField);
+                if (!_commonFieldNames.Contains(indexField.Name))
+                    length += indexField.ValueAsString.Length;
+            }
+//var versionId = doc.Fields["VersionId"].IntegerValue;
+//var s = doc.Serialize();
+//using (var writer = new StreamWriter($@"D:\dev\__temp\indexdocserialization\expected\{versionId}.txt"))
+//    writer.Write(s);
+            return length;
+        });
+
         serviceClient.WriteIndex(null, null, additions);
 
         // ASSERT
+        var totalLength = 0;
         var partitions = testGrpcSearchClient.Requests.Select(x => x.Additions.ToArray()).ToArray();
-        var expectedTotalLength = additions.Sum(x => x.Serialize().Length);
-        var totalLength = partitions.SelectMany(x => x).Sum(x => x.Length);
-        totalLength -= 4 * 77; // total length of the additional common field terms.
-        Assert.AreEqual(expectedTotalLength, totalLength);
+//var count = 0;
+        foreach (var partition in partitions)
+        {
+            foreach (var s in partition)
+            {
+                var doc = IndexDocument.Deserialize(s);
+//var versionId = doc.Fields["VersionId"].IntegerValue;
+//var fileName = versionId == 42 + 5 ? $"{versionId}{(count == 0 ? "" : "-"+count )}" : $"{versionId}";
+//if (versionId == 42 + 5) count++;
+//using (var writer = new StreamWriter($@"D:\dev\__temp\indexdocserialization\actual\{fileName}.txt"))
+//    writer.Write(s);
+                totalLength += doc.Fields.Values
+                    .Where(f => !_commonFieldNames.Contains(f.Name))
+                    .Sum(f => f.ValueAsString.Length);
+            }
+        }
 
+        // 1 - All requests are shorter than maxSendMessageSizeEffective
         for (int i = 0; i < partitions.Length; i++)
         {
             var request = partitions[i];
             var length = request.Sum(x => x.Length);
             Assert.IsTrue(length < maxSendMessageSizeEffective, $"Request {i} too long: {length}. Expected max: {maxSendMessageSizeEffective}");
         }
+
+        // 2 - All requests contain the common fields
+        var requests = partitions.SelectMany(x => x).ToArray();
+        for (int i = 0; i < requests.Length; i++)
+        {
+            var request = requests[i];
+            var indxDoc = IndexDocument.Deserialize(request);
+            Assert.IsTrue(indxDoc.Fields.ContainsKey("Id"), $"Missing Id in request {i}");
+            Assert.IsTrue(indxDoc.Fields.ContainsKey("VersionId"), $"Missing VersionId in request {i}");
+            Assert.IsTrue(indxDoc.Fields.ContainsKey("IsLastPublic"), $"Missing IsLastPublic in request {i}");
+            Assert.IsTrue(indxDoc.Fields.ContainsKey("IsLastDraft"), $"Missing IsLastDraft in request {i}");
+        }
+
+        // 3 - Payload length
+        Assert.AreEqual(expectedTotalLength, totalLength);
     }
     [TestMethod]
     public void GrpcPartitioning_Additions_Big_LargeFields()
@@ -221,12 +276,15 @@ public class GrpcPartitioningTests
         // ACT
         var additions = Enumerable.Range(0, 10).Select(i => new IndexDocument
         {
+            new IndexField("Id", 100 + i, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
             new IndexField("Name", "Content" + i, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
             new IndexField("VersionId", 42 + i, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
             new IndexField("Binary", "Small binary", IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
             new IndexField("String1", "value", IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
             new IndexField("StringArray1", new[] {"value1", "value2"}, IndexingMode.Analyzed, IndexStoringMode.No, IndexTermVector.No),
             new IndexField("Boolean1", true, IndexingMode.AnalyzedNoNorms, IndexStoringMode.Yes, IndexTermVector.WithOffsets),
+            new IndexField("IsLastPublic", false, IndexingMode.AnalyzedNoNorms, IndexStoringMode.Yes, IndexTermVector.WithOffsets),
+            new IndexField("IsLastDraft", true, IndexingMode.AnalyzedNoNorms, IndexStoringMode.Yes, IndexTermVector.WithOffsets),
             new IndexField("Integer1", 42, IndexingMode.No, IndexStoringMode.Default, IndexTermVector.WithPositions),
             new IndexField("IntegerArray1", new[] {42, 43, 44}, IndexingMode.NotAnalyzed, IndexStoringMode.Default, IndexTermVector.WithPositions),
             new IndexField("Long1", 42L, IndexingMode.Analyzed, IndexStoringMode.Default, IndexTermVector.WithPositionsOffsets),
@@ -241,41 +299,58 @@ public class GrpcPartitioningTests
             IndexStoringMode.Default, IndexTermVector.Default);
         additions[5].Fields["_Text"] = new IndexField("_Text", bigData, IndexingMode.Default,
             IndexStoringMode.Default, IndexTermVector.Default);
-//var ie = 0;
         var expectedTotalLength = additions.Sum(x =>
         {
-            var versionId = x.Fields["VersionId"].IntegerValue;
-            var y = new IndexDocument();
-            foreach (var item in x.Fields)
-                y.Fields.Add(item);
-            var s = y.Serialize();
-//using (var writer = new StreamWriter($@"D:\dev\__temp\indexdocserialization\expected{ie++}.txt"))
-//    writer.Write(s);
-            return s.Length;
+            var length = 0;
+            var doc = new IndexDocument();
+            foreach (var indexField in x.Fields.Values)
+            {
+                doc.Add(indexField);
+                if (!_commonFieldNames.Contains(indexField.Name))
+                    length += indexField.ValueAsString.Length;
+            }
+            return length;
         });
 
         serviceClient.WriteIndex(null, null, additions);
 
         // ASSERT
+        var totalLength = 0;
         var partitions = testGrpcSearchClient.Requests.Select(x => x.Additions.ToArray()).ToArray();
-//var ia = 0;
-        var totalLength = partitions.SelectMany(x => x).Sum(x =>
+        foreach (var partition in partitions)
         {
-//using (var writer = new StreamWriter($@"D:\dev\__temp\indexdocserialization\actual{ia++}.txt"))
-//    writer.Write(x);
-            return x.Length;
-        });
-        expectedTotalLength -= 147; // Original skeleton of the Binary and _Text fields.
-        expectedTotalLength += 4 * (151 + 150); // Skeletons of the additional document slices (common field + Binary or _Text)
-        expectedTotalLength -= 6; // Dropped whitespaces when the big fields sliced.
-        Assert.AreEqual(expectedTotalLength, totalLength);
+            foreach (var s in partition)
+            {
+                var doc = IndexDocument.Deserialize(s);
+                totalLength += doc.Fields.Values
+                    .Where(f => !_commonFieldNames.Contains(f.Name))
+                    .Sum(f => f.ValueAsString.Length);
+            }
+        }
 
+        // 1 - All requests are shorter than maxSendMessageSizeEffective
         for (int i = 0; i < partitions.Length; i++)
         {
             var request = partitions[i];
             var length = request.Sum(x => x.Length);
             Assert.IsTrue(length < maxSendMessageSizeEffective, $"Request {i} too long: {length}. Expected max: {maxSendMessageSizeEffective}");
         }
+
+        // 2 - All requests contain the common fields
+        var requests = partitions.SelectMany(x => x).ToArray();
+        for (int i = 0; i < requests.Length; i++)
+        {
+            var request = requests[i];
+            var indxDoc = IndexDocument.Deserialize(request);
+            Assert.IsTrue(indxDoc.Fields.ContainsKey("Id"), $"Missing Id in request {i}");
+            Assert.IsTrue(indxDoc.Fields.ContainsKey("VersionId"), $"Missing VersionId in request {i}");
+            Assert.IsTrue(indxDoc.Fields.ContainsKey("IsLastPublic"), $"Missing IsLastPublic in request {i}");
+            Assert.IsTrue(indxDoc.Fields.ContainsKey("IsLastDraft"), $"Missing IsLastDraft in request {i}");
+        }
+
+        // 3 - Payload length
+        expectedTotalLength -= 6; // Dropped whitespaces when the big fields sliced.
+        Assert.AreEqual(expectedTotalLength, totalLength);
     }
 
     [TestMethod]
@@ -291,15 +366,14 @@ public class GrpcPartitioningTests
             UpdateTerm = new SnTerm("VersionId", 100 + i),
             Document = new IndexDocument
             {
+                new IndexField("Id", 100 + i, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
                 new IndexField("VersionId", 100 + i, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
-                new IndexField("String1", "value" + i, IndexingMode.Analyzed, IndexStoringMode.Default,
-                    IndexTermVector.Default),
-                new IndexField("Binary", "Small binary", IndexingMode.Default, IndexStoringMode.Default,
-                    IndexTermVector.Default),
-                new IndexField("Integer1", i, IndexingMode.No, IndexStoringMode.Yes,
-                    IndexTermVector.Default),
-                new IndexField("_Text", "Small binary", IndexingMode.No, IndexStoringMode.Yes,
-                    IndexTermVector.Default),
+                new IndexField("IsLastPublic", false, IndexingMode.AnalyzedNoNorms, IndexStoringMode.Yes, IndexTermVector.WithOffsets),
+                new IndexField("IsLastDraft", true, IndexingMode.AnalyzedNoNorms, IndexStoringMode.Yes, IndexTermVector.WithOffsets),
+                new IndexField("String1", "value" + i, IndexingMode.Analyzed, IndexStoringMode.Default, IndexTermVector.Default),
+                new IndexField("Binary", "Small binary", IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
+                new IndexField("Integer1", i, IndexingMode.No, IndexStoringMode.Yes, IndexTermVector.Default),
+                new IndexField("_Text", "Small binary", IndexingMode.No, IndexStoringMode.Yes, IndexTermVector.Default),
             }
         }).ToArray();
 
@@ -310,32 +384,77 @@ public class GrpcPartitioningTests
             IndexStoringMode.Default, IndexTermVector.Default);
         var expectedTotalLength = updates.Sum(x =>
         {
-            var versionId = x.Document.Fields["VersionId"].IntegerValue;
-            var y = new IndexDocument();
-            foreach (var item in x.Document.Fields)
-                y.Fields.Add(item);
-            var z = new DocumentUpdate {UpdateTerm = x.UpdateTerm, Document = y};
-            var s = z.Serialize();
-            return s.Length;
+            var length = 0;
+            var doc = new IndexDocument();
+            foreach (var indexField in x.Document.Fields.Values)
+            {
+                doc.Add(indexField);
+                if (!_commonFieldNames.Contains(indexField.Name))
+                    length += indexField.ValueAsString.Length;
+            }
+            return length;
         });
 
         serviceClient.WriteIndex(null, updates, null);
 
         // ASSERT
-        var partitions = testGrpcSearchClient.Requests.Select(x => x.Deletions.Union(x.Updates).Union(x.Additions).ToArray()).ToArray();
-        var totalLength = partitions.SelectMany(x => x).Sum(x => x.Length);
-        expectedTotalLength += 62; //  delete request
-        expectedTotalLength -= 147; // Original skeleton of the Binary and _Text fields.
-        expectedTotalLength -= 101; // Original skeleton of the DocumentUpdate
-        expectedTotalLength += 2 * (152 + 151); // Skeletons of the additional document slices (common field + Binary or _Text)
+        var totalLength = 0;
+        var partitions = testGrpcSearchClient.Requests;//.Select(x => x.Updates.ToArray()).ToArray();
+        var i = 0;
+        foreach (var request in partitions)
+        {
+            foreach (var deletionItem in request.Deletions) { }
+
+            foreach (var updateItem in request.Updates)
+            {
+                var upd = DocumentUpdate.Deserialize(updateItem);
+                totalLength += upd.Document.Fields.Values
+                    .Where(f => !_commonFieldNames.Contains(f.Name))
+                    .Sum(f => f.ValueAsString.Length);
+                Assert.IsTrue(upd.Document.Fields.ContainsKey("Id"), $"Missing Id in request {i}");
+                Assert.IsTrue(upd.Document.Fields.ContainsKey("VersionId"), $"Missing VersionId in request {i}");
+                Assert.IsTrue(upd.Document.Fields.ContainsKey("IsLastPublic"), $"Missing IsLastPublic in request {i}");
+                Assert.IsTrue(upd.Document.Fields.ContainsKey("IsLastDraft"), $"Missing IsLastDraft in request {i}");
+            }
+
+            foreach (var additionItem in request.Additions)
+            {
+                var indexDocument = IndexDocument.Deserialize(additionItem);
+                totalLength += indexDocument.Fields.Values
+                    .Where(f => !_commonFieldNames.Contains(f.Name))
+                    .Sum(f => f.ValueAsString.Length);
+                Assert.IsTrue(indexDocument.Fields.ContainsKey("Id"), $"Missing Id in request {i}");
+                Assert.IsTrue(indexDocument.Fields.ContainsKey("VersionId"), $"Missing VersionId in request {i}");
+                Assert.IsTrue(indexDocument.Fields.ContainsKey("IsLastPublic"), $"Missing IsLastPublic in request {i}");
+                Assert.IsTrue(indexDocument.Fields.ContainsKey("IsLastDraft"), $"Missing IsLastDraft in request {i}");
+            }
+
+            i++;
+        }
+
+        // 1 - All requests are shorter than maxSendMessageSizeEffective
+        i = 0;
+        var length = 0;
+        foreach (var partition in partitions)
+        {
+            length = partition.Deletions.Sum(x => x.Length);
+            Assert.IsTrue(length < maxSendMessageSizeEffective,
+                $"Request {i} Deletions too long: {length}. Expected max: {maxSendMessageSizeEffective}");
+
+            length = partition.Updates.Sum(x => x.Length);
+            Assert.IsTrue(length < maxSendMessageSizeEffective,
+                $"Request {i} Updates too long: {length}. Expected max: {maxSendMessageSizeEffective}");
+
+            length = partition.Additions.Sum(x => x.Length);
+            Assert.IsTrue(length < maxSendMessageSizeEffective,
+                $"Request {i} Additions too long: {length}. Expected max: {maxSendMessageSizeEffective}");
+
+            i++;
+        }
+
+        // Check payload length
         expectedTotalLength -= 2; // Dropped whitespaces when the big fields sliced.
         Assert.AreEqual(expectedTotalLength, totalLength);
 
-        for (int i = 0; i < partitions.Length; i++)
-        {
-            var request = partitions[i];
-            var length = request.Sum(x => x.Length);
-            Assert.IsTrue(length < maxSendMessageSizeEffective, $"Request {i} too long: {length}. Expected max: {maxSendMessageSizeEffective}");
-        }
     }
 }

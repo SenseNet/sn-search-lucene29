@@ -312,7 +312,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
             // get too big fields
             var fieldMaxSize = _maxSendMessageSizeEffective * 9 / 10;
-            var commonField = indexDocument.Fields["VersionId"];
+            var commonFields = GetCommonFields(indexDocument, out var commonFieldsLength);
             var stringFields = indexDocument.Fields.Values
                 .Where(f => f.Type == IndexValueType.String)
                 .ToArray();
@@ -322,7 +322,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             var slicedFields = new List<IndexField>();
             foreach (var tooBigField in tooBigFields)
             {
-                var slices = SliceField(tooBigField);
+                var slices = SliceField(tooBigField, commonFieldsLength);
                 indexDocument.Fields.Remove(tooBigField.Name);
                 slicedFields.AddRange(slices);
             }
@@ -330,19 +330,23 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             {
                 var indxDoc = new IndexDocument();
                 documentParts.Add(indxDoc);
-                indxDoc.Add(commonField);
+                foreach (var commonField in commonFields)
+                    indxDoc.Add(commonField);
                 indxDoc.Add(slicedField);
             }
 
             // Make document parts from the not too large fields
-            var fields = indexDocument.Fields.Values.Where(f => f.Name != commonField.Name).ToArray();
+            var fields = indexDocument.Fields.Values
+                .Where(f => !CommonFieldNames.Contains(f.Name))
+                .ToArray();
             var fieldIndex = 0;
             while (fieldIndex < fields.Length)
             {
                 var documentPart = new IndexDocument();
                 documentParts.Add(documentPart);
-                documentPart.Add(commonField);
-                var length = commonField.Name.Length + commonField.ValueAsString.Length; //UNDONE: MATEK!
+                foreach (var commonField in commonFields)
+                    documentPart.Add(commonField);
+                var length = commonFieldsLength;
                 while (fieldIndex < fields.Length)
                 {
                     var field = fields[fieldIndex];
@@ -363,7 +367,22 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             } ));
             return requests;
         }
-        private IEnumerable<IndexField> SliceField(IndexField indexField)
+
+        private static readonly string[] CommonFieldNames = new[] {"Id", "VersionId", "IsLastPublic", "IsLastDraft"};
+        private IndexField[] GetCommonFields(IndexDocument indexDocument, out int commonFieldsLength)
+        {
+            var tempDoc = new IndexDocument();
+            var indexFields = CommonFieldNames.Select(f =>
+            {
+                if (indexDocument.Fields.TryGetValue(f, out var field))
+                    tempDoc.Add(field);
+                return field;
+            }).Where(x => x != null).ToArray();
+
+            commonFieldsLength = tempDoc.Serialize().Length;
+            return indexFields;
+        }
+        private IEnumerable<IndexField> SliceField(IndexField indexField, int commonFieldsLength)
         {
             if (indexField.Type != IndexValueType.String)
                 throw new NotSupportedException($"SliceField is not supported on the {indexField.Type} IndexField.");
@@ -375,7 +394,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             var sm = indexField.Store;
             var tv = indexField.TermVector;
 
-            var maxLength = _maxSendMessageSizeEffective - 200; // Ensure place for the common field;
+            var maxLength = _maxSendMessageSizeEffective - commonFieldsLength * 12 / 10; // 120%
             var p0 = 0; // start poosition
             var p = maxLength;
             while (p < stringValue.Length)
