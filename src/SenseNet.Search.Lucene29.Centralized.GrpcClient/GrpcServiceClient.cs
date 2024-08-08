@@ -19,6 +19,8 @@ using BackupResponse = SenseNet.Search.Indexing.BackupResponse;
 using IndexFieldAnalyzer = SenseNet.Search.Indexing.IndexFieldAnalyzer;
 using IndexingActivityStatus = SenseNet.Search.Indexing.IndexingActivityStatus;
 using ServiceQueryContext = SenseNet.Search.Lucene29.Centralized.Common.ServiceQueryContext;
+using Lucene.Net.Index;
+using SenseNet.ContentRepository.Storage.Data;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 {
@@ -223,12 +225,12 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
                 SendByPartitionsAsync(deletions,
                     snTerm => snTerm.Serialize(),
                     (item, request) => { request.Deletions.Add(item);},
-                    CancellationToken.None).GetAwaiter().GetResult(); ;
+                    CancellationToken.None).GetAwaiter().GetResult();
             if (updates != null)
                 SendByPartitionsAsync(updates,
                     documentUpdate => documentUpdate.Serialize(),
                     (item, request) => { request.Updates.Add(item); },
-                    CancellationToken.None).GetAwaiter().GetResult(); ;
+                    CancellationToken.None).GetAwaiter().GetResult();
             if (additions != null)
                 SendByPartitionsAsync(additions,
                     indexDocument => indexDocument.Serialize(),
@@ -236,13 +238,27 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
                     CancellationToken.None).GetAwaiter().GetResult();
         }
 
-        private async Task SendByPartitionsAsync<T>(T[] items, Func<T, string> serialize,
-            Action<string, GrpcService.WriteIndexRequest> addToRequest, CancellationToken cancel)
+        private async Task SendByPartitionsAsync<T>(
+            T[] items,
+            Func<T, string> serialize,
+            Action<string, GrpcService.WriteIndexRequest> addToRequest,
+            CancellationToken cancel)
         {
             var request = new GrpcService.WriteIndexRequest();
             var length = 0;
             foreach (var item in items)
             {
+                var approximateSize = GetApproximateSize(item);
+                if (approximateSize > _maxSendMessageSizeEffective)
+                {
+                    var requests = SliceAndCreateRequests(item);
+                    foreach (var slicedRequest in requests)
+                        await SendWriteIndexRequestAsync(slicedRequest, cancel).ConfigureAwait(false);
+                    //request = new GrpcService.WriteIndexRequest();
+                    //length = 0;
+                    continue;
+                }
+
                 var serialized = serialize(item);
                 if (length + serialized.Length > _maxSendMessageSizeEffective)
                 {
@@ -257,6 +273,126 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             if (length > 0)
                 await SendWriteIndexRequestAsync(request, cancel).ConfigureAwait(false);
         }
+        private int GetApproximateSize(object item)
+        {
+            if (item is SnTerm snTerm)
+                return snTerm.Name.Length + snTerm.ValueAsString.Length;
+            if (item is IndexDocument indxDoc)
+                return indxDoc.Fields.Values.Sum(f => f.Name.Length + f.ValueAsString.Length + 110);
+            if (item is DocumentUpdate docUpd)
+                return GetApproximateSize(docUpd.UpdateTerm) + GetApproximateSize(docUpd.Document) + 20;
+            throw new NotSupportedException($"GetApproximateSize is not supported for an instance of " +
+                                            $"{item.GetType().FullName}.");
+        }
+        private IEnumerable<WriteIndexRequest> SliceAndCreateRequests<T>(T item)
+        {
+            if (item is IndexDocument indexDocument)
+                return SliceIndexDocumentAndCreateRequests(indexDocument);
+            if (item is DocumentUpdate documentUpdate)
+                return SliceDocumentUpdateAndCreateRequests(documentUpdate);
+
+            throw new NotSupportedException($"SliceTheDocumentAndCreateRequests is not supported for an instance of " +
+                                            $"{item.GetType().FullName}.");
+        }
+        private IEnumerable<WriteIndexRequest> SliceDocumentUpdateAndCreateRequests(DocumentUpdate documentUpdate)
+        {
+            var deleteRequest = new WriteIndexRequest();
+            var serialized = documentUpdate.UpdateTerm.Serialize();
+            deleteRequest.Deletions.Add(serialized);
+            return SliceIndexDocumentAndCreateRequests(
+                indexDocument: documentUpdate.Document,
+                requests: new List<WriteIndexRequest>(new[] { deleteRequest }),
+                requestsLength: serialized.Length);
+        }
+        private IEnumerable<WriteIndexRequest> SliceIndexDocumentAndCreateRequests(IndexDocument indexDocument,
+            List<WriteIndexRequest> requests = null, int requestsLength = 0)
+        {
+            requests ??= new List<WriteIndexRequest>();
+            var documentParts = new List<IndexDocument>();
+
+            // get too big fields
+            var fieldMaxSize = _maxSendMessageSizeEffective * 9 / 10;
+            var commonField = indexDocument.Fields["VersionId"];
+            var stringFields = indexDocument.Fields.Values
+                .Where(f => f.Type == IndexValueType.String)
+                .ToArray();
+            var tooBigFields = stringFields.Where(f => f.StringValue.Length > fieldMaxSize).ToArray();
+
+            // Make document parts from the large fields if there is any
+            var slicedFields = new List<IndexField>();
+            foreach (var tooBigField in tooBigFields)
+            {
+                var slices = SliceField(tooBigField);
+                indexDocument.Fields.Remove(tooBigField.Name);
+                slicedFields.AddRange(slices);
+            }
+            foreach (var slicedField in slicedFields)
+            {
+                var indxDoc = new IndexDocument();
+                documentParts.Add(indxDoc);
+                indxDoc.Add(commonField);
+                indxDoc.Add(slicedField);
+            }
+
+            // Make document parts from the not too large fields
+            var fields = indexDocument.Fields.Values.Where(f => f.Name != commonField.Name).ToArray();
+            var fieldIndex = 0;
+            while (fieldIndex < fields.Length)
+            {
+                var documentPart = new IndexDocument();
+                documentParts.Add(documentPart);
+                documentPart.Add(commonField);
+                var length = commonField.Name.Length + commonField.ValueAsString.Length; //UNDONE: MATEK!
+                while (fieldIndex < fields.Length)
+                {
+                    var field = fields[fieldIndex];
+                    var fieldLength = field.Name.Length + field.ValueAsString.Length + 110;
+                    if (fieldIndex >= fields.Length || length + fieldLength >= _maxSendMessageSizeEffective)
+                        break;
+                    documentPart.Add(field);
+                    length += fieldLength;
+                    fieldIndex++;
+                }
+            }
+
+            // Make request from all document parts
+            requests.AddRange(documentParts.Select(d => {
+                var req = new WriteIndexRequest();
+                req.Additions.Add(d.Serialize());
+                return req;
+            } ));
+            return requests;
+        }
+        private IEnumerable<IndexField> SliceField(IndexField indexField)
+        {
+            if (indexField.Type != IndexValueType.String)
+                throw new NotSupportedException($"SliceField is not supported on the {indexField.Type} IndexField.");
+            var result = new List<IndexField>();
+
+            var name = indexField.Name;
+            var stringValue = indexField.StringValue;
+            var im = indexField.Mode;
+            var sm = indexField.Store;
+            var tv = indexField.TermVector;
+
+            var maxLength = _maxSendMessageSizeEffective - 200; // Ensure place for the common field;
+            var p0 = 0; // start poosition
+            var p = maxLength;
+            while (p < stringValue.Length)
+            {
+                for (var i = p - 1; i >= 0 && !Char.IsWhiteSpace(stringValue[i]); i--) p = i;
+                var slice = stringValue.Substring(p0, p - p0 - 1);
+                result.Add(new IndexField(name, slice, im, sm, tv));
+                p0 = p;
+                p = p0 + maxLength;
+            }
+
+            if (p0 < stringValue.Length - 1)
+                result.Add(new IndexField(name, stringValue.Substring(p0), im, sm, tv));
+
+            return result;
+        }
+
         private async Task SendWriteIndexRequestAsync(WriteIndexRequest request, CancellationToken cancel)
         {
             _logger.LogTrace($"WriteIndexRequest: deletions count: {request.Deletions?.Count ?? 0}, " +
@@ -279,15 +415,6 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
                     _logger.LogError(e, $"WriteIndex failed after {i} iteration.");
                 }
                 , cancel: cancel);
-
-            //try
-            //{
-            //    _searchClient.WriteIndex(request);
-            //}
-            //catch (Exception ex)
-            //{
-            //    throw LogAndFormatException(ex, "WriteIndex");
-            //}
         }
 
         public QueryResult<int> ExecuteQuery(SnQuery query, ServiceQueryContext queryContext)
