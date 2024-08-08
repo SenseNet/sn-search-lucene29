@@ -254,8 +254,6 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
                     var requests = SliceAndCreateRequests(item);
                     foreach (var slicedRequest in requests)
                         await SendWriteIndexRequestAsync(slicedRequest, cancel).ConfigureAwait(false);
-                    //request = new GrpcService.WriteIndexRequest();
-                    //length = 0;
                     continue;
                 }
 
@@ -307,6 +305,8 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
         private IEnumerable<WriteIndexRequest> SliceIndexDocumentAndCreateRequests(IndexDocument indexDocument,
             List<WriteIndexRequest> requests = null, int requestsLength = 0)
         {
+            var isDocumentUpdate = requests != null;
+
             requests ??= new List<WriteIndexRequest>();
             var documentParts = new List<IndexDocument>();
 
@@ -365,6 +365,14 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
                 req.Additions.Add(d.Serialize());
                 return req;
             } ));
+
+            if (isDocumentUpdate)
+                _logger.LogTrace($"Slice a DocumentUpdate. VersionId: {indexDocument.VersionId}. " +
+                                 $"Requests: 1 deletion and {documentParts.Count} additions");
+            else
+                _logger.LogTrace($"Slice an IndexDocument. VersionId: {indexDocument.VersionId}. " +
+                                 $"Requests: {documentParts.Count} additions");
+
             return requests;
         }
 
