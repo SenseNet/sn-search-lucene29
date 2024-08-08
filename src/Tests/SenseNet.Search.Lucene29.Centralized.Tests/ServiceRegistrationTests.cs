@@ -16,6 +16,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Tests
 
             var services = new ServiceCollection()
                 .AddLogging()
+                .AddSenseNetRetrier()
                 .AddLucene29CentralizedSearchEngineWithGrpc(options =>
                 {
                     options.ServiceAddress = "amqps://asdsada:adsad-asd435hh456@khd.rmq2.asdsad.com/adsdas";
