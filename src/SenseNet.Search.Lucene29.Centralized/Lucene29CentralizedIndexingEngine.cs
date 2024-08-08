@@ -15,6 +15,7 @@ using SenseNet.Search.Lucene29.Centralized;
 using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Search.Querying;
 using SenseNet.Tools;
+using static SenseNet.ContentRepository.RepositoryTools;
 
 namespace SenseNet.Search.Lucene29
 {
@@ -159,32 +160,16 @@ namespace SenseNet.Search.Lucene29
                         continue;
 
                     // send a bunch of data to the service and clean the buffer
-                    RetryWrite(partition.ToArray(), write);
+                    write(partition.ToArray());
 
                     partition.Clear();
                 }
 
                 // process the last page
                 if (partition.Any())
-                    RetryWrite(partition.ToArray(), write);
+                    write(partition.ToArray());
             }
-
-            void RetryWrite<T>(T[] data, Action<T[]> write)
-            {
-                Retrier.Retry(SearchServiceClient.RetryCount, SearchServiceClient.RetryWaitMilliseconds,
-                    () => write(data), (remainingCount, ex) =>
-                    {
-                        if (ex == null)
-                            return true;
-                        if (remainingCount == 1)
-                            throw ex;
-
-                        SnTrace.Index.WriteError($"WriteIndex: {ex.Message} Remaining retry count: {remainingCount - 1}");
-
-                        return true;
-                    });
-            }
-
+            
             //UNDONE: [async] make this async
             WriteIndex(deletions, deleteTerms => SearchServiceClient.Instance.WriteIndex(deleteTerms, null, null));
             WriteIndex(updates, updateDocuments => SearchServiceClient.Instance.WriteIndex(null, updateDocuments, null));
