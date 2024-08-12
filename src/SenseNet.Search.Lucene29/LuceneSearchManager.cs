@@ -602,7 +602,7 @@ namespace SenseNet.Search.Lucene29
             EnsureIndex(path);
 
             _snapshotMaker = new SnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy());
-            _writer = new IndexWriter(directory, GetAnalyzer(), false, _snapshotMaker, IndexWriter.MaxFieldLength.LIMITED);
+            _writer = new IndexWriter(directory, GetAnalyzer(), false, _snapshotMaker, IndexWriter.MaxFieldLength.UNLIMITED);
 
             _writer.SetMaxMergeDocs(Configuration.Lucene29.LuceneMaxMergeDocs);
             _writer.SetMergeFactor(Configuration.Lucene29.LuceneMergeFactor);
