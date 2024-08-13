@@ -311,8 +311,8 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             var documentParts = new List<IndexDocument>();
 
             // get too big fields
-            var fieldMaxSize = _maxSendMessageSizeEffective * 9 / 10;
             var commonFields = GetCommonFields(indexDocument, out var commonFieldsLength);
+            var fieldMaxSize = _maxSendMessageSizeEffective * 9 / 10 - commonFieldsLength;
             var stringFields = indexDocument.Fields.Values
                 .Where(f => f.Type == IndexValueType.String)
                 .ToArray();
@@ -352,7 +352,16 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
                     var field = fields[fieldIndex];
                     var fieldLength = field.Name.Length + field.ValueAsString.Length + 110;
                     if (fieldIndex >= fields.Length || length + fieldLength >= _maxSendMessageSizeEffective)
+                    {
+                        // Avoid infinite loop
+                        if (documentPart.Fields.Count == commonFields.Length)
+                        {
+                            var path = commonFields.FirstOrDefault(f => f.Name == "Path")?.StringValue;
+                            throw new Exception("Infinite loop. Path: " + path);
+                        }
+                        // Create next slice
                         break;
+                    }
                     documentPart.Add(field);
                     length += fieldLength;
                     fieldIndex++;
