@@ -376,7 +376,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             return requests;
         }
 
-        private static readonly string[] CommonFieldNames = new[] {"Id", "VersionId", "IsLastPublic", "IsLastDraft"};
+        private static readonly string[] CommonFieldNames = {"Id", "VersionId", "IsLastPublic", "IsLastDraft", "InTree", "Path" };
         private IndexField[] GetCommonFields(IndexDocument indexDocument, out int commonFieldsLength)
         {
             var tempDoc = new IndexDocument();

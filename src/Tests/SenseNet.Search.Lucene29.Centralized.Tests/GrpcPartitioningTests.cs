@@ -148,7 +148,7 @@ public class GrpcPartitioningTests
         }
     }
 
-    private readonly string[] _commonFieldNames = new[] { "Id", "VersionId", "IsLastPublic", "IsLastDraft" };
+    private static readonly string[] _commonFieldNames = { "Id", "VersionId", "IsLastPublic", "IsLastDraft", "InTree", "Path" };
     [TestMethod]
     public void GrpcPartitioning_Additions_Big_MoreFields()
     {
@@ -176,6 +176,8 @@ public class GrpcPartitioningTests
             new IndexField("IsLastPublic", false, IndexingMode.AnalyzedNoNorms, IndexStoringMode.Yes, IndexTermVector.WithOffsets),
             new IndexField("IsLastDraft", true, IndexingMode.AnalyzedNoNorms, IndexStoringMode.Yes, IndexTermVector.WithOffsets),
             new IndexField("Integer1", 42, IndexingMode.No, IndexStoringMode.Default, IndexTermVector.WithPositions),
+            new IndexField("Path", "/root/content/content" + i, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.No),
+            new IndexField("InTree", new[] {"/root", "/root/content", "/root/content/content" + i}, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.No),
             new IndexField("IntegerArray1", new[] {42, 43, 44}, IndexingMode.NotAnalyzed, IndexStoringMode.Default, IndexTermVector.WithPositions),
             new IndexField("Long1", 42L, IndexingMode.Analyzed, IndexStoringMode.Default, IndexTermVector.WithPositionsOffsets),
             new IndexField("Float1", (float) 123.45, IndexingMode.NotAnalyzed, IndexStoringMode.Default, IndexTermVector.Yes),
@@ -190,6 +192,8 @@ public class GrpcPartitioningTests
             new("VersionId", 42 + 5, 0, 0, 0),
             new("IsLastPublic", false, 0, 0, 0),
             new("IsLastDraft", true, 0, 0, 0),
+            new("Path", "/root/content/content5", 0, 0, 0),
+            new("InTree", new[] {"/root", "/root/content", "/root/content/content5"}, 0, 0, 0),
             new("String01", GetStringValue(100), 0, 0, 0),
             new("String02", GetStringValue(100), 0, 0, 0),
             new("String03", GetStringValue(100), 0, 0, 0),
@@ -261,6 +265,8 @@ public class GrpcPartitioningTests
             Assert.IsTrue(indxDoc.Fields.ContainsKey("VersionId"), $"Missing VersionId in request {i}");
             Assert.IsTrue(indxDoc.Fields.ContainsKey("IsLastPublic"), $"Missing IsLastPublic in request {i}");
             Assert.IsTrue(indxDoc.Fields.ContainsKey("IsLastDraft"), $"Missing IsLastDraft in request {i}");
+            Assert.IsTrue(indxDoc.Fields.ContainsKey("InTree"), $"Missing InTree in request {i}");
+            Assert.IsTrue(indxDoc.Fields.ContainsKey("Path"), $"Missing Path in request {i}");
         }
 
         // 3 - Payload length
@@ -286,6 +292,8 @@ public class GrpcPartitioningTests
             new IndexField("IsLastPublic", false, IndexingMode.AnalyzedNoNorms, IndexStoringMode.Yes, IndexTermVector.WithOffsets),
             new IndexField("IsLastDraft", true, IndexingMode.AnalyzedNoNorms, IndexStoringMode.Yes, IndexTermVector.WithOffsets),
             new IndexField("Integer1", 42, IndexingMode.No, IndexStoringMode.Default, IndexTermVector.WithPositions),
+            new IndexField("Path", "/root/content/content" + i, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.No),
+            new IndexField("InTree", new[] {"/root", "/root/content", "/root/content/content" + i}, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.No),
             new IndexField("IntegerArray1", new[] {42, 43, 44}, IndexingMode.NotAnalyzed, IndexStoringMode.Default, IndexTermVector.WithPositions),
             new IndexField("Long1", 42L, IndexingMode.Analyzed, IndexStoringMode.Default, IndexTermVector.WithPositionsOffsets),
             new IndexField("Float1", (float) 123.45, IndexingMode.NotAnalyzed, IndexStoringMode.Default, IndexTermVector.Yes),
@@ -346,6 +354,8 @@ public class GrpcPartitioningTests
             Assert.IsTrue(indxDoc.Fields.ContainsKey("VersionId"), $"Missing VersionId in request {i}");
             Assert.IsTrue(indxDoc.Fields.ContainsKey("IsLastPublic"), $"Missing IsLastPublic in request {i}");
             Assert.IsTrue(indxDoc.Fields.ContainsKey("IsLastDraft"), $"Missing IsLastDraft in request {i}");
+            Assert.IsTrue(indxDoc.Fields.ContainsKey("InTree"), $"Missing InTree in request {i}");
+            Assert.IsTrue(indxDoc.Fields.ContainsKey("Path"), $"Missing Path in request {i}");
         }
 
         // 3 - Payload length
@@ -356,7 +366,7 @@ public class GrpcPartitioningTests
     [TestMethod]
     public void GrpcPartitioning_Updates_Big_LargeFields()
     {
-        var maxSendMessageSize = 2_500;
+        var maxSendMessageSize = 3_500; // 3_500
         var maxSendMessageSizeEffective = maxSendMessageSize * 9 / 10;
         CreateInfrastructure(maxSendMessageSize, out var serviceClient, out var testGrpcSearchClient);
 
@@ -373,6 +383,8 @@ public class GrpcPartitioningTests
                 new IndexField("String1", "value" + i, IndexingMode.Analyzed, IndexStoringMode.Default, IndexTermVector.Default),
                 new IndexField("Binary", "Small binary", IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.Default),
                 new IndexField("Integer1", i, IndexingMode.No, IndexStoringMode.Yes, IndexTermVector.Default),
+                new IndexField("Path", "/root/content/content" + i, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.No),
+                new IndexField("InTree", new[] {"/root", "/root/content", "/root/content/content" + i}, IndexingMode.Default, IndexStoringMode.Default, IndexTermVector.No),
                 new IndexField("_Text", "Small binary", IndexingMode.No, IndexStoringMode.Yes, IndexTermVector.Default),
             }
         }).ToArray();
@@ -415,6 +427,8 @@ public class GrpcPartitioningTests
                 Assert.IsTrue(upd.Document.Fields.ContainsKey("VersionId"), $"Missing VersionId in request {i}");
                 Assert.IsTrue(upd.Document.Fields.ContainsKey("IsLastPublic"), $"Missing IsLastPublic in request {i}");
                 Assert.IsTrue(upd.Document.Fields.ContainsKey("IsLastDraft"), $"Missing IsLastDraft in request {i}");
+                Assert.IsTrue(upd.Document.Fields.ContainsKey("InTree"), $"Missing InTree in request {i}");
+                Assert.IsTrue(upd.Document.Fields.ContainsKey("Path"), $"Missing Path in request {i}");
             }
 
             foreach (var additionItem in request.Additions)
@@ -427,6 +441,8 @@ public class GrpcPartitioningTests
                 Assert.IsTrue(indexDocument.Fields.ContainsKey("VersionId"), $"Missing VersionId in request {i}");
                 Assert.IsTrue(indexDocument.Fields.ContainsKey("IsLastPublic"), $"Missing IsLastPublic in request {i}");
                 Assert.IsTrue(indexDocument.Fields.ContainsKey("IsLastDraft"), $"Missing IsLastDraft in request {i}");
+                Assert.IsTrue(indexDocument.Fields.ContainsKey("InTree"), $"Missing InTree in request {i}");
+                Assert.IsTrue(indexDocument.Fields.ContainsKey("Path"), $"Missing Path in request {i}");
             }
 
             i++;
