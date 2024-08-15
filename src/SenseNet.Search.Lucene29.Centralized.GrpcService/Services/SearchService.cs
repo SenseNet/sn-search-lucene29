@@ -20,15 +20,18 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
     {
         private readonly ILogger<SearchService> _logger;
         private readonly Index.SearchService _indexService;
+        private readonly IIndexDocumentPartitionStorage _partitionStorage;
         private readonly RabbitMqOptions _rabbitMqOptions;
         private readonly GrpcServiceOptions _grpcOptions;
 
 
         public SearchService(ILogger<SearchService> logger, Index.SearchService indexService,
+            IIndexDocumentPartitionStorage partitionStorage, 
             IOptions<RabbitMqOptions> rabbitMqOptions, IOptions<GrpcServiceOptions> grpcOptions)
         {
             _logger = logger;
             _indexService = indexService;
+            _partitionStorage = partitionStorage;
             _rabbitMqOptions = rabbitMqOptions.Value;
             _grpcOptions = grpcOptions.Value;
         }
@@ -127,32 +130,38 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
             return Task.FromResult(new WriteIndexResponse());
         }
 
-        private readonly Dictionary<int, List<IndexDocumentPartition>> _docPartitions = new();
         private IndexDocument DeserializePartition(string serialized)
         {
             if (serialized.StartsWith("IndexDocumentPartition"))
             {
                 var partition = IndexDocumentPartition.Deserialize(serialized);
 
-                if (partition.PartitionIndex == 0 && _docPartitions.ContainsKey(partition.VersionId))
+                if (partition.PartitionIndex == 0 && _partitionStorage.Contains(partition.VersionId))
                     throw new InvalidOperationException(
                         "Transfer collision. This document's transfer is in progress by another appDomain. " +
                         "VersionId: " + partition.VersionId);
 
-                if (!_docPartitions.TryGetValue(partition.VersionId, out var parts))
+                if (!_partitionStorage.TryGet(partition.VersionId, out var parts))
                 {
                     parts = new List<IndexDocumentPartition>();
-                    _docPartitions.Add(partition.VersionId, parts);
+                    _partitionStorage.Add(partition.VersionId, parts);
                 }
 
                 parts.Add(partition);
+                var message = $"VersionId: {partition.VersionId}, PartitionIndex: {partition.PartitionIndex}, " +
+                              $"Payload length: {partition.Payload.Length}";
                 if (!partition.IsLast)
+                {
+                    _logger.LogTrace("Partition received: " + message);
                     return null;
+                }
+                var partitionOrder = string.Join(", ", parts.Select(p => p.PartitionIndex));
+                _logger.LogTrace($"Last partition received: {message}. Partition order: {partitionOrder}.");
 
                 var data = new StringBuilder();
                 foreach (var part in parts.OrderBy(part => part.PartitionIndex))
                     data.Append(part.Payload);
-                _docPartitions.Remove(partition.VersionId);
+                _partitionStorage.Remove(partition.VersionId);
                 serialized = data.ToString();
             }
 

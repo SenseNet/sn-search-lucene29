@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SenseNet.Configuration;
 using SenseNet.Extensions.DependencyInjection;
+using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Security;
 using SenseNet.Security.Configuration;
 using SenseNet.Security.Messaging;
@@ -44,11 +45,14 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
                 .Configure<RabbitMqOptions>(Configuration.GetSection("sensenet:security:rabbitmq"))
                 .Configure<MessagingOptions>(Configuration.GetSection("sensenet:security:messaging"))
                 .ConfigureConnectionStrings(Configuration);
-            
+
             // [sensenet] Search service singleton. This instance will be used
             // by the communication layer to route incoming client calls to the
             // index layer.
             services.AddSingleton<Index.SearchService>();
+
+            // [sensenet] Partition storage singleton. This instance will be used by the search service.
+            services.AddSingleton<IIndexDocumentPartitionStorage, IndexDocumentPartitionStorage>();
 
             // [sensenet]: Set options for EFCSecurityDataProvider
             services.AddOptions<SenseNet.Security.EFCSecurityStore.Configuration.DataOptions>()
