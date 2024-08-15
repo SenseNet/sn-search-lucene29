@@ -237,7 +237,6 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
                     (item, request) => { request.Additions.Add(item); },
                     CancellationToken.None).GetAwaiter().GetResult();
         }
-
         private async Task SendByPartitionsAsync<T>(
             T[] items,
             Func<T, string> serialize,
@@ -299,136 +298,47 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             deleteRequest.Deletions.Add(serialized);
             return SliceIndexDocumentAndCreateRequests(
                 indexDocument: documentUpdate.Document,
-                requests: new List<WriteIndexRequest>(new[] { deleteRequest }),
-                requestsLength: serialized.Length);
+                requests: new List<WriteIndexRequest>(new[] { deleteRequest }));
         }
         private IEnumerable<WriteIndexRequest> SliceIndexDocumentAndCreateRequests(IndexDocument indexDocument,
-            List<WriteIndexRequest> requests = null, int requestsLength = 0)
+            List<WriteIndexRequest> requests = null)
         {
             var isDocumentUpdate = requests != null;
-
             requests ??= new List<WriteIndexRequest>();
-            var documentParts = new List<IndexDocument>();
-
-            // get too big fields
-            var commonFields = GetCommonFields(indexDocument, out var commonFieldsLength);
-            var fieldMaxSize = _maxSendMessageSizeEffective * 9 / 10 - commonFieldsLength;
-            var stringFields = indexDocument.Fields.Values
-                .Where(f => f.Type == IndexValueType.String)
-                .ToArray();
-            var tooBigFields = stringFields.Where(f => f.StringValue.Length > fieldMaxSize).ToArray();
-
-            // Make document parts from the large fields if there is any
-            var slicedFields = new List<IndexField>();
-            foreach (var tooBigField in tooBigFields)
+            var serialized = indexDocument.Serialize(true);
+            var maxSize = _maxSendMessageSizeEffective - 90;
+            var p0 = 0;
+            var versionId = indexDocument.VersionId;
+            var partitionIndex = 0;
+            while (p0 < serialized.Length)
             {
-                var slices = SliceField(tooBigField, commonFieldsLength);
-                indexDocument.Fields.Remove(tooBigField.Name);
-                slicedFields.AddRange(slices);
-            }
-            foreach (var slicedField in slicedFields)
-            {
-                var indxDoc = new IndexDocument();
-                documentParts.Add(indxDoc);
-                foreach (var commonField in commonFields)
-                    indxDoc.Add(commonField);
-                indxDoc.Add(slicedField);
-            }
-
-            // Make document parts from the not too large fields
-            var fields = indexDocument.Fields.Values
-                .Where(f => !CommonFieldNames.Contains(f.Name))
-                .ToArray();
-            var fieldIndex = 0;
-            while (fieldIndex < fields.Length)
-            {
-                var documentPart = new IndexDocument();
-                documentParts.Add(documentPart);
-                foreach (var commonField in commonFields)
-                    documentPart.Add(commonField);
-                var length = commonFieldsLength;
-                while (fieldIndex < fields.Length)
+                var p = p0 + maxSize;
+                var isLast = p >= serialized.Length;
+                var partition = new IndexDocumentPartition
                 {
-                    var field = fields[fieldIndex];
-                    var fieldLength = field.Name.Length + field.ValueAsString.Length + 110;
-                    if (fieldIndex >= fields.Length || length + fieldLength >= _maxSendMessageSizeEffective)
-                    {
-                        // Avoid infinite loop
-                        if (documentPart.Fields.Count == commonFields.Length)
-                        {
-                            var path = commonFields.FirstOrDefault(f => f.Name == "Path")?.StringValue;
-                            throw new Exception("Infinite loop. Path: " + path);
-                        }
-                        // Create next slice
-                        break;
-                    }
-                    documentPart.Add(field);
-                    length += fieldLength;
-                    fieldIndex++;
-                }
-            }
-
-            // Make request from all document parts
-            requests.AddRange(documentParts.Select(d => {
+                    VersionId = versionId,
+                    PartitionIndex = partitionIndex++,
+                    IsLast = isLast,
+                    Payload = isLast
+                        ? serialized.Substring(p0)
+                        : serialized.Substring(p0, maxSize)
+                };
                 var req = new WriteIndexRequest();
-                req.Additions.Add(d.Serialize());
-                return req;
-            } ));
+                requests.Add(req);
+                req.Additions.Add(partition.Serialize());
+
+                p0 = p;
+            }
 
             if (isDocumentUpdate)
                 _logger.LogTrace($"Slice a DocumentUpdate. VersionId: {indexDocument.VersionId}. " +
-                                 $"Requests: 1 deletion and {documentParts.Count} additions");
+                                 $"Requests: 1 deletion and {requests.Count - 1} additions");
             else
                 _logger.LogTrace($"Slice an IndexDocument. VersionId: {indexDocument.VersionId}. " +
-                                 $"Requests: {documentParts.Count} additions");
+                                 $"Requests: {requests.Count} additions");
 
             return requests;
         }
-
-        private static readonly string[] CommonFieldNames = {"Id", "VersionId", "IsLastPublic", "IsLastDraft", "InTree", "Path" };
-        private IndexField[] GetCommonFields(IndexDocument indexDocument, out int commonFieldsLength)
-        {
-            var tempDoc = new IndexDocument();
-            var indexFields = CommonFieldNames.Select(f =>
-            {
-                if (indexDocument.Fields.TryGetValue(f, out var field))
-                    tempDoc.Add(field);
-                return field;
-            }).Where(x => x != null).ToArray();
-
-            commonFieldsLength = tempDoc.Serialize().Length;
-            return indexFields;
-        }
-        private IEnumerable<IndexField> SliceField(IndexField indexField, int commonFieldsLength)
-        {
-            if (indexField.Type != IndexValueType.String)
-                throw new NotSupportedException($"SliceField is not supported on the {indexField.Type} IndexField.");
-            var result = new List<IndexField>();
-
-            var name = indexField.Name;
-            var stringValue = indexField.StringValue;
-            var im = indexField.Mode;
-            var sm = indexField.Store;
-            var tv = indexField.TermVector;
-
-            var maxLength = _maxSendMessageSizeEffective - commonFieldsLength * 12 / 10; // 120%
-            var p0 = 0; // start poosition
-            var p = maxLength;
-            while (p < stringValue.Length)
-            {
-                for (var i = p - 1; i >= 0 && !Char.IsWhiteSpace(stringValue[i]); i--) p = i;
-                var slice = stringValue.Substring(p0, p - p0 - 1);
-                result.Add(new IndexField(name, slice, im, sm, tv));
-                p0 = p;
-                p = p0 + maxLength;
-            }
-
-            if (p0 < stringValue.Length - 1)
-                result.Add(new IndexField(name, stringValue.Substring(p0), im, sm, tv));
-
-            return result;
-        }
-
         private async Task SendWriteIndexRequestAsync(WriteIndexRequest request, CancellationToken cancel)
         {
             _logger.LogTrace($"WriteIndexRequest: deletions count: {request.Deletions?.Count ?? 0}, " +

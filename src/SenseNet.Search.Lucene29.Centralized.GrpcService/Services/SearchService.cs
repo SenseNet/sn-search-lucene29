@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Grpc.AspNetCore.Server;
 using Grpc.Core;
@@ -7,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using SenseNet.Search.Indexing;
+using SenseNet.Search.Lucene29.Centralized.Common;
 using SenseNet.Search.Querying;
 using SenseNet.Security.Configuration;
 using SenseNet.Security.Messaging.RabbitMQ;
@@ -117,12 +120,46 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
                 .Select(upd => string.IsNullOrEmpty(upd) ? null : DocumentUpdate.Deserialize(upd))
                 .Where(upd => upd != null).ToArray();
             var additions = request.Additions
-                .Select(add => string.IsNullOrEmpty(add) ? null : IndexDocument.Deserialize(add))
+                .Select(add => string.IsNullOrEmpty(add) ? null : DeserializePartition(add))
                 .Where(add => add != null).ToArray();
             _indexService.WriteIndex(deletions, updates, additions);
 
             return Task.FromResult(new WriteIndexResponse());
         }
+
+        private readonly Dictionary<int, List<IndexDocumentPartition>> _docPartitions = new();
+        private IndexDocument DeserializePartition(string serialized)
+        {
+            if (serialized.StartsWith("IndexDocumentPartition"))
+            {
+                var partition = IndexDocumentPartition.Deserialize(serialized);
+
+                if (partition.PartitionIndex == 0 && _docPartitions.ContainsKey(partition.VersionId))
+                    throw new InvalidOperationException(
+                        "Transfer collision. This document's transfer is in progress by another appDomain. " +
+                        "VersionId: " + partition.VersionId);
+
+                if (!_docPartitions.TryGetValue(partition.VersionId, out var parts))
+                {
+                    parts = new List<IndexDocumentPartition>();
+                    _docPartitions.Add(partition.VersionId, parts);
+                }
+
+                parts.Add(partition);
+                if (!partition.IsLast)
+                    return null;
+
+                var data = new StringBuilder();
+                foreach (var part in parts.OrderBy(part => part.PartitionIndex))
+                    data.Append(part.Payload);
+                _docPartitions.Remove(partition.VersionId);
+                serialized = data.ToString();
+            }
+
+            var doc = IndexDocument.Deserialize(serialized);
+            return doc;
+        }
+
         public override Task<QueryResultIds> ExecuteQuery(QueryRequest request, ServerCallContext context)
         {
             var queryResult = _indexService.ExecuteQuery(
