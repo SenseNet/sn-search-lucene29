@@ -29,7 +29,7 @@
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="SenseNet.Tools" Version="3.2.13" />
 		<PackageReference Include="SenseNet.Security" Version="4.2.4" />
-		<PackageReference Include="SenseNet.Search" Version="2.4.19" />
+		<PackageReference Include="SenseNet.Search" Version="2.4.19.1" />
 		<PackageReference Include="SenseNet.Search.Lucene29.Lucene.Net" Version="2.9.4.301" />
 	</ItemGroup>
 
