@@ -2,23 +2,24 @@
 using System.Runtime.Serialization;
 using System.Text;
 using System.Xml;
+using SenseNet.Search.Querying;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 {
-    internal static class Tools
+    public static class Tools
     {
         /// <summary>
         /// Serialize an object to an xml string. Uses <see cref="DataContractSerializer"/>.
         /// </summary>
-        internal static string Serialize(object obj)
+        public static string SerializeSnQuery(SnQuery query)
         {
-            var serializer = new DataContractSerializer(obj.GetType());
+            var serializer = new DataContractSerializer(query.GetType());
 
             var xmlWriterSettings = new XmlWriterSettings { Indent = true, IndentChars = "  " };
             var sb = new StringBuilder();
             using (var stringWriter = new StringWriter(sb))
             using (var xmlWriter = XmlWriter.Create(stringWriter, xmlWriterSettings))
-                serializer.WriteObject(xmlWriter, obj);
+                serializer.WriteObject(xmlWriter, query);
 
             return sb.ToString();
         }

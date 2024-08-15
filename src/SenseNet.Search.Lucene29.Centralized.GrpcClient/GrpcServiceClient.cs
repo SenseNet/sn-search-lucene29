@@ -13,11 +13,14 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using SenseNet.Extensions.DependencyInjection;
 using SenseNet.Search.Lucene29.Centralized.GrpcService;
+using SenseNet.Tools;
 using static SenseNet.Search.Lucene29.Centralized.GrpcService.GrpcSearch;
 using BackupResponse = SenseNet.Search.Indexing.BackupResponse;
 using IndexFieldAnalyzer = SenseNet.Search.Indexing.IndexFieldAnalyzer;
 using IndexingActivityStatus = SenseNet.Search.Indexing.IndexingActivityStatus;
 using ServiceQueryContext = SenseNet.Search.Lucene29.Centralized.Common.ServiceQueryContext;
+using Lucene.Net.Index;
+using SenseNet.ContentRepository.Storage.Data;
 
 namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 {
@@ -28,21 +31,26 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
     /// </summary>
     public class GrpcServiceClient : ISearchServiceClient
     {
-        /* =================================================== ISearchServiceClient */
-
         public ISearchServiceClient CreateInstance() => this;
-
-        /* =================================================== ISearchServiceContract */
 
         private GrpcSearchClient _searchClient;
         private GrpcChannel _channel;
-        private readonly ILogger<GrpcServiceClient> _logger;
-        private readonly GrpcClientOptions _options;
 
-        public GrpcServiceClient(IOptions<GrpcClientOptions> options, ILogger<GrpcServiceClient> logger)
+        private IRetrier _retrier;
+
+        private readonly GrpcClientOptions _options;
+        private int _maxSendMessageSize;
+        private int _maxSendMessageSizeEffective;
+
+        private readonly ILogger<GrpcServiceClient> _logger;
+
+        public GrpcServiceClient(IRetrier retrier, IOptions<GrpcClientOptions> options, ILogger<GrpcServiceClient> logger)
         {
+            _retrier = retrier;
             _options = options.Value;
             _logger = logger;
+            _maxSendMessageSize = _options.ChannelOptions.MaxSendMessageSize ?? 4_194_304;
+            _maxSendMessageSizeEffective = _maxSendMessageSize * 9 / 10; // default: 3_774_873
         }
 
         [Obsolete("Use the other constructor that is able to work with DI instead.")]
@@ -213,23 +221,146 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
 
         public void WriteIndex(SnTerm[] deletions, DocumentUpdate[] updates, IndexDocument[] additions)
         {
-            var request = new GrpcService.WriteIndexRequest();
-            
             if (deletions != null)
-                request.Deletions.AddRange(deletions.Select(Tools.Serialize));
+                SendByPartitionsAsync(deletions,
+                    snTerm => snTerm.Serialize(),
+                    (item, request) => { request.Deletions.Add(item);},
+                    CancellationToken.None).GetAwaiter().GetResult();
             if (updates != null)
-                request.Updates.AddRange(updates.Where(x => x.Document != null).Select(Tools.Serialize));
+                SendByPartitionsAsync(updates,
+                    documentUpdate => documentUpdate.Serialize(),
+                    (item, request) => { request.Updates.Add(item); },
+                    CancellationToken.None).GetAwaiter().GetResult();
             if (additions != null)
-                request.Additions.AddRange(additions.Where(doc => doc != null).Select(doc => doc.Serialize()));
+                SendByPartitionsAsync(additions,
+                    indexDocument => indexDocument.Serialize(),
+                    (item, request) => { request.Additions.Add(item); },
+                    CancellationToken.None).GetAwaiter().GetResult();
+        }
+        private async Task SendByPartitionsAsync<T>(
+            T[] items,
+            Func<T, string> serialize,
+            Action<string, GrpcService.WriteIndexRequest> addToRequest,
+            CancellationToken cancel)
+        {
+            var request = new GrpcService.WriteIndexRequest();
+            var length = 0;
+            foreach (var item in items)
+            {
+                var approximateSize = GetApproximateSize(item);
+                if (approximateSize > _maxSendMessageSizeEffective)
+                {
+                    var requests = SliceAndCreateRequests(item);
+                    foreach (var slicedRequest in requests)
+                        await SendWriteIndexRequestAsync(slicedRequest, cancel).ConfigureAwait(false);
+                    continue;
+                }
 
-            try
-            {
-                _searchClient.WriteIndex(request);
+                var serialized = serialize(item);
+                if (length + serialized.Length > _maxSendMessageSizeEffective)
+                {
+                    await SendWriteIndexRequestAsync(request, cancel).ConfigureAwait(false);
+                    request = new GrpcService.WriteIndexRequest();
+                    length = 0;
+                }
+                addToRequest(serialized, request);
+                length += serialized.Length;
             }
-            catch (Exception ex)
+
+            if (length > 0)
+                await SendWriteIndexRequestAsync(request, cancel).ConfigureAwait(false);
+        }
+        private int GetApproximateSize(object item)
+        {
+            if (item is SnTerm snTerm)
+                return snTerm.Name.Length + snTerm.ValueAsString.Length;
+            if (item is IndexDocument indxDoc)
+                return indxDoc.Fields.Values.Sum(f => f.Name.Length + f.ValueAsString.Length + 110);
+            if (item is DocumentUpdate docUpd)
+                return GetApproximateSize(docUpd.UpdateTerm) + GetApproximateSize(docUpd.Document) + 20;
+            throw new NotSupportedException($"GetApproximateSize is not supported for an instance of " +
+                                            $"{item.GetType().FullName}.");
+        }
+        private IEnumerable<WriteIndexRequest> SliceAndCreateRequests<T>(T item)
+        {
+            if (item is IndexDocument indexDocument)
+                return SliceIndexDocumentAndCreateRequests(indexDocument);
+            if (item is DocumentUpdate documentUpdate)
+                return SliceDocumentUpdateAndCreateRequests(documentUpdate);
+
+            throw new NotSupportedException($"SliceTheDocumentAndCreateRequests is not supported for an instance of " +
+                                            $"{item.GetType().FullName}.");
+        }
+        private IEnumerable<WriteIndexRequest> SliceDocumentUpdateAndCreateRequests(DocumentUpdate documentUpdate)
+        {
+            var deleteRequest = new WriteIndexRequest();
+            var serialized = documentUpdate.UpdateTerm.Serialize();
+            deleteRequest.Deletions.Add(serialized);
+            return SliceIndexDocumentAndCreateRequests(
+                indexDocument: documentUpdate.Document,
+                requests: new List<WriteIndexRequest>(new[] { deleteRequest }));
+        }
+        private IEnumerable<WriteIndexRequest> SliceIndexDocumentAndCreateRequests(IndexDocument indexDocument,
+            List<WriteIndexRequest> requests = null)
+        {
+            var isDocumentUpdate = requests != null;
+            requests ??= new List<WriteIndexRequest>();
+            var serialized = indexDocument.Serialize(true);
+            var maxSize = _maxSendMessageSizeEffective - 90;
+            var p0 = 0;
+            var versionId = indexDocument.VersionId;
+            var partitionIndex = 0;
+            while (p0 < serialized.Length)
             {
-                throw LogAndFormatException(ex, "WriteIndex");
+                var p = p0 + maxSize;
+                var isLast = p >= serialized.Length;
+                var partition = new IndexDocumentPartition
+                {
+                    VersionId = versionId,
+                    PartitionIndex = partitionIndex++,
+                    IsLast = isLast,
+                    Payload = isLast
+                        ? serialized.Substring(p0)
+                        : serialized.Substring(p0, maxSize)
+                };
+                var req = new WriteIndexRequest();
+                requests.Add(req);
+                req.Additions.Add(partition.Serialize());
+
+                p0 = p;
             }
+
+            if (isDocumentUpdate)
+                _logger.LogTrace($"Slice a DocumentUpdate. VersionId: {indexDocument.VersionId}. " +
+                                 $"Requests: 1 deletion and {requests.Count - 1} additions");
+            else
+                _logger.LogTrace($"Slice an IndexDocument. VersionId: {indexDocument.VersionId}. " +
+                                 $"Requests: {requests.Count} additions");
+
+            return requests;
+        }
+        private async Task SendWriteIndexRequestAsync(WriteIndexRequest request, CancellationToken cancel)
+        {
+            _logger.LogTrace($"WriteIndexRequest: deletions count: {request.Deletions?.Count ?? 0}, " +
+                             $"updates count: {request.Updates?.Count ?? 0}, " +
+                             $"updates size: {request.Updates?.Sum(x => x.Length) ?? 0}, " +
+                             $"additions count: {request.Additions?.Count ?? 0}, " +
+                             $"additions size: {request.Additions?.Sum(x => x.Length) ?? 0}");
+            await _retrier.RetryAsync(
+                action: async () =>
+                {
+                    await _searchClient.WriteIndexAsync(request);
+                },
+                shouldRetryOnError: (e, i) =>
+                {
+                    _logger.LogWarning($"WriteIndex failed. Iteration: {i}, Error: {e.Message}");
+                    return true;
+                },
+                onAfterLastIteration: (e, i) =>
+                {
+                    _logger.LogError(e, $"WriteIndex failed after {i} iteration.");
+                }
+                , cancel: cancel);
         }
 
         public QueryResult<int> ExecuteQuery(SnQuery query, ServiceQueryContext queryContext)
@@ -245,7 +376,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             {
                 var result = _searchClient.ExecuteQuery(new GrpcService.QueryRequest()
                 {
-                    Query = Tools.Serialize(query),
+                    Query = Tools.SerializeSnQuery(query),
                     Context = context
                 });
 
@@ -269,7 +400,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             {
                 var result = await _searchClient.ExecuteQueryAsync(new GrpcService.QueryRequest()
                 {
-                    Query = Tools.Serialize(query),
+                    Query = Tools.SerializeSnQuery(query),
                     Context = context
                 }, cancellationToken: cancel);
 
@@ -294,7 +425,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             {
                 var result = _searchClient.ExecuteQueryAndProject(new GrpcService.QueryRequest()
                 {
-                    Query = Tools.Serialize(query),
+                    Query = Tools.SerializeSnQuery(query),
                     Context = context
                 });
 
@@ -318,7 +449,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
             {
                 var result = await _searchClient.ExecuteQueryAndProjectAsync(new GrpcService.QueryRequest()
                 {
-                    Query = Tools.Serialize(query),
+                    Query = Tools.SerializeSnQuery(query),
                     Context = context
                 }, cancellationToken: cancel);
 
@@ -421,7 +552,12 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
                 throw LogAndFormatException(ex, "getting configuration info");
             }
 
-            return result.Configuration;
+            var configData = result.Configuration
+                .ToDictionary(x => x.Key, x => x.Value);
+            configData.Add("GRPC_CLIENT:MaxReceiveMessageSize", _options.ChannelOptions.MaxReceiveMessageSize?.ToString() ?? "null");
+            configData.Add("GRPC_CLIENT:MaxSendMessageSize", _options.ChannelOptions.MaxSendMessageSize?.ToString() ?? "null");
+
+            return configData;
         }
 
         public IDictionary<string, string> GetHealth()
