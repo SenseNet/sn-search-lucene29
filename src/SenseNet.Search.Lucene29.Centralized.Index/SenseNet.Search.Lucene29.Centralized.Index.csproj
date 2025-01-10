@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+		<TargetFramework>net6.0</TargetFramework>
 		<AssemblyName>SenseNet.Search.Lucene29.Centralized.Index</AssemblyName>
 		<RootNamespace>SenseNet.Search.Lucene29.Centralized.Index</RootNamespace>
 		<Version>2.1.14</Version>
