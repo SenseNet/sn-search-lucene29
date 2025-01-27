@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+	<TargetFramework>net8.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -12,9 +12,9 @@
     <PackageReference Include="MSTest.TestAdapter" Version="2.2.10" />
     <PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
     <PackageReference Include="coverlet.collector" Version="3.0.2" />
-    <PackageReference Include="SenseNet.ContentRepository.InMemory" Version="1.0.1" />
-    <PackageReference Include="SenseNet.Services.Core" Version="1.0.1" />
-    <PackageReference Include="SenseNet.Tests.Core" Version="1.1.14" />
+    <PackageReference Include="SenseNet.ContentRepository.InMemory" Version="1.0.1.1" />
+    <PackageReference Include="SenseNet.Services.Core" Version="1.0.1.1" />
+    <PackageReference Include="SenseNet.Tests.Core" Version="1.1.14.1" />
   </ItemGroup>
 
   <ItemGroup>

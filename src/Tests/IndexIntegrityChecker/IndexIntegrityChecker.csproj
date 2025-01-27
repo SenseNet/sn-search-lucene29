@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<UserSecretsId>34862dc8-9cf2-4ebd-a4d5-b9f5737033e3</UserSecretsId>
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
@@ -12,9 +12,9 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
-		<PackageReference Include="SenseNet.ContentRepository.MsSql" Version="1.0.1" />
-		<PackageReference Include="SenseNet.Security.EFCSecurityStore" Version="3.1.2" />
-		<PackageReference Include="SenseNet.Services.Core" Version="1.0.1" />
+		<PackageReference Include="SenseNet.ContentRepository.MsSql" Version="1.0.1.1" />
+		<PackageReference Include="SenseNet.Security.EFCSecurityStore" Version="3.1.2.1" />
+		<PackageReference Include="SenseNet.Services.Core" Version="1.0.1.1" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
 		<PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
 		<PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0" />
