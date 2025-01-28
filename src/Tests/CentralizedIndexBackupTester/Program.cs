@@ -176,39 +176,5 @@ namespace CentralizedIndexBackupTester
                         .AddRabbitMqSecurityMessageProvider() //TODO: Test this registration
                         ;
                 });
-
-        private static void RestoreFiles()
-        {
-            var target = Directory.GetDirectories(_serviceIndexDirectory).OrderBy(x => x).Last();
-
-            // Ensure empty target
-            foreach(var file in Directory.GetFiles(target))
-                File.Delete(file);
-
-            // Restore
-            foreach (var file in Directory.GetFiles(_backupIndexDirectory))
-                File.Copy(file, Path.Combine(target, Path.GetFileName(file)));
-        }
-
-        private static void WaitForServiceStarted(Binding serviceBinding, EndpointAddress serviceEndpoint)
-        {
-            Console.WriteLine($"Is write.lock deleted? :)");
-
-            while (true)
-            {
-                try
-                {
-                    using (var client = new WcfServiceClient(serviceBinding, serviceEndpoint))
-                        client.Alive();
-                    return;
-                }
-                catch(Exception e)
-                {
-                    Console.WriteLine($"Wait for service ({e.Message})");
-                }
-
-                Task.Delay(1000).ConfigureAwait(false).GetAwaiter().GetResult();
-            }
-        }
     }
 }
