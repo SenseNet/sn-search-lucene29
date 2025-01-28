@@ -26,9 +26,10 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
                     webBuilder.UseStartup<Startup>()
                         .ConfigureLogging(loggingConfiguration =>
                             loggingConfiguration.ClearProviders())
-                        .UseSerilog((hostingContext, loggerConfiguration) =>
-                            loggerConfiguration.ReadFrom
-                                .Configuration(hostingContext.Configuration));
-                });
+                        ;
+                })
+                .UseSerilog((hostingContext, loggerConfiguration) =>
+                    loggerConfiguration.ReadFrom
+                        .Configuration(hostingContext.Configuration));
     }
 }
