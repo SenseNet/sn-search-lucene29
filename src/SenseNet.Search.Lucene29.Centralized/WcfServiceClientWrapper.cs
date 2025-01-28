@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using SenseNet.Search.Indexing;
@@ -11,6 +12,7 @@ namespace SenseNet.Search.Lucene29.Centralized
     /// Internal wrapper class for <see cref="WcfServiceClient"/> to make sure
     /// that the client object is disposed correctly.
     /// </summary>
+    [Obsolete("Do not use this technology anymore.", true)]
     class WcfServiceClientWrapper : ISearchServiceClient
     {
         public bool Alive()
