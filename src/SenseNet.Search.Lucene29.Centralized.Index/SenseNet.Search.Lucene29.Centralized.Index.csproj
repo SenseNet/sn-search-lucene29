@@ -27,8 +27,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="SenseNet.Common" Version="7.5.16.1" />
-		<PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.1" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="SenseNet.Security" Version="4.2.4.1" />
 		<PackageReference Include="SenseNet.Search" Version="2.4.20.1" />
 		<PackageReference Include="SenseNet.Search.Lucene29.Lucene.Net" Version="2.9.4.301" />

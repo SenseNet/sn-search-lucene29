@@ -29,7 +29,6 @@
 		<PackageReference Include="SenseNet.ContentRepository" Version="7.7.42.1" />
 		<PackageReference Include="SenseNet.Search.Lucene29.Lucene.Net" Version="2.9.4.301" />
 		<PackageReference Include="System.ServiceModel.Primitives" Version="4.10.0" />
-		<PackageReference Include="System.Diagnostics.EventLog" Version="7.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
