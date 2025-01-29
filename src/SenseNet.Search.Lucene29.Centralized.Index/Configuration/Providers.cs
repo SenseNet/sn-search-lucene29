@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using SenseNet.Configuration;
 using SenseNet.Diagnostics;
 using SenseNet.Security;
@@ -60,7 +61,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index.Configuration
         {
             var msgProvider = CreateProviderInstance<IMessageProvider>(SecurityMessageProviderClassName,
                 "SecurityMessageProvider");
-            msgProvider.Initialize();
+            msgProvider.InitializeAsync(CancellationToken.None);
 
             return msgProvider;
         });
