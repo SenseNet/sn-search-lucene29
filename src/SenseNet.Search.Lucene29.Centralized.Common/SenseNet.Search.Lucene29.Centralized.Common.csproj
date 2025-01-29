@@ -26,8 +26,8 @@
 	<ItemGroup>
 		<PackageReference Include="System.ServiceModel.Primitives" Version="8.1.1" />
 		<PackageReference Include="SenseNet.Tools" Version="3.2.13.1" />
-		<PackageReference Include="SenseNet.Security" Version="4.2.4.1" />
-		<PackageReference Include="SenseNet.Search" Version="2.4.20.1" />
+		<PackageReference Include="SenseNet.Security" Version="4.2.4.2" />
+		<PackageReference Include="SenseNet.Search" Version="2.4.20.2" />
 	</ItemGroup>
 
 </Project>
