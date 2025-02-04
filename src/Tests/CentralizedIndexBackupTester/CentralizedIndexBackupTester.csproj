@@ -13,10 +13,10 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
-		<PackageReference Include="SenseNet.ContentRepository.MsSql" Version="1.0.1.1" />
-		<PackageReference Include="SenseNet.Security.EFCSecurityStore" Version="3.1.2.2" />
-		<PackageReference Include="SenseNet.Security.Messaging.RabbitMQ" Version="1.2.6.2" />
-		<PackageReference Include="SenseNet.Services.Core" Version="1.0.1.1" />
+		<PackageReference Include="SenseNet.ContentRepository.MsSql" Version="1.1.0" />
+		<PackageReference Include="SenseNet.Security.EFCSecurityStore" Version="3.2.0" />
+		<PackageReference Include="SenseNet.Security.Messaging.RabbitMQ" Version="1.3.0" />
+		<PackageReference Include="SenseNet.Services.Core" Version="1.1.0" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
 		<PackageReference Include="System.ServiceModel.NetTcp" Version="8.1.1" />
 		<PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" />

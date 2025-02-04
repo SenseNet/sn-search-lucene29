@@ -34,7 +34,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="SenseNet.Tools" Version="3.2.13.1" />
+		<PackageReference Include="SenseNet.Tools" Version="3.3.0" />
 	</ItemGroup>
 
 	<ItemGroup>

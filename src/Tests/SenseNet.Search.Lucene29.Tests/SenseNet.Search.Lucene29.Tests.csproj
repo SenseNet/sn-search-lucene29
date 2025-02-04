@@ -15,9 +15,9 @@
 	    <PrivateAssets>all</PrivateAssets>
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="SenseNet.ContentRepository.InMemory" Version="1.0.1.1" />
-    <PackageReference Include="SenseNet.Services.Core" Version="1.0.1.1" />
-    <PackageReference Include="SenseNet.Tests.Core" Version="1.1.14.1" />
+    <PackageReference Include="SenseNet.ContentRepository.InMemory" Version="1.1.0" />
+    <PackageReference Include="SenseNet.Services.Core" Version="1.1.0" />
+    <PackageReference Include="SenseNet.Tests.Core" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup>
