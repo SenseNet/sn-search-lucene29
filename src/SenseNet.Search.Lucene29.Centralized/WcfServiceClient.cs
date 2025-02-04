@@ -12,7 +12,7 @@ using SenseNet.Search.Querying;
 namespace SenseNet.Search.Lucene29.Centralized
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "<Pending>")]
-    [Obsolete("Do not use this technology anymore.")]
+    [Obsolete("Do not use this technology anymore.", true)]
     public class WcfServiceClient : ClientBase<ISearchServiceContract>, ISearchServiceClient, IDisposable
     {
         #region Search service client creation
@@ -62,13 +62,13 @@ namespace SenseNet.Search.Lucene29.Centralized
         #region Constructors and Dispose
 
         public WcfServiceClient() { }
-        public WcfServiceClient(string endpointConfigurationName) : base(endpointConfigurationName) { }
-        public WcfServiceClient(string endpointConfigurationName, string remoteAddress) :
-            base(endpointConfigurationName, remoteAddress)
-        { }
-        public WcfServiceClient(string endpointConfigurationName, EndpointAddress remoteAddress) :
-            base(endpointConfigurationName, remoteAddress)
-        { }
+        //public WcfServiceClient(string endpointConfigurationName) : base(endpointConfigurationName) { }
+        //public WcfServiceClient(string endpointConfigurationName, string remoteAddress) :
+        //    base(endpointConfigurationName, remoteAddress)
+        //{ }
+        //public WcfServiceClient(string endpointConfigurationName, EndpointAddress remoteAddress) :
+        //    base(endpointConfigurationName, remoteAddress)
+        //{ }
         public WcfServiceClient(Binding binding, EndpointAddress remoteAddress) :
             base(binding, remoteAddress)
         { }

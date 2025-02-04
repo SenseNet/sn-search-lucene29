@@ -43,6 +43,7 @@ namespace SenseNet.Extensions.DependencyInjection
         /// Set the centralized Lucene engine as the search engine and initialize it
         /// using the provided WCF endpoint binding.
         /// </summary>
+        [Obsolete("Do not use this technology anymore.", true)]
         public static IRepositoryBuilder UseLucene29CentralizedSearchEngineWithWcf(this IRepositoryBuilder repositoryBuilder,
             Binding binding, EndpointAddress address, ILogger<Lucene29SearchEngine> logger)
         {

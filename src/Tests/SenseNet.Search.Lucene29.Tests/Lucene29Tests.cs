@@ -743,6 +743,9 @@ namespace SenseNet.Search.Lucene29.Tests
 
         public static void DeleteIndexDirectories()
         {
+            if (Providers.Instance == null)
+                return;
+
             var path = Providers.Instance.SearchManager.IndexDirectoryPath;
             foreach (var indexDir in Directory.GetDirectories(path))
             {
