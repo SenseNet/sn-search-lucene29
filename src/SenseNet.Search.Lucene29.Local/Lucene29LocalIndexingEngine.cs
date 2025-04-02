@@ -120,7 +120,7 @@ namespace SenseNet.Search.Lucene29
         /// <inheritdoc />
         public async Task<BackupResponse> BackupAsync(string target, CancellationToken cancellationToken)
         {
-            using var op = SnTrace.System.StartOperation($"Index backup. Lucene29CentralizedIndexingEngine");
+            using var op = SnTrace.System.StartOperation($"Index backup. {nameof(Lucene29LocalIndexingEngine)}");
 
             // Activity state update is not necessary in the local index (only in the centralized).
             var result = ___Backup(null, target);
