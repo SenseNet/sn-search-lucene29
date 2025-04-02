@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Lucene.Net.Index;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 
@@ -24,24 +20,48 @@ namespace SenseNet.Search.Lucene29
         public void Backup(IndexingActivityStatus state, string backupDirectoryPath,
             LuceneSearchManager indexManager, CancellationToken cancellationToken)
         {
+            var backupDirectoryIsConfigured = false;
+            if (backupDirectoryPath == null)
+            {
+                backupDirectoryIsConfigured = true;
+                backupDirectoryPath = Configuration.Lucene29.IndexBackupDirectory;
+            }
+
             using (var op = SnTrace.Index.StartOperation("BackupManager: INDEX BACKUP. Target: " + backupDirectoryPath))
             {
                 SnTrace.Index.Write("BackupManager: IndexingActivityStatus: " + state);
 
                 BackupInfo.StartedAt = DateTime.UtcNow;
+                BackupInfo.TargetPath = backupDirectoryPath;
 
-                EnsureEmptyBackupDirectory(backupDirectoryPath, cancellationToken);
+                BackupInfo.Message = "Ensure empty backup directory";
+                EnsureEmptyBackupDirectory(backupDirectoryPath, backupDirectoryIsConfigured, cancellationToken);
 
                 using (var snapshot = indexManager.CreateSnapshot(state))
                     CopyIndexFiles(snapshot, indexManager, backupDirectoryPath, cancellationToken);
 
                 BackupInfo.FinishedAt = DateTime.UtcNow;
 
+                BackupInfo.Message = cancellationToken.IsCancellationRequested ? "Canceled" : "Finished";
+
                 op.Successful = true;
             }
         }
 
-        private void EnsureEmptyBackupDirectory(string backupDirectoryPath, CancellationToken cancellationToken)
+        public bool CheckDirectory(string backupDirectoryPath)
+        {
+            if (backupDirectoryPath == null)
+                return true;
+
+            if (!Directory.Exists(backupDirectoryPath))
+                return true;
+
+            var subDirs = Directory.GetDirectories(backupDirectoryPath);
+            var files = Directory.GetFiles(backupDirectoryPath);
+            return subDirs.Length + files.Length == 0;
+        }
+
+        private void EnsureEmptyBackupDirectory(string backupDirectoryPath, bool backupDirectoryIsConfigured, CancellationToken cancellationToken)
         {
             using (var op = SnTrace.Index.StartOperation("BackupManager: Prepare backup directory"))
             {
@@ -53,7 +73,12 @@ namespace SenseNet.Search.Lucene29
                     return;
                 }
 
-                foreach (var path in Directory.GetFiles(backupDirectoryPath))
+                var subDirs = Directory.GetDirectories(backupDirectoryPath);
+                var files = Directory.GetFiles(backupDirectoryPath);
+                if(!backupDirectoryIsConfigured && (subDirs.Length + files.Length > 0))
+                    throw new InvalidOperationException("BackupManager: backup directory is not empty: " + backupDirectoryPath);
+
+                foreach (var path in files)
                 {
                     Task.Run(() => { File.Delete(path); }, cancellationToken)
                         .ConfigureAwait(false).GetAwaiter().GetResult();
@@ -80,10 +105,22 @@ namespace SenseNet.Search.Lucene29
                 SnTrace.Index.Write("BackupManager: count of files: {0}, total bytes: {1}",
                     BackupInfo.CountOfFiles, BackupInfo.TotalBytes);
 
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    SnTrace.Index.Write("BackupManager: canceled.");
+                    return;
+                }
                 CopyFile(sourceDirectoryPath, backupDirectoryPath, snapshot.SegmentFileName, cancellationToken);
 
                 foreach (var fileName in snapshot.FileNames)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        SnTrace.Index.Write("BackupManager: canceled.");
+                        return;
+                    }
                     CopyFile(sourceDirectoryPath, backupDirectoryPath, fileName, cancellationToken);
+                }
 
                 op.Successful = true;
             }

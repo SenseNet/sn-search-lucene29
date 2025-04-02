@@ -84,11 +84,6 @@ namespace SenseNet.Search.Lucene29
             BackupResponse result;
             using (var op = SnTrace.System.StartOperation($"Index backup. Lucene29CentralizedIndexingEngine"))
             {
-                if (target == null)
-                {
-                    SnTrace.System.WriteError($"Index backup error: target is not specified.");
-                    throw new ArgumentNullException(nameof(target));
-                }
 
                 await Providers.Instance.IndexManager.DeleteRestorePointsAsync(cancellationToken).ConfigureAwait(false);
 

@@ -15,6 +15,11 @@ namespace SenseNet.Configuration
 
         public static readonly string DefaultLocalIndexDirectory = Path.Combine("App_Data", "LocalIndex");
 
+        public static readonly string DefaultIndexBackupDirectory = Path.Combine("App_Data", "IndexBackup");
+
+        public static string IndexBackupDirectory { get; internal set; } =
+            GetProvider("IndexBackupDirectory", DefaultIndexBackupDirectory);
+
         public static int[] DefaultTopAndGrowth { get; internal set; } =
             ParseDefaultTopAndGrowth(GetValue<string>(SectionName, "DefaultTopAndGrowth", "100,1000,10000,0"));
         private static int[] ParseDefaultTopAndGrowth(string configValue)

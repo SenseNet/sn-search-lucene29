@@ -84,11 +84,16 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcService
 
         public override Task<BackupResponse> Backup(BackupRequest request, ServerCallContext context)
         {
+            // Empty string means null
+            var backupDirectory = request.Target;
+            if (backupDirectory == string.Empty)
+                backupDirectory = null;
+
             var result = _indexService.Backup(new Indexing.IndexingActivityStatus
             {
                 LastActivityId = request.Status.LastActivityId,
                 Gaps = request.Status.Gaps.ToArray()
-            }, request.Target);
+            }, backupDirectory);
 
             return Task.FromResult(new BackupResponse
             {
