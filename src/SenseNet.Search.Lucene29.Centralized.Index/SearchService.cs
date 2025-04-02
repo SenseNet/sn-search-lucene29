@@ -152,12 +152,6 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
         private static readonly List<BackupInfo> _backupHistory = new List<BackupInfo>();
         public BackupResponse Backup(IndexingActivityStatus state, string backupDirectoryPath)
         {
-            if (backupDirectoryPath == null)
-            {
-                SnTrace.Index.WriteError("SearchService: Missing 'backupDirectoryPath'");
-                throw new ArgumentNullException(nameof(backupDirectoryPath));
-            }
-
             if (_backupManager != null)
             {
                 SnTrace.Index.Write("SearchService: Backup already executing by another thread.");
@@ -169,6 +163,21 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
                 if (_backupManager != null)
                     return CreateBackupResponse(BackupState.Executing, false);
                 _backupManager = _backupManagerFactory.CreateBackupManager();
+            }
+
+            if (!_backupManager.CheckDirectory(backupDirectoryPath))
+            {
+                var message = "SearchService: Backup directory is not empty.";
+                SnTrace.Index.WriteError(message + " Path: " + backupDirectoryPath);
+                var result = CreateBackupResponse(BackupState.Faulted, false);
+                var info = result.Current;
+                info.StartedAt = DateTime.UtcNow;
+                info.FinishedAt = DateTime.UtcNow;
+                info.TargetPath = backupDirectoryPath;
+                info.Message = message;
+                _backupHistory.Add(info.Clone());
+                _backupManager = null;
+                return result;
             }
 
             SnTrace.Index.Write("SearchService: BackupManager created.");
@@ -228,7 +237,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             }
             else
             {
-                BackupInfo info = _backupHistory.FirstOrDefault();
+                BackupInfo info = _backupHistory.LastOrDefault();
                 if (info == null)
                 {
                     state = BackupState.Initial;
@@ -261,7 +270,7 @@ namespace SenseNet.Search.Lucene29.Centralized.Index
             {
                 State = state,
                 Current = _backupManager?.BackupInfo.Clone(),
-                History = withHistory ? _backupHistory.ToArray() : null,
+                History = withHistory ? _backupHistory.OrderByDescending(x => x.StartedAt).ToArray() : null,
             };
         }
 

@@ -62,6 +62,11 @@ namespace SenseNet.Search.Lucene29.Tests
             {
                 Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).GetAwaiter().GetResult();
             }
+
+            public bool CheckDirectory(string backupDirectoryPath)
+            {
+                return true;
+            }
         }
         #endregion
 
@@ -132,6 +137,11 @@ namespace SenseNet.Search.Lucene29.Tests
                 }
 
                 BackupInfo.FinishedAt = DateTime.UtcNow;
+            }
+
+            public bool CheckDirectory(string backupDirectoryPath)
+            {
+                return true;
             }
         }
         #endregion
@@ -219,6 +229,11 @@ namespace SenseNet.Search.Lucene29.Tests
                     BackupInfo.CurrentlyCopiedFile = $"File{++i + 1}";
                 }
                 // ReSharper disable once FunctionNeverReturns
+            }
+
+            public bool CheckDirectory(string backupDirectoryPath)
+            {
+                return true;
             }
         }
         #endregion

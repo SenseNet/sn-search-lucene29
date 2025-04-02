@@ -159,7 +159,7 @@ namespace SenseNet.Search.Lucene29.Centralized.GrpcClient
                 var response = _searchClient.Backup(new BackupRequest
                 {
                     Status = state.ToGrpcActivityStatus(),
-                    Target = backupDirectoryPath
+                    Target = backupDirectoryPath ?? string.Empty // grpc hates null values
                 });
 
                 return JsonConvert.DeserializeObject<BackupResponse>(response.Response);

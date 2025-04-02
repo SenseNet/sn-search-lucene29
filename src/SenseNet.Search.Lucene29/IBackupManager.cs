@@ -14,5 +14,7 @@ namespace SenseNet.Search.Lucene29
         BackupInfo BackupInfo { get; }
         void Backup(IndexingActivityStatus state, string backupDirectoryPath,
             LuceneSearchManager indexManager, CancellationToken cancellationToken);
+
+        bool CheckDirectory(string backupDirectoryPath);
     }
 }
