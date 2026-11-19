@@ -2,6 +2,7 @@ using System.Text.Json;
 using Lucene.Net.Analysis;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -147,6 +148,34 @@ public class RepairTests
         Assert.AreEqual("99", fixture.Data()["LastActivityId"]);
         Assert.IsFalse(fixture.Data().ContainsKey("Gaps"));
         Assert.AreEqual("keep", fixture.Data()["other"]);
+    }
+
+    [TestMethod]
+    public async Task TimestampRepairKeepsNonSystemDocumentSearchable()
+    {
+        const string systemField = "IsSystemContent";
+        var document = CheckerTests.Doc(versionTs: 201);
+        document.Add(new Field(systemField, "no", Field.Store.YES, Field.Index.NOT_ANALYZED));
+        using var fixture = new Fixture([document], [Row()]);
+        var query = new TermQuery(new Term(systemField, "no"));
+
+        AssertSearchFindsDocument();
+        Assert.AreEqual(DifferenceKind.DifferentVersionTimestamp, (await fixture.CompareAsync()).Single().Kind);
+        await using (var repair = fixture.Repair())
+        {
+            Assert.IsTrue(await repair.PrepareAsync(fixture.ReportPath, default));
+            await repair.ApplyAsync(default);
+        }
+        Assert.AreEqual(0, (await fixture.CompareAsync(false)).Count);
+        AssertSearchFindsDocument();
+
+        void AssertSearchFindsDocument()
+        {
+            using var directory = FSDirectory.Open(new DirectoryInfo(fixture.IndexPath));
+            using var reader = IndexReader.Open(directory, true);
+            using var searcher = new IndexSearcher(reader);
+            Assert.AreEqual(1, searcher.Search(query, 1).TotalHits);
+        }
     }
 
     // TODO(refactor): Experimental malformed-document closure test; retain for the supported repair implementation.

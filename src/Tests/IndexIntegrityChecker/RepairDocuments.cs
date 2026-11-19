@@ -171,6 +171,8 @@ internal sealed class RepairSchema
 // TODO(refactor): Experimental local document conversion; replace with supported offline indexing APIs.
 internal static class RepairDocuments
 {
+    private const string IsSystemContentFieldName = "IsSystemContent";
+
     // TODO(refactor): Experimental adaptation of sensenet@91be9c5c3f7d5f5aa03c9a72cde4a935f106584f
     // src/Search/Indexing/IndexDocument.cs::Deserialize and
     // src/ContentRepository/Search/Indexing/IndexManager.cs::CompleteIndexDocument/GetParentPaths.
@@ -200,7 +202,8 @@ internal static class RepairDocuments
         if (version.LastPublic == version.VersionId && version.Status != 1)
             throw new InvalidDataException($"SQL last public version {version.VersionId} is not Approved; SQL correction is outside this tool.");
         var doc = new Document();
-        var completed = new HashSet<string>(["Name", "Path", "Depth", "InTree", "InFolder", "ParentId", "IsSystem", "IsLastPublic", "IsLastDraft", "NodeTimestamp", "VersionTimestamp"]);
+        var completed = new HashSet<string>(
+            ["Name", "Path", "Depth", "InTree", "InFolder", "ParentId", IsSystemContentFieldName, "IsLastPublic", "IsLastDraft", "NodeTimestamp", "VersionTimestamp"]);
         foreach (var (name, field) in fields)
         {
             if (completed.Contains(name)) continue;
@@ -220,7 +223,12 @@ internal static class RepairDocuments
         }
         AddField(doc, "Depth", "Int", JsonSerializer.SerializeToElement(path.Count(c => c == '/') - 1), "AnalyzedNoNorms", "Yes", "No");
         AddField(doc, "ParentId", "Int", JsonSerializer.SerializeToElement(version.ParentId), "AnalyzedNoNorms", "No", "No");
-        foreach (var (name, value) in new[] { ("IsSystem", version.IsSystem), ("IsLastPublic", version.LastPublic == version.VersionId), ("IsLastDraft", version.LastDraft == version.VersionId) })
+        foreach (var (name, value) in new[]
+        {
+            (IsSystemContentFieldName, version.IsSystem),
+            ("IsLastPublic", version.LastPublic == version.VersionId),
+            ("IsLastDraft", version.LastDraft == version.VersionId)
+        })
             AddField(doc, name, "Bool", JsonSerializer.SerializeToElement(value), "NotAnalyzed", "Yes", "No");
         foreach (var (name, value) in new[] { ("NodeTimestamp", version.NodeTimestamp), ("VersionTimestamp", version.VersionTimestamp) })
             AddField(doc, name, "Long", JsonSerializer.SerializeToElement(value), "AnalyzedNoNorms", "Yes", "No");
