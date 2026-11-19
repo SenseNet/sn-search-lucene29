@@ -20,7 +20,7 @@ namespace SenseNet.Search.Lucene29
     /// Lucene29 indexing engine for a local environment. Works with a Lucene index stored in the file system.
     /// </summary>
     /// <inheritdoc/>
-    public class Lucene29LocalIndexingEngine : ILuceneIndexingEngine
+    public class Lucene29LocalIndexingEngine : ILuceneIndexingEngine, IIndexCatchUpEngine
     {
         internal IndexDirectory IndexDirectory => LuceneSearchManager.IndexDirectory;
 
@@ -290,6 +290,11 @@ namespace SenseNet.Search.Lucene29
         {
             LuceneSearchManager.WriteIndex(deletions, updates, additions);
             return Task.CompletedTask;
+        }
+
+        public IIndexCatchUpSession BeginCatchUp(CancellationToken cancellationToken)
+        {
+            return LuceneSearchManager.BeginCatchUp(cancellationToken);
         }
 
         /// <inheritdoc />
