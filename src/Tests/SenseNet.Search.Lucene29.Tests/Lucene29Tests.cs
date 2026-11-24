@@ -339,6 +339,12 @@ namespace SenseNet.Search.Lucene29.Tests
                 await engine.WriteActivityStatusToIndexAsync(
                     new IndexingActivityStatus { LastActivityId = 120, Gaps = new[] { 100 } }, cancel);
 
+                var pendingDocument = new IndexDocument();
+                pendingDocument.Add(new IndexField(IndexFieldName.VersionId, 1235, IndexingMode.AnalyzedNoNorms,
+                    IndexStoringMode.Yes, IndexTermVector.No));
+                await engine.WriteIndexAsync(null, null, new[] { pendingDocument }, cancel);
+                CollectionAssert.Contains(engine.GetIndexProperties().VersionIds.ToArray(), 1235);
+
                 using (var session = engine.BeginCatchUp(cancel))
                 {
                     Assert.AreEqual(1, session.GetVersions(term, cancel).Count);
@@ -354,6 +360,7 @@ namespace SenseNet.Search.Lucene29.Tests
 
                 manager.Start(TextWriter.Null);
                 CollectionAssert.Contains(engine.GetIndexProperties().VersionIds.ToArray(), 1234);
+                CollectionAssert.Contains(engine.GetIndexProperties().VersionIds.ToArray(), 1235);
                 var state = await engine.ReadActivityStatusFromIndexAsync(cancel);
                 Assert.AreEqual(120, state.LastActivityId);
                 CollectionAssert.AreEqual(new[] { 100 }, state.Gaps);
@@ -386,6 +393,64 @@ namespace SenseNet.Search.Lucene29.Tests
                 Assert.AreEqual(150, state.LastActivityId);
                 CollectionAssert.AreEqual(Array.Empty<int>(), state.Gaps);
             }, false);
+        }
+
+        [TestMethod, TestCategory("IR, L29")]
+        public async Task L29_CatchUp_CommitSucceedsWhenReaderRefreshFails()
+        {
+            await L29Test(async () =>
+            {
+                var directory = new IndexDirectory("catch-up-reader-refresh",
+                    Providers.Instance.SearchManager.IndexDirectoryPath);
+                var manager = new ReaderRefreshFailingManager(directory);
+                manager.SetIndexingInfo(new Dictionary<string, Analyzer>(), new Dictionary<string, IndexValueType>
+                {
+                    [IndexFieldName.VersionId] = IndexValueType.Int
+                });
+                manager.Start(TextWriter.Null);
+                try
+                {
+                    var cancel = CancellationToken.None;
+                    var document = new IndexDocument();
+                    document.Add(new IndexField(IndexFieldName.VersionId, 1234, IndexingMode.AnalyzedNoNorms,
+                        IndexStoringMode.Yes, IndexTermVector.No));
+
+                    using (var session = manager.BeginCatchUp(cancel))
+                    {
+                        await session.WriteIndexAsync(Array.Empty<SnTerm>(), new[]
+                        {
+                            new DocumentUpdate { UpdateTerm = new SnTerm(IndexFieldName.VersionId, 1234), Document = document }
+                        }, cancel);
+
+                        manager.FailNextReaderRefresh = true;
+                        await session.CommitAsync(new IndexingActivityStatus { LastActivityId = 150 }, cancel);
+                        Assert.IsFalse(manager.FailNextReaderRefresh);
+                    }
+
+                    var index = new IndexExplorer(manager).GetIndexProperties();
+                    Assert.AreEqual(150, index.IndexingActivityStatus.LastActivityId);
+                    CollectionAssert.Contains(index.VersionIds.ToArray(), 1234);
+                }
+                finally
+                {
+                    manager.ShutDown();
+                }
+            }, false);
+        }
+
+        private sealed class ReaderRefreshFailingManager(IndexDirectory directory) : LuceneSearchManager(directory)
+        {
+            public bool FailNextReaderRefresh { get; set; }
+
+            internal override void ReopenReader()
+            {
+                if (FailNextReaderRefresh)
+                {
+                    FailNextReaderRefresh = false;
+                    throw new IOException("Simulated reader refresh failure.");
+                }
+                base.ReopenReader();
+            }
         }
 
         [TestMethod, TestCategory("IR, L29")]

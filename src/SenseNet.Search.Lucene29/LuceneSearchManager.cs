@@ -517,7 +517,7 @@ namespace SenseNet.Search.Lucene29
             }
         }
 
-        private void ReopenReader()
+        internal virtual void ReopenReader()
         {
             using (var op = SnTrace.Index.StartOperation("LM: ReopenReader"))
             {

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
+using Lucene.Net.Index;
+using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
 using SenseNet.Search.Querying;
 
@@ -22,6 +24,8 @@ namespace SenseNet.Search.Lucene29
                 if (!Running || _catchUp != null)
                     throw new InvalidOperationException("The index writer is not available for catch-up.");
 
+                // Preserve pending normal writes as the rollback baseline without advancing their checkpoint.
+                _writer.Commit(IndexReader.GetCommitUserData(_writer.GetDirectory()));
                 return _catchUp = new CatchUpSession(this);
             }
             finally
@@ -75,7 +79,7 @@ namespace SenseNet.Search.Lucene29
         {
             private readonly LuceneSearchManager _manager;
             private readonly object _sync = new object();
-            private Lucene.Net.Index.IndexReader _reader;
+            private IndexReader _reader;
 
             public CatchUpSession(LuceneSearchManager manager)
             {
@@ -137,8 +141,19 @@ namespace SenseNet.Search.Lucene29
                     if (_manager._catchUp != this)
                         throw new InvalidOperationException("The catch-up session is closed.");
                     CloseReader();
-                    _manager.Commit(true, status);
+                    _manager.Commit(false, status);
                     _manager._catchUp = null;
+
+                    try
+                    {
+                        _manager.ReopenReader();
+                    }
+                    catch (Exception error)
+                    {
+                        _manager.IndexReopenedAt = default;
+                        SnLog.WriteException(error, "Catch-up was committed. Lucene reader refresh will be retried on the next read.");
+                    }
+
                     return Task.CompletedTask;
                 }
                 finally
