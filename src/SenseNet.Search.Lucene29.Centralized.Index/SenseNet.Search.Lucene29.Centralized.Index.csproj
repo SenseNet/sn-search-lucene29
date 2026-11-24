@@ -4,7 +4,7 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<AssemblyName>SenseNet.Search.Lucene29.Centralized.Index</AssemblyName>
 		<RootNamespace>SenseNet.Search.Lucene29.Centralized.Index</RootNamespace>
-		<Version>2.3.0-alpha.1-indxctchp</Version>
+		<Version>2.3.0-alpha-1.0</Version>
 		<Company>Sense/Net Inc.</Company>
 		<Description>Index layer for the sensenet Centralized search engine implementation for Lucene29.</Description>
 		<Copyright>Copyright © Sense/Net Inc.</Copyright>
@@ -28,7 +28,7 @@
 	<ItemGroup>
 		<PackageReference Include="SenseNet.Common" Version="7.6.0" />
 		<PackageReference Include="SenseNet.Security" Version="4.3.2-alpha.5" />
-		<PackageReference Include="SenseNet.Search" Version="2.6.0-alpha.1-indxctchp" />
+		<PackageReference Include="SenseNet.Search" Version="2.6.0-alpha-1.0" />
 		<PackageReference Include="SenseNet.Search.Lucene29.Lucene.Net" Version="2.9.4.301" />
 	</ItemGroup>
 
