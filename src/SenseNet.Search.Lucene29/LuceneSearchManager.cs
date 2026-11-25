@@ -23,7 +23,7 @@ namespace SenseNet.Search.Lucene29
     /// of this class when creating a Lucene29 indexing engine implementation in the app domain where the actual index
     /// folder is stored.
     /// </summary>
-    public class LuceneSearchManager
+    public partial class LuceneSearchManager
     {
         public static readonly Lucene.Net.Util.Version LuceneVersion = Lucene.Net.Util.Version.LUCENE_29;
 
@@ -99,6 +99,21 @@ namespace SenseNet.Search.Lucene29
         }
         public void ShutDown()
         {
+            _catchUpLock.EnterWriteLock();
+            try
+            {
+                if (_catchUp != null)
+                    RollbackCatchUp();
+                ShutDownCore();
+            }
+            finally
+            {
+                _catchUpLock.ExitWriteLock();
+            }
+        }
+
+        private void ShutDownCore()
+        {
             using (var op = SnTrace.Index.StartOperation("LUCENEMANAGER SHUTDOWN"))
             {
                 if (_writer != null)
@@ -131,6 +146,11 @@ namespace SenseNet.Search.Lucene29
 
         public void ClearIndex()
         {
+            UseIndexWriter(ClearIndexCore);
+        }
+
+        private void ClearIndexCore()
+        {
             using (var op = SnTrace.Index.StartOperation("LM.ClearIndex"))
             {
                 _reader?.Close();
@@ -155,7 +175,7 @@ namespace SenseNet.Search.Lucene29
 
         public void WriteActivityStatusToIndex(IndexingActivityStatus state)
         {
-            Commit(true, state);
+            UseIndexWriter(() => Commit(true, state));
         }
 
         //================================================================================== Lock file operations
@@ -324,8 +344,14 @@ namespace SenseNet.Search.Lucene29
 
         /* ============================================================================================= Document Operations */
 
-        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
         public void WriteIndex(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates, IEnumerable<IndexDocument> additions)
+        {
+            UseIndexWriter(() => WriteIndexCore(deletions, updates, additions));
+        }
+
+        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
+        private void WriteIndexCore(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates,
+            IEnumerable<IndexDocument> additions)
         {
             using (var wrFrame = IndexWriterFrame.Get(_writer, _writerRestartLock, false)) // // AddTree
             {
@@ -358,7 +384,6 @@ namespace SenseNet.Search.Lucene29
 
         private Term GetTerm(SnTerm snTerm)
         {
-            // In the sensenet ecosystem, this method is only used with “VersionId”.
             return GetTerms(snTerm).First();
         }
         private Term[] GetTerms(IEnumerable<SnTerm> snTerms)
@@ -492,7 +517,7 @@ namespace SenseNet.Search.Lucene29
             }
         }
 
-        private void ReopenReader()
+        internal virtual void ReopenReader()
         {
             using (var op = SnTrace.Index.StartOperation("LM: ReopenReader"))
             {
@@ -580,17 +605,24 @@ namespace SenseNet.Search.Lucene29
 
         public IndexReaderFrame GetIndexReaderFrame(bool dirty = false)
         {
-            var needReopen = (DateTime.UtcNow - IndexReopenedAt) > ForceReopenFrequency;
-            if (!dirty || needReopen)
-                if (!_reader.IsCurrent())
+            _catchUpLock.EnterReadLock();
+            try
+            {
+                var needReopen = (DateTime.UtcNow - IndexReopenedAt) > ForceReopenFrequency;
+                if (_catchUp == null && (!dirty || needReopen) && !_reader.IsCurrent())
                     using (IndexWriterFrame.Get(_writer, _writerRestartLock, false))
                         ReopenReader();
 
 #pragma warning disable 420
-            Interlocked.Increment(ref _recentlyUsedReaderFrames);
+                Interlocked.Increment(ref _recentlyUsedReaderFrames);
 #pragma warning restore 420
 
-            return new IndexReaderFrame(_reader);
+                return new IndexReaderFrame(_reader);
+            }
+            finally
+            {
+                _catchUpLock.ExitReadLock();
+            }
         }
 
         private void CreateWriterAndReader()
@@ -647,8 +679,13 @@ namespace SenseNet.Search.Lucene29
 
         internal IndexSnapshot CreateSnapshot(IndexingActivityStatus state)
         {
-            Commit(true, state);
-            return new IndexSnapshot(_snapshotMaker);
+            IndexSnapshot snapshot = null;
+            UseIndexWriter(() =>
+            {
+                Commit(true, state);
+                snapshot = new IndexSnapshot(_snapshotMaker);
+            });
+            return snapshot;
         }
     }
 }
