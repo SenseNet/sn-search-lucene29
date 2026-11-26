@@ -10,14 +10,15 @@ namespace SenseNet.Search.Lucene29
 
         public string[] FileNames { get; }
         public string SegmentFileName { get; }
+        internal IndexCommitPoint CommitPoint { get; }
 
         public IndexSnapshot(SnapshotDeletionPolicy snapshotMaker)
         {
             _snapshotMaker = snapshotMaker;
 
-            var indexCommitPoint = _snapshotMaker.Snapshot();
-            FileNames = indexCommitPoint.GetFileNames().ToArray();
-            SegmentFileName = indexCommitPoint.GetSegmentsFileName();
+            CommitPoint = _snapshotMaker.Snapshot();
+            FileNames = CommitPoint.GetFileNames().ToArray();
+            SegmentFileName = CommitPoint.GetSegmentsFileName();
         }
         public void Dispose()
         {

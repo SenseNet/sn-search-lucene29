@@ -12,6 +12,7 @@ using SenseNet.ContentRepository.Search;
 using SenseNet.ContentRepository.Search.Indexing;
 using SenseNet.Diagnostics;
 using SenseNet.Search.Indexing;
+using SenseNet.Search.Indexing.Integrity;
 using SenseNet.Search.Querying;
 
 namespace SenseNet.Search.Lucene29
@@ -20,7 +21,7 @@ namespace SenseNet.Search.Lucene29
     /// Lucene29 indexing engine for a local environment. Works with a Lucene index stored in the file system.
     /// </summary>
     /// <inheritdoc/>
-    public class Lucene29LocalIndexingEngine : ILuceneIndexingEngine, IIndexCatchUpEngine
+    public class Lucene29LocalIndexingEngine : ILuceneIndexingEngine, IIndexCatchUpEngine, IIndexIntegrityEngine
     {
         internal IndexDirectory IndexDirectory => LuceneSearchManager.IndexDirectory;
 
@@ -291,6 +292,19 @@ namespace SenseNet.Search.Lucene29
             LuceneSearchManager.WriteIndex(deletions, updates, additions);
             return Task.CompletedTask;
         }
+
+        string IIndexIntegrityEngine.IndexIdentity => System.IO.Path.GetFullPath(IndexDirectory.CurrentDirectory);
+
+        IIndexIntegrityReader IIndexIntegrityEngine.OpenIntegrityReader(CancellationToken cancellationToken) =>
+            LuceneSearchManager.OpenIntegrityReader(cancellationToken);
+
+        IndexIntegrityProbe IIndexIntegrityEngine.ProbeIntegrity(IReadOnlyCollection<int> versionIds,
+            string scratchDirectory, CancellationToken cancellationToken) =>
+            LuceneSearchManager.ProbeIntegrity(versionIds, scratchDirectory, cancellationToken);
+
+        bool IIndexIntegrityEngine.TryApplyIntegrityRepairs(long revision, IReadOnlyList<IndexIntegrityUpdate> updates,
+            CancellationToken cancellationToken) =>
+            LuceneSearchManager.TryApplyIntegrityRepairs(revision, updates, cancellationToken);
 
         public IIndexCatchUpSession BeginCatchUp(CancellationToken cancellationToken)
         {

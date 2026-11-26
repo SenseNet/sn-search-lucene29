@@ -69,6 +69,3 @@ internal sealed class CheckpointWriter : IDisposable
             throw new InvalidDataException($"Checksum mismatch in saved file: {saved.Name}.");
     }
 }
-
-internal readonly record struct SavedIndexVersion(int VersionId, int DocId, IndexMetadata Metadata);
-

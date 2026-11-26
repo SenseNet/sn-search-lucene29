@@ -146,11 +146,19 @@ namespace SenseNet.Search.Lucene29
 
         public void ClearIndex()
         {
-            UseIndexWriter(ClearIndexCore);
+            _catchUpLock.EnterWriteLock();
+            try
+            {
+                if (_catchUp != null)
+                    throw new InvalidOperationException("The index writer is not available for this operation during catch-up.");
+                ClearIndexCore();
+            }
+            finally { _catchUpLock.ExitWriteLock(); }
         }
 
         private void ClearIndexCore()
         {
+            MarkIntegrityMutation();
             using (var op = SnTrace.Index.StartOperation("LM.ClearIndex"))
             {
                 _reader?.Close();
@@ -353,6 +361,7 @@ namespace SenseNet.Search.Lucene29
         private void WriteIndexCore(IEnumerable<SnTerm> deletions, IEnumerable<DocumentUpdate> updates,
             IEnumerable<IndexDocument> additions)
         {
+            MarkIntegrityMutation();
             using (var wrFrame = IndexWriterFrame.Get(_writer, _writerRestartLock, false)) // // AddTree
             {
                 if (deletions != null)
@@ -530,7 +539,12 @@ namespace SenseNet.Search.Lucene29
                         if (retry > 1)
                             SnTrace.Index.Write("LM: REOPEN READER {0}. ATTEMPT", retry);
 
-                        _reader = _writer.GetReader();
+                        lock (_readerLock)
+                        {
+                            var previous = _reader;
+                            _reader = _writer.GetReader();
+                            previous?.Close();
+                        }
 
 #pragma warning disable 420
                         var recentlyUsedReaderFrames = Interlocked.Exchange(ref _recentlyUsedReaderFrames, 0);
@@ -597,6 +611,7 @@ namespace SenseNet.Search.Lucene29
 
         private IndexWriter _writer;
         private IndexReader _reader;
+        private readonly object _readerLock = new object();
         private readonly object _commitLock = new object();
         private SnapshotDeletionPolicy _snapshotMaker;
 
@@ -609,7 +624,10 @@ namespace SenseNet.Search.Lucene29
             try
             {
                 var needReopen = (DateTime.UtcNow - IndexReopenedAt) > ForceReopenFrequency;
-                if (_catchUp == null && (!dirty || needReopen) && !_reader.IsCurrent())
+                bool refresh;
+                lock (_readerLock)
+                    refresh = _catchUp == null && (!dirty || needReopen) && !_reader.IsCurrent();
+                if (refresh)
                     using (IndexWriterFrame.Get(_writer, _writerRestartLock, false))
                         ReopenReader();
 
@@ -617,7 +635,8 @@ namespace SenseNet.Search.Lucene29
                 Interlocked.Increment(ref _recentlyUsedReaderFrames);
 #pragma warning restore 420
 
-                return new IndexReaderFrame(_reader);
+                lock (_readerLock)
+                    return new IndexReaderFrame(_reader);
             }
             finally
             {
@@ -627,6 +646,7 @@ namespace SenseNet.Search.Lucene29
 
         private void CreateWriterAndReader()
         {
+            MarkIntegrityMutation();
             //?? new IndexReader
 
             var path = IndexDirectory.CurrentDirectory;
@@ -659,12 +679,18 @@ namespace SenseNet.Search.Lucene29
 
         public void SetIndexingInfo(IDictionary<string, Analyzer> analyzerInfo, IDictionary<string, IndexValueType> indexFieldTypeInfo)
         {
-            AnalyzerInfo = analyzerInfo;
-            IndexFieldTypeInfo = indexFieldTypeInfo;
+            _catchUpLock.EnterWriteLock();
+            try
+            {
+                MarkIntegrityMutation();
+                AnalyzerInfo = analyzerInfo;
+                IndexFieldTypeInfo = indexFieldTypeInfo;
 
-            if(_writer!= null)
-                using (var wrFrame = IndexWriterFrame.Get(_writer, _writerRestartLock, false))
-                    ((SnPerFieldAnalyzerWrapper) wrFrame.IndexWriter.GetAnalyzer()).RefreshAnalyzers(analyzerInfo);
+                if (_writer != null)
+                    using (var wrFrame = IndexWriterFrame.Get(_writer, _writerRestartLock, false))
+                        ((SnPerFieldAnalyzerWrapper)wrFrame.IndexWriter.GetAnalyzer()).RefreshAnalyzers(analyzerInfo);
+            }
+            finally { _catchUpLock.ExitWriteLock(); }
         }
 
         private Document GetFakeDocument()

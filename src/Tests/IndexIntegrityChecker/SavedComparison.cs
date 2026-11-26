@@ -85,7 +85,7 @@ internal static class SavedComparison
             var database = SnapshotFiles.ReadDatabase(workspace.FilePath(state.DatabaseFile), state.Database!.Data.Rows, cancel);
             var index = SnapshotFiles.ReadIndex(workspace.FilePath(state.IndexFile), state.IndexSnapshot!.Data.Rows, state.IndexSnapshot.MaxDoc, cancel);
             using var reportedPaths = new DiskBitSet(workspace.FilePath($"comparison-scratch-{state.Id:N}.bits"), state.IndexSnapshot.MaxDoc);
-            counts = Merge(database, index, reporter, reportedPaths, cancel);
+            counts = IndexIntegrityComparer.Compare(database, index, reporter, reportedPaths.TryMark, cancel);
             writer.WriteLine(JsonSerializer.Serialize(new
             {
                 type = "summary", status = reporter.Count == 0 ? "consistent" : "differences",
@@ -104,67 +104,6 @@ internal static class SavedComparison
         state.Database?.LastActivityId is int database && state.IndexSnapshot?.Activity is { } index
             ? new(database, index)
             : throw new InvalidDataException("The saved snapshots have no complete activity state. Run a new full check in a new workspace.");
-
-    private static CheckCounts Merge(IEnumerable<DatabaseVersion> database, IEnumerable<SavedIndexVersion> index,
-        DifferenceReporter reporter, DiskBitSet reportedPaths, CancellationToken cancel)
-    {
-        using var db = database.GetEnumerator();
-        using var ix = index.GetEnumerator();
-        var hasDb = db.MoveNext(); var hasIx = ix.MoveNext();
-        int lastDb = 0, lastIx = 0;
-        long dbCount = 0, ixCount = 0, matched = 0;
-        while (hasDb || hasIx)
-        {
-            cancel.ThrowIfCancellationRequested();
-            if (hasDb && db.Current.VersionId <= lastDb) throw new InvalidDataException("Database snapshot is not ordered by unique positive VersionId.");
-            if (hasIx && ix.Current.VersionId < lastIx) throw new InvalidDataException("Index snapshot is not ordered by VersionId.");
-            if (hasDb && (!hasIx || db.Current.VersionId < ix.Current.VersionId))
-            {
-                reporter.Report(new(DifferenceKind.NotInIndex, db.Current.VersionId, NodeId: db.Current.NodeId));
-                lastDb = db.Current.VersionId; dbCount++; hasDb = db.MoveNext(); continue;
-            }
-            var version = ix.Current.VersionId;
-            var found = hasDb && db.Current.VersionId == version;
-            long duplicates = 0;
-            do
-            {
-                cancel.ThrowIfCancellationRequested();
-                var current = ix.Current;
-                if (++duplicates > 1) reporter.Report(new(DifferenceKind.MoreDocument, version, current.DocId, current.Metadata.NodeId));
-                if (found) { Compare(db.Current, current, reporter, reportedPaths); matched++; }
-                else reporter.Report(new(DifferenceKind.NotInDatabase, version, current.DocId, current.Metadata.NodeId));
-                lastIx = version; ixCount++; hasIx = ix.MoveNext();
-            } while (hasIx && ix.Current.VersionId == version);
-            if (found) { lastDb = version; dbCount++; hasDb = db.MoveNext(); }
-        }
-        return new(dbCount, ixCount, matched);
-    }
-
-    private static void Compare(DatabaseVersion db, SavedIndexVersion row, DifferenceReporter reporter, DiskBitSet reportedPaths)
-    {
-        var ix = row.Metadata;
-        void Difference(DifferenceKind kind, string field, object? expected, object? actual) =>
-            reporter.Report(new(kind, row.VersionId, row.DocId, db.NodeId, field, expected, actual));
-        if ((ix.Present & Fields.NodeId) != 0 && ix.NodeId != db.NodeId)
-            Difference(DifferenceKind.DifferentNodeId, "Id", db.NodeId, ix.NodeId);
-        if ((ix.Present & Fields.VersionTimestamp) != 0 && ix.VersionTimestamp != db.VersionTimestamp)
-            Difference(DifferenceKind.DifferentVersionTimestamp, "VersionTimestamp", db.VersionTimestamp, ix.VersionTimestamp);
-        if ((ix.Present & Fields.IsLastPublic) != 0 && ix.IsLastPublic != (db.VersionId == db.LastMajorVersionId))
-            Difference(DifferenceKind.DifferentLastPublicFlag, "IsLastPublic", db.VersionId == db.LastMajorVersionId, ix.IsLastPublic);
-        if ((ix.Present & Fields.IsLastDraft) != 0 && ix.IsLastDraft != (db.VersionId == db.LastMinorVersionId))
-            Difference(DifferenceKind.DifferentLastDraftFlag, "IsLastDraft", db.VersionId == db.LastMinorVersionId, ix.IsLastDraft);
-        if ((ix.Present & Fields.NodeTimestamp) != 0 && ix.NodeTimestamp != db.NodeTimestamp)
-        {
-            if (!ix.IsLastDraft)
-            {
-                if (ix.MissingDraftPath && reportedPaths.TryMark(ix.DraftDocId))
-                    reporter.Report(new(DifferenceKind.MissingField, DocId: ix.DraftDocId, Field: "Path"));
-                if (ix.MissingOwnPath) reporter.Report(new(DifferenceKind.MissingField, DocId: row.DocId, Field: "Path"));
-            }
-            if (ix.IsLastDraft || !ix.HistoricalPathMatches)
-                Difference(DifferenceKind.DifferentNodeTimestamp, "NodeTimestamp", db.NodeTimestamp, ix.NodeTimestamp);
-        }
-    }
 }
 
 internal sealed class DiskBitSet : IDisposable

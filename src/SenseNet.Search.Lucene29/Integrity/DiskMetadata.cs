@@ -1,6 +1,10 @@
+#nullable enable
+using System;
+using System.IO;
+using SenseNet.Search.Indexing.Integrity;
 using System.IO.MemoryMappedFiles;
 
-namespace IndexIntegrityChecker;
+namespace SenseNet.Search.Lucene29.Integrity;
 
 /// <summary>Fixed-size, disk-backed metadata. Resident pages are managed by the OS.</summary>
 internal sealed class DiskMetadata : IDisposable
@@ -36,11 +40,11 @@ internal sealed class DiskMetadata : IDisposable
             var flags = _view.ReadByte(offset + 25);
             return new IndexMetadata
             {
-                NodeId = _view.ReadInt32(offset), NodeTimestamp = _view.ReadInt64(offset + 8),
+                NodeId = _view.ReadInt32(offset), UniqueVersionId = _view.ReadInt32(offset + 4), NodeTimestamp = _view.ReadInt64(offset + 8),
                 VersionTimestamp = _view.ReadInt64(offset + 16), Present = (Fields)_view.ReadByte(offset + 24),
                 IsLastPublic = (flags & 1) != 0, IsLastDraft = (flags & 2) != 0, IsCommit = (flags & 4) != 0,
                 HistoricalPathMatches = (flags & 8) != 0, MissingOwnPath = (flags & 16) != 0,
-                MissingDraftPath = (flags & 32) != 0, DraftPathReported = (flags & 64) != 0,
+                MissingDraftPath = (flags & 32) != 0, DraftPathReported = (flags & 64) != 0, AmbiguousVersionId = (flags & 128) != 0,
                 DraftDocId = _view.ReadInt32(offset + 28)
             };
         }
@@ -48,12 +52,14 @@ internal sealed class DiskMetadata : IDisposable
         {
             var offset = Offset(doc);
             _view.Write(offset, value.NodeId);
+            _view.Write(offset + 4, value.UniqueVersionId);
             _view.Write(offset + 8, value.NodeTimestamp);
             _view.Write(offset + 16, value.VersionTimestamp);
             _view.Write(offset + 24, (byte)value.Present);
             _view.Write(offset + 25, (byte)((value.IsLastPublic ? 1 : 0) | (value.IsLastDraft ? 2 : 0) |
                 (value.IsCommit ? 4 : 0) | (value.HistoricalPathMatches ? 8 : 0) |
-                (value.MissingOwnPath ? 16 : 0) | (value.MissingDraftPath ? 32 : 0) | (value.DraftPathReported ? 64 : 0)));
+                (value.MissingOwnPath ? 16 : 0) | (value.MissingDraftPath ? 32 : 0) | (value.DraftPathReported ? 64 : 0) |
+                (value.AmbiguousVersionId ? 128 : 0)));
             _view.Write(offset + 28, value.DraftDocId);
         }
     }

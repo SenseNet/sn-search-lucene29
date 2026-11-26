@@ -1,8 +1,14 @@
+#nullable enable
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using SenseNet.Search.Indexing.Integrity;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Util;
 
-namespace IndexIntegrityChecker;
+namespace SenseNet.Search.Lucene29.Integrity;
 
 /// <summary>Metadata of one fixed IndexReader snapshot; the caller owns the reader.</summary>
 public sealed class LuceneSnapshot : IDisposable
@@ -17,20 +23,22 @@ public sealed class LuceneSnapshot : IDisposable
     public int ContentDocuments { get; private set; }
     public int MaxDoc => _metadata.Count;
 
-    public LuceneSnapshot(IndexReader reader, DifferenceReporter reporter, CancellationToken cancel = default, string? scratchPath = null)
+    public LuceneSnapshot(IndexReader reader, DifferenceReporter reporter, CancellationToken cancel = default, string? scratchPath = null, bool identifyVersions = false)
     {
         _reader = reader;
         _reporter = reporter;
         _cancel = cancel;
         LiveDocuments = reader.NumDocs();
         _metadata = new DiskMetadata(reader.MaxDoc(), scratchPath);
-        try { Initialize(); }
+        try { Initialize(identifyVersions); }
         catch { _metadata.Dispose(); throw; }
     }
 
-    private void Initialize()
+    private void Initialize(bool identifyVersions)
     {
         ReadExact("$#COMMIT", "$#COMMIT", doc => { var data = _metadata[doc]; data.IsCommit = true; _metadata[doc] = data; });
+        if (identifyVersions)
+            ReadVersionIdentities();
         ReadNumeric("Id", false, Fields.NodeId, (doc, value) =>
         {
             var data = _metadata[doc]; data.NodeId = (int)value; _metadata[doc] = data;
@@ -56,7 +64,34 @@ public sealed class LuceneSnapshot : IDisposable
         PrepareHistoricalPaths();
     }
 
-    internal IndexMetadata GetMetadata(int docId) => _metadata[docId];
+    public IndexMetadata GetMetadata(int docId)
+    {
+        var metadata = _metadata[docId];
+        if (metadata.MissingDraftPath)
+        {
+            var draft = _metadata[metadata.DraftDocId];
+            if (!draft.AmbiguousVersionId)
+                metadata.DraftVersionId = draft.UniqueVersionId;
+        }
+        return metadata;
+    }
+
+    public Difference DescribeIssue(Difference issue)
+    {
+        if (issue.DocId is not int doc)
+            return issue;
+        var metadata = GetMetadata(doc);
+        var versionId = !metadata.AmbiguousVersionId && metadata.UniqueVersionId > 0
+            ? metadata.UniqueVersionId : (int?)null;
+        return issue with
+        {
+            VersionId = versionId,
+            NodeId = metadata.NodeId > 0 ? metadata.NodeId : null,
+            Index = new SavedIndexVersion(versionId ?? 0, doc, metadata)
+        };
+    }
+
+    public bool HasStoredPath(int docId) => _reader.Document(docId, PathSelector).Get("Path") != null;
 
     public bool HistoricalNodeTimestampIsAllowed(int docId)
     {
@@ -128,6 +163,38 @@ public sealed class LuceneSnapshot : IDisposable
     {
         if (_enumerated) throw new InvalidOperationException("The version stream can only be enumerated once.");
         _enumerated = true;
+        foreach (var (value, doc) in ReadVersionPostings())
+        {
+            MarkPresent(doc, Fields.VersionId, "VersionId");
+            if (value is > 0)
+                yield return new IndexVersion(value.Value, doc);
+            else
+                Invalid(doc, "VersionId", value);
+        }
+
+        // Documents without a VersionId never appear in the stream; do not silently omit them.
+        for (var doc = 0; doc < MaxDoc; doc++)
+        {
+            _cancel.ThrowIfCancellationRequested();
+            if (IsContent(doc)) CheckPresent(doc, _metadata[doc], Fields.VersionId, "VersionId");
+        }
+    }
+
+    private void ReadVersionIdentities()
+    {
+        foreach (var (value, doc) in ReadVersionPostings())
+        {
+            var metadata = _metadata[doc];
+            if (value is not > 0 || metadata.UniqueVersionId > 0 && metadata.UniqueVersionId != value)
+                metadata.AmbiguousVersionId = true;
+            else
+                metadata.UniqueVersionId = value.Value;
+            _metadata[doc] = metadata;
+        }
+    }
+
+    private IEnumerable<(int? VersionId, int Document)> ReadVersionPostings()
+    {
         var first = NumericUtils.IntToPrefixCoded(int.MinValue);
         var terms = _reader.Terms(new Term("VersionId", first));
         var docs = _reader.TermDocs();
@@ -137,34 +204,22 @@ public sealed class LuceneSnapshot : IDisposable
             {
                 _cancel.ThrowIfCancellationRequested();
                 var term = terms.Term();
-                if (!IsFullPrecision(term, "VersionId", first[0])) break;
+                if (!IsFullPrecision(term, "VersionId", first[0]))
+                    break;
                 int? value = null;
                 try { value = NumericUtils.PrefixCodedToInt(term.Text()); }
-                catch (FormatException) { /* Report against every affected live document below. */ }
+                catch (FormatException) { }
                 docs.Seek(terms);
                 while (docs.Next())
                 {
                     _cancel.ThrowIfCancellationRequested();
                     var doc = docs.Doc();
-                    if (!IsContent(doc)) continue;
-                    MarkPresent(doc, Fields.VersionId, "VersionId");
-                    if (value is null || value <= 0)
-                    {
-                        Invalid(doc, "VersionId", value);
-                        continue;
-                    }
-                    yield return new IndexVersion(value.Value, doc);
+                    if (IsContent(doc))
+                        yield return (value, doc);
                 }
             } while (terms.Next());
         }
         finally { docs.Close(); terms.Close(); }
-
-        // Documents without a VersionId never appear in the stream; do not silently omit them.
-        for (var doc = 0; doc < MaxDoc; doc++)
-        {
-            _cancel.ThrowIfCancellationRequested();
-            if (IsContent(doc)) CheckPresent(doc, _metadata[doc], Fields.VersionId, "VersionId");
-        }
     }
 
     private bool IsContent(int doc) => !_reader.IsDeleted(doc) && !_metadata[doc].IsCommit;
