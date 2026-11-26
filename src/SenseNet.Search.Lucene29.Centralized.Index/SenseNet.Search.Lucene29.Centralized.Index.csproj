@@ -28,7 +28,7 @@
 	<ItemGroup>
 		<PackageReference Include="SenseNet.Common" Version="7.6.0" />
 		<PackageReference Include="SenseNet.Security" Version="4.3.2-alpha.5" />
-		<PackageReference Include="SenseNet.Search" Version="2.6.0-alpha-1.1" />
+		<PackageReference Include="SenseNet.Search" Version="2.6.0-alpha-1.2" />
 		<PackageReference Include="SenseNet.Search.Lucene29.Lucene.Net" Version="2.9.4.301" />
 	</ItemGroup>
 
